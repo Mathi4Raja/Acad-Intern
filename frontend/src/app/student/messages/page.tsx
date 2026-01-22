@@ -7,6 +7,7 @@ import { ConversationList, MessageList, ChatInput } from '@/components/chat'
 import type { Conversation, Message } from '@/components/chat'
 import api from '@/lib/api'
 import { useSocket } from '@/lib/SocketContext'
+import { useAuth } from '@/lib/AuthContext'
 
 // Format time for display
 const formatTime = (dateString: string) => {
@@ -36,6 +37,7 @@ function StudentMessagesPageContent() {
     const [error, setError] = useState<string | null>(null)
     const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null)
 
+    const { user } = useAuth()
     const { socket, isConnected, onlineUsers, connectError } = useSocket()
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -285,7 +287,7 @@ function StudentMessagesPageContent() {
 
                 const formattedMessage: Message = {
                     id: messageData.id,
-                    senderId: user?._id || '',
+                    senderId: user?.id || '',
                     senderName: user?.name || 'Me',
                     message: messageData.message,
                     messageType: messageData.messageType || 'text',
