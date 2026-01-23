@@ -18,12 +18,18 @@ import notificationRoutes from './routes/notifications';
 import reportRoutes from './routes/reports';
 import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/upload';
+import messageRoutes from './routes/messages';
+import { initializeSocket } from './utils/socketHandler';
 
 // Initialize Express app
 const app = express();
 
 // Create HTTP server
 const server = createServer(app);
+
+// Initialize Socket.io
+const io = initializeSocket(server);
+console.log('✅ Socket.io Server Initialized');
 
 // Connect to MongoDB (only if not in test mode)
 if (process.env.NODE_ENV !== 'test') {
@@ -83,6 +89,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/messages', messageRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -109,4 +116,4 @@ process.on('unhandledRejection', (err: Error) => {
     process.exit(1);
 });
 
-export { app, server };
+export { app, server, io };

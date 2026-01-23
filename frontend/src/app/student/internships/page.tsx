@@ -139,26 +139,26 @@ export default function InternshipsPage() {
       />
 
       {/* Search and Filter Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-4">
-        <div className="flex gap-4 flex-col md:flex-row">
+      <div className="mb-4">
+        <div className="flex gap-2 flex-col md:flex-row">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by title, skills, company..."
-              className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow placeholder:text-gray-400"
             />
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center justify-center gap-2 px-6 py-3 border rounded-lg transition-all duration-200 text-base font-medium w-full md:w-auto ${showFilters
+            className={`flex items-center justify-center gap-1.5 px-4 py-2 border rounded-lg transition-all duration-200 text-sm font-medium w-full md:w-auto ${showFilters
               ? 'border-primary bg-primary/5 text-primary'
               : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700'
               }`}
           >
-            <SlidersHorizontal size={20} />
+            <SlidersHorizontal size={16} />
             Filters
           </button>
         </div>

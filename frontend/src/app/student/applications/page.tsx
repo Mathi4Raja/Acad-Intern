@@ -136,7 +136,7 @@ export default function ApplicationsPage() {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-4">
+      <div className="mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input

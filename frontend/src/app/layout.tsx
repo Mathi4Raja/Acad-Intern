@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
+import { SocketProvider } from "@/lib/SocketContext";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-geist-sans",
@@ -49,7 +50,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${jakarta.variable} font-sans`} suppressHydrationWarning>
         <AuthProvider>
-          {children}
+          <SocketProvider>
+            {children}
+          </SocketProvider>
         </AuthProvider>
       </body>
     </html>

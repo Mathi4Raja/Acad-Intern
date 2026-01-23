@@ -61,5 +61,39 @@ api.interceptors.response.use(
     }
 );
 
+// Message API functions
+export const messageApi = {
+    // Get all conversations
+    getConversations: () => api.get('/messages/conversations'),
+
+    // Get messages for a specific application
+    getMessages: (applicationId: string) => api.get(`/messages/application/${applicationId}`),
+
+    // Send a message
+    sendMessage: (applicationId: string, content: string) => 
+        api.post(`/messages/application/${applicationId}`, { content }),
+
+    // Send a message with files
+    sendMessageWithFiles: (applicationId: string, content: string, files: File[]) => {
+        const formData = new FormData();
+        formData.append('content', content);
+        files.forEach(file => formData.append('files', file));
+        
+        return api.post(`/messages/application/${applicationId}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
+
+    // Mark messages as seen
+    markAsSeen: (applicationId: string) => 
+        api.patch(`/messages/application/${applicationId}/seen`),
+
+    // Get unread message count
+    getUnreadCount: () => api.get('/messages/unread-count'),
+};
+
 export default api;
+
 

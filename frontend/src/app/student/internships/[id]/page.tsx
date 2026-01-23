@@ -119,7 +119,7 @@ export default function InternshipDetailPage() {
     }
 
     return (
-        <div className="max-w-5xl mx-auto pb-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 pb-10">
             {/* Back Button */}
             <Link
                 href="/student/internships"
@@ -129,14 +129,14 @@ export default function InternshipDetailPage() {
                 Back to Internships
             </Link>
 
-            <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+            <div className="grid lg:grid-cols-3 gap-4 lg:gap-6">
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Header Card */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
                         <div className="flex items-start justify-between gap-4 mb-6">
                             <div>
-                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
                                     {internship.title}
                                 </h1>
                                 <div className="flex items-center gap-2 text-gray-600 font-medium">
@@ -156,7 +156,7 @@ export default function InternshipDetailPage() {
 
                         <div className="flex flex-wrap gap-4 sm:gap-6 text-sm text-gray-600 border-t border-gray-100 pt-6">
                             <div className="flex items-center gap-2">
-                                <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                                <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
                                     <MapPin size={18} />
                                 </div>
                                 <div>
@@ -166,7 +166,7 @@ export default function InternshipDetailPage() {
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <div className="p-2 bg-green-50 text-green-600 rounded-lg">
+                                <div className="p-1.5 bg-green-50 text-green-600 rounded-lg">
                                     <Clock size={18} />
                                 </div>
                                 <div>
@@ -176,7 +176,7 @@ export default function InternshipDetailPage() {
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                                <div className="p-1.5 bg-purple-50 text-purple-600 rounded-lg">
                                     <IndianRupee size={18} />
                                 </div>
                                 <div>
@@ -186,7 +186,7 @@ export default function InternshipDetailPage() {
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                                <div className="p-1.5 bg-orange-50 text-orange-600 rounded-lg">
                                     <Calendar size={18} />
                                 </div>
                                 <div>
@@ -222,9 +222,9 @@ export default function InternshipDetailPage() {
                 </div>
 
                 {/* Sidebar */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                     {/* Action Card */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 sticky top-24">
                         <h3 className="text-lg font-bold text-gray-900 mb-4">Interested?</h3>
                         <div className="space-y-3">
                             <button
@@ -255,7 +255,7 @@ export default function InternshipDetailPage() {
                     </div>
 
                     {/* Company Info */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
                         <h3 className="text-lg font-bold text-gray-900 mb-4">About Company</h3>
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-xl">

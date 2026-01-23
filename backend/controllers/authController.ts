@@ -57,8 +57,17 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
         const origin = req.headers.origin || '';
         const isSecureContext = origin.startsWith('https://') || process.env.NODE_ENV === 'production';
 
+        // HttpOnly cookie for secure API authentication
         res.cookie('token', token, {
             httpOnly: true,
+            secure: isSecureContext,
+            sameSite: isSecureContext ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        // Accessible cookie for Socket.io client-side authentication
+        res.cookie('socket_token', token, {
+            httpOnly: false,
             secure: isSecureContext,
             sameSite: isSecureContext ? 'none' : 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000
@@ -122,8 +131,17 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
         const origin = req.headers.origin || '';
         const isSecureContext = origin.startsWith('https://') || process.env.NODE_ENV === 'production';
 
+        // HttpOnly cookie for secure API authentication
         res.cookie('token', token, {
             httpOnly: true,
+            secure: isSecureContext,
+            sameSite: isSecureContext ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        // Accessible cookie for Socket.io client-side authentication
+        res.cookie('socket_token', token, {
+            httpOnly: false,
             secure: isSecureContext,
             sameSite: isSecureContext ? 'none' : 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000
@@ -172,7 +190,12 @@ export const getMe = async (req: AuthRequest, res: Response, next: NextFunction)
         res.status(200).json({
             success: true,
             data: {
-                user,
+                user: user ? {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                } : null,
                 profile
             }
         });
@@ -189,6 +212,12 @@ export const logout = async (req: AuthRequest, res: Response, next: NextFunction
         res.cookie('token', 'none', {
             expires: new Date(Date.now() + 10 * 1000),
             httpOnly: true
+        });
+
+        // Clear the socket token as well
+        res.cookie('socket_token', 'none', {
+            expires: new Date(Date.now() + 10 * 1000),
+            httpOnly: false
         });
 
         res.status(200).json({

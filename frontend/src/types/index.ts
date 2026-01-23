@@ -69,3 +69,62 @@ export interface Application {
     duration: string
     notes: string | null
 }
+
+// Message types
+export type MessageStatus = 'sent' | 'delivered' | 'seen';
+
+export interface MessageAttachment {
+    fileUrl: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+}
+
+export interface Message {
+    _id: string;
+    applicationId: string;
+    senderId: {
+        _id: string;
+        name: string;
+        email: string;
+        role: UserRole;
+    };
+    receiverId: string;
+    content?: string;
+    attachments: MessageAttachment[];
+    status: MessageStatus;
+    createdAt: string;
+    updatedAt: string;
+    deliveredAt?: string;
+    seenAt?: string;
+}
+
+export interface Conversation {
+    application: {
+        _id: string;
+        internshipId: {
+            _id: string;
+            title: string;
+            companyId: {
+                _id: string;
+                companyName: string;
+                logo?: string;
+                userId: {
+                    _id: string;
+                    name: string;
+                    email: string;
+                };
+            };
+        };
+        studentId: {
+            _id: string;
+            name: string;
+            email: string;
+        };
+        status: ApplicationStatus;
+        appliedAt: string;
+    };
+    lastMessage?: Message;
+    unreadCount: number;
+}
+

@@ -1,7 +1,7 @@
 'use client'
 
 import { DashboardLayout } from '@/components/dashboard'
-import { Home, Briefcase, FileText, PlusCircle, Building, BarChart3 } from 'lucide-react'
+import { Home, Briefcase, FileText, PlusCircle, Building, BarChart3, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/lib/AuthContext'
 import { useNotifications } from '@/lib/useNotifications'
 
@@ -10,14 +10,18 @@ const navigation = [
   { name: 'Post Internship', href: '/company/post-internship', icon: PlusCircle },
   { name: 'My Internships', href: '/company/internships', icon: Briefcase },
   { name: 'Applications', href: '/company/applications', icon: FileText },
+  { name: 'Messages', href: '/company/messages', icon: MessageCircle },
   { name: 'Analytics', href: '/company/analytics', icon: BarChart3 },
   { name: 'Company Profile', href: '/company/profile', icon: Building },
 ]
 
+import { usePathname } from 'next/navigation'
 
 export default function CompanyLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth()
   const { notifications, markAsRead, markAllAsRead } = useNotifications()
+  const pathname = usePathname()
+  const isMessagesPage = pathname === '/company/messages'
 
   return (
     <DashboardLayout
@@ -30,6 +34,7 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
       onMarkNotificationAsRead={markAsRead}
       onMarkAllNotificationsAsRead={markAllAsRead}
       onLogout={logout}
+      disableContentPadding={isMessagesPage}
     >
       {children}
     </DashboardLayout>

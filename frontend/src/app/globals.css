@@ -606,3 +606,213 @@
   outline: 2px solid oklch(0.52 0.24 255);
   outline-offset: 2px;
 }
+
+/* ========== MOBILE MESSAGING IMPROVEMENTS ========== */
+
+/* Safe area support for mobile devices */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Mobile message animations */
+@keyframes message-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes message-slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes message-slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes typing-dots {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-message-slide-in {
+  animation: message-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-message-slide-in-left {
+  animation: message-slide-in-left 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-message-slide-in-right {
+  animation: message-slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-typing-dots {
+  animation: typing-dots 1.4s infinite ease-in-out;
+}
+
+/* Mobile touch improvements */
+@media (max-width: 768px) {
+  /* Larger touch targets */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better text input on mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+    -webkit-appearance: none;
+    border-radius: 12px;
+  }
+  
+  /* Smooth scrolling for message containers */
+  .messages-container {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Hide scrollbar on mobile for cleaner look */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Better message bubble spacing on mobile */
+  .message-bubble {
+    max-width: 85%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Improved attachment preview on mobile */
+  .attachment-preview {
+    max-width: 200px;
+  }
+  
+  /* Better conversation list on mobile */
+  .conversation-item {
+    padding: 16px;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  .conversation-item:first-child {
+    border-top: none;
+  }
+  
+  .conversation-item:last-child {
+    border-bottom: none;
+  }
+  
+  /* Mobile-specific message input improvements */
+  .mobile-message-input {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  /* Prevent body scroll when typing */
+  .keyboard-open {
+    position: fixed;
+    width: 100%;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .message-avatar {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Message bubble styling - explicit light mode */
+.message-bubble-own {
+  background: linear-gradient(135deg, oklch(0.52 0.24 255) 0%, oklch(0.45 0.22 260) 100%) !important;
+  color: white !important;
+}
+
+.message-bubble-other {
+  background: white !important;
+  color: oklch(0.12 0.03 250) !important;
+  border: 1px solid oklch(0.91 0.015 250) !important;
+}
+
+/* Dark mode improvements for messages */
+@media (prefers-color-scheme: dark) {
+  .message-bubble-own {
+    background: linear-gradient(135deg, oklch(0.62 0.24 255) 0%, oklch(0.52 0.22 260) 100%) !important;
+    color: white !important;
+  }
+  
+  .message-bubble-other {
+    background: oklch(0.96 0.01 250) !important;
+    color: oklch(0.12 0.03 250) !important;
+    border: 1px solid oklch(0.91 0.015 250) !important;
+  }
+  
+  .conversation-item:hover {
+    background: oklch(0.97 0.01 250) !important;
+  }
+  
+  .conversation-item.selected {
+    background: oklch(0.52 0.24 255 / 0.1) !important;
+    border-right: 4px solid oklch(0.52 0.24 255) !important;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-message-slide-in,
+  .animate-message-slide-in-left,
+  .animate-message-slide-in-right,
+  .animate-typing-dots {
+    animation: none;
+  }
+  
+  .message-bubble {
+    transition: none;
+  }
+  
+  button {
+    transition: none;
+  }
+}

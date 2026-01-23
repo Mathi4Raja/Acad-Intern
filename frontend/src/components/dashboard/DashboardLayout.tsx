@@ -27,6 +27,7 @@ interface DashboardLayoutProps {
     onMarkNotificationAsRead?: (id: string) => void;
     onMarkAllNotificationsAsRead?: () => void;
     onLogout?: () => void;
+    disableContentPadding?: boolean;
 }
 
 export function DashboardLayout({
@@ -45,6 +46,7 @@ export function DashboardLayout({
     onMarkNotificationAsRead,
     onMarkAllNotificationsAsRead,
     onLogout,
+    disableContentPadding = false,
 }: DashboardLayoutProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -91,7 +93,7 @@ export function DashboardLayout({
                     )}
 
                     {/* Main Content */}
-                    <main className="lg:ml-64 pt-16">
+                    <main className={`lg:ml-64 pt-16 ${disableContentPadding ? '' : ''}`}>
                         {children}
                     </main>
                 </>
@@ -116,7 +118,7 @@ export function DashboardLayout({
                     )}
 
                     {/* Main Content */}
-                    <main className="mt-14 sm:mt-16 lg:ml-64 p-3 sm:p-6 lg:p-8">
+                    <main className={`mt-14 sm:mt-16 lg:ml-64 ${disableContentPadding ? 'p-0' : 'p-3 sm:p-6 lg:p-8'}`}>
                         {children}
                     </main>
                 </>

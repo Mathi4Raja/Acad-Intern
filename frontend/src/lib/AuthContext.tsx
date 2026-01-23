@@ -46,14 +46,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    // Helper to set cookie
+    const setCookie = (name: string, value: string, days: number) => {
+        const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+        document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+    };
+
+    // Helper to clear cookie
+    const clearCookie = (name: string) => {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+    };
+
     const login = async (formData: any) => {
         try {
             const res = await api.post('/auth/login', formData);
             setUser(res.data.data.user);
-            // After login, we might want to fetch full profile or it might be returned
-            // The backend login controller sends: data: { user: {...}, token }
-            // It doesn't send the profile. We should probably fetch 'me' or update backend.
-            // For now, let's trigger a refresh
+
+            // Store token in an accessible cookie for Socket.IO
+            // The backend also sets httpOnly cookie for API requests
+            const token = res.data.data.token;
+            if (token) {
+                setCookie('socket_token', token, 7); // 7 days to match backend
+            }
+
+            // Fetch full profile
             await checkAuthStatus();
 
             // Redirect based on role
@@ -71,6 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             const res = await api.post('/auth/signup', formData);
             setUser(res.data.data.user);
+
+            // Store token in an accessible cookie for Socket.IO
+            const token = res.data.data.token;
+            if (token) {
+                setCookie('socket_token', token, 7);
+            }
+
             await checkAuthStatus();
 
             const role = res.data.data.user.role;
@@ -91,6 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.error('Logout failed', error);
             }
         } finally {
+            // Clear the accessible token cookie
+            clearCookie('socket_token');
             // Always clear state and redirect
             setUser(null);
             setProfile(null);

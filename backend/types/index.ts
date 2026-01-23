@@ -118,6 +118,31 @@ export interface INotification extends Document {
     createdAt: Date;
 }
 
+// Message status enum
+export type MessageStatus = 'sent' | 'delivered' | 'seen';
+
+// Message attachment interface
+export interface IMessageAttachment {
+    fileUrl: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+}
+
+// Message interface
+export interface IMessage extends Document {
+    applicationId: Types.ObjectId;
+    senderId: Types.ObjectId;
+    receiverId: Types.ObjectId;
+    content?: string;
+    attachments: IMessageAttachment[];
+    status: MessageStatus;
+    createdAt: Date;
+    updatedAt: Date;
+    deliveredAt?: Date;
+    seenAt?: Date;
+}
+
 // Extended Request with authenticated user
 export interface AuthRequest extends Request {
     user?: IUser;
