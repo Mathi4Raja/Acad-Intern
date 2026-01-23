@@ -32,7 +32,11 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             ?.split('=')[1] ||
             localStorage.getItem('token');
 
-        // We don't block if token is missing here, as it might be in an HttpOnly cookie
+        if (!token) {
+            console.error('Socket connect failed: No token found');
+            setConnectError('Authentication failed: No token');
+            return;
+        }
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         // Connect to root if API is /api, handle trailing/no trailing
@@ -42,7 +46,6 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             auth: {
                 token
             },
-            withCredentials: true,
             transports: ['websocket'] // Force websocket to avoid polling issues
         });
 

@@ -86,15 +86,7 @@ app.use('/api/', limiter);
 // Socket.IO middleware for authentication
 io.use(async (socket, next) => {
     try {
-        let token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
-
-        if (!token && socket.handshake.headers.cookie) {
-            const cookies = socket.handshake.headers.cookie.split(';');
-            const tokenCookie = cookies.find(c => c.trim().startsWith('token='));
-            if (tokenCookie) {
-                token = tokenCookie.split('=')[1]?.trim();
-            }
-        }
+        const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
 
         if (!token) {
             return next(new Error('Authentication error'));
