@@ -53,10 +53,14 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
 
         const token = user.generateAuthToken();
 
+        // Detect if request is from dev tunnels (HTTPS origin)
+        const origin = req.headers.origin || '';
+        const isSecureContext = origin.startsWith('https://') || process.env.NODE_ENV === 'production';
+
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: isSecureContext,
+            sameSite: isSecureContext ? 'none' : 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
@@ -114,10 +118,14 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
 
         const token = user.generateAuthToken();
 
+        // Detect if request is from dev tunnels (HTTPS origin)
+        const origin = req.headers.origin || '';
+        const isSecureContext = origin.startsWith('https://') || process.env.NODE_ENV === 'production';
+
         res.cookie('token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: isSecureContext,
+            sameSite: isSecureContext ? 'none' : 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 

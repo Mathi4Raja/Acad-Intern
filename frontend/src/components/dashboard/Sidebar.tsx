@@ -24,6 +24,7 @@ interface SidebarProps {
         highlight?: boolean;
     }[];
     className?: string;
+    onLogout?: () => void;
 }
 
 const variantStyles: Record<SidebarVariant, { active: string; hover: string }> = {
@@ -48,6 +49,7 @@ export function Sidebar({
     onClose,
     quickStats,
     className,
+    onLogout,
 }: SidebarProps) {
     const pathname = usePathname();
     const styles = variantStyles[variant];
@@ -56,10 +58,9 @@ export function Sidebar({
         <aside
             className={cn(
                 "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out",
-                // Admin variant stays fixed on all screen sizes, student/company become static on large screens
-                variant !== "admin" && "lg:static",
+                // All variants stay fixed
                 isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-                variant === "admin" ? "top-16 bottom-0 w-72 sm:w-64" : "mt-14 sm:mt-16 lg:mt-0",
+                variant === "admin" ? "top-16 bottom-0 w-72 sm:w-64" : "mt-14 sm:mt-16",
                 className
             )}
         >
@@ -126,12 +127,17 @@ export function Sidebar({
                 )}
 
                 {/* Logout Button */}
-                <div className="border-t border-gray-200 p-4">
-                    <button className="flex items-center gap-3 px-4 py-3 w-full text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-red-600 rounded-lg transition-colors">
-                        <LogOut size={20} />
-                        Logout
-                    </button>
-                </div>
+                {onLogout && (
+                    <div className="border-t border-gray-200 p-4">
+                        <button
+                            onClick={onLogout}
+                            className="flex items-center gap-3 px-4 py-3 w-full text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-red-600 rounded-lg transition-colors"
+                        >
+                            <LogOut size={20} />
+                            Logout
+                        </button>
+                    </div>
+                )}
             </div>
         </aside>
     );

@@ -1,6 +1,5 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { randomUUID } from 'crypto';
 import path from 'path';
 
 // R2 Configuration
@@ -34,19 +33,62 @@ export interface UploadResult {
 }
 
 /**
+ * Extract the key from a full R2 URL
+ */
+export const getKeyFromUrl = (url: string): string | null => {
+    if (!url) return null;
+
+    // If it's already a key (starts with acadintern/)
+    if (url.startsWith('acadintern/')) {
+        return url;
+    }
+
+    // Extract key from full URL
+    try {
+        const urlObj = new URL(url);
+        // Remove leading slash
+        return urlObj.pathname.substring(1);
+    } catch {
+        return null;
+    }
+};
+
+/**
  * Upload a file buffer to Cloudflare R2
+ * @param buffer - File buffer
+ * @param originalFilename - Original filename (used for extension)
+ * @param mimetype - MIME type
+ * @param username - Sanitized username for consistent naming
+ * @param existingUrl - Existing file URL to delete (for replace functionality)
  */
 export const uploadToR2 = async (
     buffer: Buffer,
     originalFilename: string,
-    mimetype: string
+    mimetype: string,
+    username?: string,
+    existingUrl?: string
 ): Promise<UploadResult> => {
-    // Generate unique filename
+    // Generate filename based on username for consistency
     const ext = path.extname(originalFilename).toLowerCase();
-    const uniqueId = randomUUID();
-    const key = `acadintern/resumes/${uniqueId}${ext}`;
+    const key = username
+        ? `acadintern/resumes/${username}_resume${ext}`
+        : `acadintern/resumes/${Date.now()}_resume${ext}`;
 
-    // Upload to R2
+    // Delete existing file if replacing (different extension case)
+    if (existingUrl) {
+        const existingKey = getKeyFromUrl(existingUrl);
+        if (existingKey && existingKey !== key) {
+            try {
+                await deleteFromR2(existingKey);
+                console.log(`🗑️ Deleted old file: ${existingKey}`);
+            } catch (err) {
+                console.error('Failed to delete old file:', err);
+                // Continue with upload even if delete fails
+            }
+        }
+    }
+
+    // Upload to R2 (overwrites if same key exists)
     const command = new PutObjectCommand({
         Bucket: R2_BUCKET_NAME,
         Key: key,

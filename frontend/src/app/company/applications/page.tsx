@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, User, Briefcase, Star, Mail, Phone, Download, CheckCircle, XCircle, Clock, Calendar, MessageCircle, Loader2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Search, Filter, User, Briefcase, Star, Mail, Calendar, CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react'
 import api from '@/lib/api'
 
 interface Application {
@@ -25,7 +24,6 @@ interface Internship {
 }
 
 export default function Applications() {
-  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterInternship, setFilterInternship] = useState('all')
@@ -35,7 +33,6 @@ export default function Applications() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [messagingStudentId, setMessagingStudentId] = useState<string | null>(null)
 
   // Fetch internships and their applications
   useEffect(() => {
@@ -90,32 +87,6 @@ export default function Applications() {
 
     fetchData()
   }, [])
-
-  const handleMessageStudent = async (studentId: string) => {
-    if (!studentId) {
-      alert('Student information not available')
-      return
-    }
-
-    try {
-      setMessagingStudentId(studentId)
-
-      // Create or get existing conversation
-      const response = await api.post('/messages/conversations', {
-        participantId: studentId
-      })
-
-      if (response.data.success) {
-        // Navigate to messages page
-        router.push('/company/messages')
-      }
-    } catch (err: any) {
-      console.error('Failed to start conversation:', err)
-      alert('Failed to start conversation. Please try again.')
-    } finally {
-      setMessagingStudentId(null)
-    }
-  }
 
   const handleUpdateStatus = async (applicationId: string, status: string) => {
     try {
@@ -399,20 +370,6 @@ export default function Applications() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    {/* Message Student Button */}
-                    <button
-                      onClick={() => handleMessageStudent(app.studentId)}
-                      disabled={!app.studentId || messagingStudentId === app.studentId}
-                      className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50"
-                    >
-                      {messagingStudentId === app.studentId ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        <MessageCircle size={14} />
-                      )}
-                      Message
-                    </button>
-
                     {app.status === 'pending' && (
                       <>
                         <button

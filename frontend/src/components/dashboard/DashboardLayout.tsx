@@ -79,6 +79,7 @@ export function DashboardLayout({
                         isOpen={sidebarOpen}
                         onClose={closeSidebar}
                         quickStats={quickStats}
+                        onLogout={onLogout}
                     />
 
                     {/* Overlay for mobile */}
@@ -95,14 +96,15 @@ export function DashboardLayout({
                     </main>
                 </>
             ) : (
-                // Student/Company layout: flex container
-                <div className="flex pt-14 sm:pt-16">
+                // Student/Company layout: fixed sidebar with scrollable content
+                <>
                     <Sidebar
                         navigation={navigation}
                         variant={variant}
                         isOpen={sidebarOpen}
                         onClose={closeSidebar}
                         quickStats={quickStats}
+                        onLogout={onLogout}
                     />
 
                     {/* Overlay for mobile */}
@@ -114,10 +116,10 @@ export function DashboardLayout({
                     )}
 
                     {/* Main Content */}
-                    <main className="flex-1 p-3 sm:p-6 lg:p-8">
+                    <main className="mt-14 sm:mt-16 lg:ml-64 p-3 sm:p-6 lg:p-8">
                         {children}
                     </main>
-                </div>
+                </>
             )}
         </div>
     );

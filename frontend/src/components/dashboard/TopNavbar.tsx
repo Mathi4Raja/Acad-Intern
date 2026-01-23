@@ -68,7 +68,7 @@ export function TopNavbar({
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <nav className={cn("bg-white border-b border-gray-200 fixed w-full top-0 z-50", className)}>
+        <nav className={cn("bg-white border-b border-gray-200 fixed w-full top-0 z-[60]", className)}>
             <div className="px-3 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14 sm:h-16">
                     {/* Left Side: Menu + Logo */}

@@ -10,14 +10,18 @@ const fileFilter = (
     file: Express.Multer.File,
     cb: FileFilterCallback
 ): void => {
-    if (
-        file.mimetype === 'application/pdf' ||
-        file.mimetype === 'image/jpeg' ||
-        file.mimetype === 'image/png'
-    ) {
+    const allowedMimeTypes = [
+        'application/pdf',
+        'image/jpeg',
+        'image/png',
+        'application/msword', // .doc
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // .docx
+    ];
+
+    if (allowedMimeTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Invalid file type. Only PDF, JPG and PNG are allowed.'));
+        cb(new Error('Invalid file type. Allowed: PDF, JPG, PNG, DOC, DOCX'));
     }
 };
 

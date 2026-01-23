@@ -3,31 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import api from './api';
 import { useRouter, usePathname } from 'next/navigation';
-
-// Define User types based on backend models
-export type UserRole = 'student' | 'company' | 'admin';
-
-export interface User {
-    id: string;
-    name: string;
-    email: string;
-    role: UserRole;
-}
-
-export interface StudentProfile {
-    userId: string;
-    department?: string;
-    semester?: string;
-    skills: string[];
-    // ... add other fields as needed
-}
-
-export interface CompanyProfile {
-    userId: string;
-    companyName: string;
-    website?: string;
-    // ... add other fields as needed
-}
+import { User, StudentProfile, CompanyProfile } from '@/types';
 
 interface AuthContextType {
     user: User | null;

@@ -52,11 +52,11 @@ export function StatCard({
     }
 
     return (
-        <div className={cn('bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow', className)}>
-            <div className="flex items-start justify-between mb-3">
+        <div className={cn('bg-white rounded-xl p-3 sm:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow', className)}>
+            <div className="flex items-start justify-between mb-2 sm:mb-3">
                 {Icon && (
-                    <div className={cn('p-2.5 rounded-lg', iconBg)}>
-                        <Icon className={cn('w-5 h-5', iconColor)} />
+                    <div className={cn('p-2 sm:p-2.5 rounded-lg', iconBg)}>
+                        <Icon className={cn('w-4 h-4 sm:w-5 sm:h-5', iconColor)} />
                     </div>
                 )}
                 {change && (

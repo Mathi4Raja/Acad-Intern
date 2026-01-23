@@ -1,18 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
     ArrowLeft,
     MapPin,
     Clock,
     IndianRupee,
-    Briefcase,
     Calendar,
     Globe,
     Share2,
-    Send,
     Building,
     CheckCircle,
     Loader2
@@ -44,11 +42,9 @@ interface InternshipDetail {
 
 export default function InternshipDetailPage() {
     const { id } = useParams()
-    const router = useRouter()
     const [internship, setInternship] = useState<InternshipDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [messageLoading, setMessageLoading] = useState(false)
 
     useEffect(() => {
         if (id) {
@@ -74,30 +70,6 @@ export default function InternshipDetailPage() {
     const handleApply = () => {
         // TODO: Implement application logic
         alert('Application feature coming soon!')
-    }
-
-    const handleMessageCompany = async () => {
-        if (!internship) return
-
-        try {
-            setMessageLoading(true)
-            // Pass an initial message context
-            const initialMessage = `Hi, I'm interested in your ${internship.title} internship position.`
-
-            const response = await api.post(`/messages/start-with-company/${internship.companyId.userId}`, {
-                initialMessage
-            })
-
-            if (response.data.success) {
-                const conversationId = response.data.data.conversationId
-                router.push(`/student/messages?conversationId=${conversationId}`)
-            }
-        } catch (err: any) {
-            console.error('Failed to start conversation:', err)
-            alert('Failed to start conversation. Please try again.')
-        } finally {
-            setMessageLoading(false)
-        }
     }
 
     const formatStipend = (stipend: number) => {
@@ -260,20 +232,6 @@ export default function InternshipDetailPage() {
                                 className="w-full py-3 bg-primary text-white rounded-xl hover:bg-primary/90 font-semibold shadow-lg shadow-primary/25 transition-all text-sm sm:text-base"
                             >
                                 Apply Now
-                            </button>
-                            <button
-                                onClick={handleMessageCompany}
-                                disabled={messageLoading}
-                                className="w-full py-3 bg-white border-2 border-primary text-primary rounded-xl hover:bg-primary/5 font-semibold transition-colors flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-70 disabled:cursor-not-allowed"
-                            >
-                                {messageLoading ? (
-                                    <Loader2 size={18} className="animate-spin" />
-                                ) : (
-                                    <>
-                                        <Send size={18} />
-                                        Message Company
-                                    </>
-                                )}
                             </button>
                         </div>
 

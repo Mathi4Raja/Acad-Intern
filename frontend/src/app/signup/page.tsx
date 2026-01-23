@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Eye, EyeOff, Mail, Lock, User, Building2, GraduationCap, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Building2, GraduationCap, ArrowRight, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
 
 type UserRole = 'student' | 'company' | null
 
@@ -439,9 +439,13 @@ export default function SignupPage() {
         )}
 
         {/* Back to Home */}
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-            ← Back to home
+        <div className="mt-8 text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-gray-600 bg-white/50 hover:bg-white hover:text-primary rounded-full transition-all duration-200 border border-transparent hover:border-gray-200 hover:shadow-sm group"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
+            Back to home
           </Link>
         </div>
       </div>
