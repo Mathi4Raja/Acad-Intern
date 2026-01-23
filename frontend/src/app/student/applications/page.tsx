@@ -92,7 +92,7 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
       <PageHeader
         title="My Applications"
         subtitle="Track and manage all your internship applications in one place."
@@ -106,7 +106,7 @@ export default function ApplicationsPage() {
       )}
 
       {/* Stats Cards / Filters */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-6 sm:mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {[
           { id: 'all', label: 'Total Applications', count: statusCounts.all, color: 'text-gray-900', border: 'border-primary', ring: 'ring-primary/20' },
           { id: 'pending', label: 'Pending', count: statusCounts.pending, color: 'text-yellow-600', border: 'border-yellow-500', ring: 'ring-yellow-100' },
@@ -118,18 +118,25 @@ export default function ApplicationsPage() {
             key={stat.id}
             onClick={() => handleFilterChange(stat.id)}
             className={`
-              bg-white rounded-xl shadow-sm border p-4 text-left hover:shadow-md transition-all 
-              ${filterStatus === stat.id ? `${stat.border} ring-2 ${stat.ring}` : 'border-gray-100'}
+              relative overflow-hidden rounded-xl p-3 text-left transition-all duration-200 group
+              ${filterStatus === stat.id
+                ? 'bg-white shadow-md ring-1 ring-primary border-primary'
+                : 'bg-white shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200'}
             `}
           >
-            <div className={`text-xl sm:text-2xl font-bold ${stat.color}`}>{stat.count}</div>
-            <div className="text-xs sm:text-sm text-gray-600">{stat.label}</div>
+            <div className={`mb-0.5 text-xl font-bold ${stat.color} leading-tight`}>{stat.count}</div>
+            <div className="text-xs font-medium text-gray-500 group-hover:text-gray-700">{stat.label}</div>
+
+            {/* Active Indicator */}
+            {filterStatus === stat.id && (
+              <div className="absolute right-0 top-0 h-full w-1 bg-primary" />
+            )}
           </button>
         ))}
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-4">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input

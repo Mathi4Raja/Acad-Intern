@@ -2,6 +2,7 @@
 
 import { Eye, Search, TrendingUp, Users, Briefcase, Target } from 'lucide-react'
 import { StatCard, BarChart, LineChart, SkillMatchRadar } from '@/components/analytics'
+import { PageHeader } from '@/components/common'
 import Link from 'next/link'
 
 export default function StudentAnalyticsPage() {
@@ -47,15 +48,15 @@ export default function StudentAnalyticsPage() {
     ]
 
     return (
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             {/* Header */}
-            <div className="mb-6 sm:mb-8">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Profile Analytics</h1>
-                <p className="text-sm sm:text-base text-gray-600">Track your visibility and optimize your profile for better matches</p>
-            </div>
+            <PageHeader
+                title="Profile Analytics"
+                subtitle="Track your visibility and optimize your profile for better matches"
+            />
 
             {/* Stats Row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
                 <StatCard
                     title="Profile Views"
                     value="105"
@@ -95,7 +96,7 @@ export default function StudentAnalyticsPage() {
             </div>
 
             {/* Charts Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                 <LineChart
                     title="Profile Views (Last 7 Days)"
                     data={profileViews}
@@ -108,7 +109,7 @@ export default function StudentAnalyticsPage() {
                 />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
                 {/* Skills in Demand */}
                 <BarChart
                     title="Your Top Skills in Demand"

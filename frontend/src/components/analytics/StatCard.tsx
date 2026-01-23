@@ -52,25 +52,25 @@ export function StatCard({
     }
 
     return (
-        <div className={cn('bg-white rounded-xl p-3 sm:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow', className)}>
-            <div className="flex items-start justify-between mb-2 sm:mb-3">
+        <div className={cn('bg-white rounded-xl p-2.5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow', className)}>
+            <div className="flex items-start justify-between mb-1">
                 {Icon && (
-                    <div className={cn('p-2 sm:p-2.5 rounded-lg', iconBg)}>
-                        <Icon className={cn('w-4 h-4 sm:w-5 sm:h-5', iconColor)} />
+                    <div className={cn('p-1.5 rounded-md', iconBg)}>
+                        <Icon className={cn('w-3 h-3', iconColor)} />
                     </div>
                 )}
                 {change && (
-                    <div className={cn('flex items-center gap-1 text-sm font-medium', getTrendColor())}>
+                    <div className={cn('flex items-center gap-0.5 text-[10px] font-medium', getTrendColor())}>
                         {getTrendIcon()}
                         <span>{change.value > 0 ? '+' : ''}{change.value}%</span>
                     </div>
                 )}
             </div>
-            <div className="space-y-1">
-                <p className="text-sm text-gray-500 font-medium">{title}</p>
-                <p className="text-2xl font-bold text-gray-900">{value}</p>
+            <div className="space-y-0.5">
+                <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">{title}</p>
+                <p className="text-lg font-bold text-gray-900 leading-none">{value}</p>
                 {description && (
-                    <p className="text-xs text-gray-400">{description}</p>
+                    <p className="text-[10px] text-gray-400 leading-tight">{description}</p>
                 )}
             </div>
         </div>

@@ -9,13 +9,13 @@ interface PageHeaderProps {
 
 const PageHeader = memo(({ title, subtitle, children, className = '' }: PageHeaderProps) => {
     return (
-        <div className={`mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 ${className}`}>
+        <div className={`mb-2 flex flex-col sm:flex-row sm:items-end justify-between gap-2 sm:gap-4 ${className}`}>
             <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-0.5 tracking-tight">
                     {title}
                 </h1>
                 {subtitle && (
-                    <p className="text-sm sm:text-base text-gray-600 max-w-2xl">
+                    <p className="text-xs sm:text-sm text-gray-600 max-w-2xl">
                         {subtitle}
                     </p>
                 )}

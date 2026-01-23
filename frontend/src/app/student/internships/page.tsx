@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal, Loader2, Briefcase } from 'lucide-react'
 import api from '@/lib/api'
 import InternshipCard from '@/components/internships/InternshipCard'
 import { Internship } from '@/types'
+import { PageHeader } from '@/components/common'
 
 export default function InternshipsPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -130,15 +131,15 @@ export default function InternshipsPage() {
   }, [])
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Browse Internships</h1>
-        <p className="text-base text-gray-600">Discover opportunities that match your skills and interests</p>
-      </div>
+      <PageHeader
+        title="Browse Internships"
+        subtitle="Discover opportunities that match your skills and interests"
+      />
 
       {/* Search and Filter Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-4">
         <div className="flex gap-4 flex-col md:flex-row">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -153,8 +154,8 @@ export default function InternshipsPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center justify-center gap-2 px-6 py-3 border rounded-lg transition-all duration-200 text-base font-medium w-full md:w-auto ${showFilters
-                ? 'border-primary bg-primary/5 text-primary'
-                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700'
+              ? 'border-primary bg-primary/5 text-primary'
+              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700'
               }`}
           >
             <SlidersHorizontal size={20} />
@@ -164,7 +165,7 @@ export default function InternshipsPage() {
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="mt-6 pt-6 border-t border-gray-100 grid items-end md:grid-cols-3 gap-6 animate-in slide-in-from-top-2 duration-200">
+          <div className="mt-4 pt-4 border-t border-gray-100 grid items-end md:grid-cols-3 gap-4 animate-in slide-in-from-top-2 duration-200">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Work Mode</label>
               <select
@@ -284,7 +285,7 @@ export default function InternshipsPage() {
 
       {/* Internships Grid */}
       {!loading && !error && internships.length > 0 && (
-        <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
           {internships.map((internship) => (
             <InternshipCard
               key={internship._id}

@@ -38,16 +38,16 @@ const InternshipCard = memo(({
 
                         {/* Text Content */}
                         <div className="flex-1 min-w-0">
-                            <h3 className="text-sm sm:text-base font-bold text-gray-900 group-hover:text-primary transition-colors truncate leading-tight mb-0.5">
+                            <h3 className="text-sm sm:text-base font-bold text-gray-900 group-hover:text-primary transition-colors truncate mb-0.5">
                                 {internship.title}
                             </h3>
-                            <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-xs font-medium text-gray-500 truncate max-w-[120px]">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                                <p className="text-xs font-medium text-gray-500 truncate">
                                     {internship.companyId?.companyName || 'Company'}
                                 </p>
-                                {/* Match Badge moved inline or just below if needed, keeping it compact */}
+                                {/* Match Badge */}
                                 {internship.matchScore && internship.matchScore >= 70 && (
-                                    <div className="inline-flex items-center gap-0.5 bg-green-50 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-green-100 whitespace-nowrap">
+                                    <div className="inline-flex items-center gap-0.5 bg-green-50 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-green-100 w-fit">
                                         <TrendingUp size={10} />
                                         {internship.matchScore}%
                                     </div>

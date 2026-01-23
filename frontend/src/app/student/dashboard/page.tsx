@@ -10,7 +10,6 @@ import { Application, Internship, ApplicationStatus } from '@/types'
 import { StatCard } from '@/components/analytics/StatCard' // Reusing from analytics
 import { PageHeader } from '@/components/common'
 import RecentApplicationsWidget from '@/components/dashboard/RecentApplicationsWidget'
-import RecommendedWidget from '@/components/dashboard/RecommendedWidget'
 import { formatDate, formatStipend, getModeLabel } from '@/lib/formatters'
 
 export default function StudentDashboard() {
@@ -26,7 +25,6 @@ export default function StudentDashboard() {
 
   // Typed state
   const [recentApplications, setRecentApplications] = useState<Application[]>([])
-  const [recommendedInternships, setRecommendedInternships] = useState<Internship[]>([])
   const [savedInternships, setSavedInternships] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
 
@@ -40,15 +38,13 @@ export default function StudentDashboard() {
     const fetchData = async () => {
       try {
         // Parallel fetching
-        const [appsRes, matchRes, profileRes, allInternshipsRes] = await Promise.all([
+        const [appsRes, profileRes, allInternshipsRes] = await Promise.all([
           api.get('/applications/my'),
-          api.get('/internships/match'),
           api.get('/students/profile/me').catch(() => ({ data: { success: false, data: null } })),
           api.get('/internships?limit=1')
         ])
 
         const applications = appsRes.data.data;
-        const matches = matchRes.data.data;
         const activeCount = allInternshipsRes.data.count || 0;
         const studentProfile = profileRes.data.data;
 
@@ -71,8 +67,6 @@ export default function StudentDashboard() {
 
         setRecentApplications(formattedApps);
 
-        // Recommended Internships are likely already in Internship shape, just ensure typing
-        setRecommendedInternships(matches);
 
         // Stats Calculation
         let completeness = 0;
@@ -120,14 +114,14 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
       <PageHeader
         title={`Welcome back, ${user?.name || 'Student'}! 👋`}
         subtitle="Here's what's happening with your internship search today."
       />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
         <StatCard
           title="Interviews"
           value="0"
@@ -163,22 +157,14 @@ export default function StudentDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column: Recent Applications */}
-        <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           <RecentApplicationsWidget
             applications={recentApplications}
             formatDate={formatDate}
           />
 
-          <RecommendedWidget
-            internships={recommendedInternships}
-            isSaved={(id) => savedInternships.has(id)}
-            onToggleSave={handleToggleSave}
-            formatStipend={formatStipend}
-            formatDate={formatDate}
-            getModeLabel={getModeLabel}
-          />
         </div>
 
         {/* Right Column: Profile Completion & More */}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Upload, Save, Plus, X, User, GraduationCap, FileText, Award, Loader2, ExternalLink, CheckCircle } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuth } from '@/lib/AuthContext'
+import { PageHeader } from '@/components/common'
 
 interface StudentProfile {
   _id?: string
@@ -221,13 +222,13 @@ export default function StudentProfile() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-0.5 sm:mb-1">My Profile</h1>
-          <p className="text-xs sm:text-sm text-gray-600">Manage your profile information and preferences</p>
-        </div>
+      {/* Header */}
+      <PageHeader
+        title="My Profile"
+        subtitle="Manage your profile information and preferences"
+      >
         {!isEditing ? (
           <button
             onClick={() => setIsEditing(true)}
@@ -253,7 +254,7 @@ export default function StudentProfile() {
             </button>
           </div>
         )}
-      </div>
+      </PageHeader>
 
       {/* Success/Error Messages */}
       {successMessage && (
@@ -269,7 +270,7 @@ export default function StudentProfile() {
       )}
 
       {/* Profile Completion Card */}
-      <div className="bg-gradient-to-r from-primary/10 to-blue-50 rounded-xl p-3 sm:p-5 mb-3 sm:mb-5 border border-primary/20">
+      <div className="bg-gradient-to-r from-primary/10 to-blue-50 rounded-xl p-3 sm:p-4 mb-2 sm:mb-3 border border-primary/20">
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-semibold text-sm sm:text-base text-gray-900">Profile Completion</h3>
           <span className="text-xl sm:text-2xl font-bold text-primary">{completionPercentage()}%</span>
@@ -288,36 +289,36 @@ export default function StudentProfile() {
       </div>
 
       {/* Personal Information */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-5 mb-3 sm:mb-5">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-3 sm:mb-4">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 ml-1 flex items-center gap-2">
           <User className="text-primary" size={18} />
           Personal Information
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Full Name</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1 ml-1">Full Name</label>
             <input
               type="text"
               value={user?.name || ''}
               disabled
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1 ml-1">Email</label>
             <input
               type="email"
               value={user?.email || ''}
               disabled
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
             />
           </div>
         </div>
       </div>
 
       {/* Academic Information */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-5 mb-3 sm:mb-5">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-3 sm:mb-4">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 ml-1 flex items-center gap-2">
           <GraduationCap className="text-primary" size={18} />
           Academic Information
         </h2>
@@ -495,7 +496,7 @@ export default function StudentProfile() {
       </div>
 
       {/* Social Links */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-5">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4">
         <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Social Links</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
