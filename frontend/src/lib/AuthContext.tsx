@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import api from './api';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { AxiosError } from 'axios';
 
 // Define User types based on backend models
 export type UserRole = 'student' | 'company' | 'admin';
@@ -34,8 +35,8 @@ interface AuthContextType {
     profile: StudentProfile | CompanyProfile | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (data: any) => Promise<void>; // Type 'any' for now, can be specific login payload
-    signup: (data: any) => Promise<void>;
+    login: (data: Record<string, unknown>) => Promise<void>;
+    signup: (data: Record<string, unknown>) => Promise<void>;
     logout: () => Promise<void>;
     refreshUser: () => Promise<void>;
 }
@@ -47,7 +48,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [profile, setProfile] = useState<StudentProfile | CompanyProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
-    const pathname = usePathname();
 
     // Check if user is logged in on mount
     useEffect(() => {
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const res = await api.get('/auth/me');
             setUser(res.data.data.user);
             setProfile(res.data.data.profile);
-        } catch (error) {
+        } catch {
             // Not authenticated
             setUser(null);
             setProfile(null);
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const login = async (formData: any) => {
+    const login = async (formData: Record<string, unknown>) => {
         try {
             const res = await api.post('/auth/login', formData);
             setUser(res.data.data.user);
@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const signup = async (formData: any) => {
+    const signup = async (formData: Record<string, unknown>) => {
         try {
             const res = await api.post('/auth/signup', formData);
             setUser(res.data.data.user);
@@ -109,9 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const logout = async () => {
         try {
             await api.post('/auth/logout');
-        } catch (error: any) {
+        } catch (error) {
+            const err = error as AxiosError;
             // 401 is expected if not logged in - silently ignore
-            if (error?.response?.status !== 401) {
+            if (err.response?.status !== 401) {
                 console.error('Logout failed', error);
             }
         } finally {

@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, Mail, Phone, Calendar, Edit, Trash2, Ban, CheckCircle, XCircle, Eye, Download, Loader2 } from 'lucide-react'
+import { Search, Filter, Trash2, Ban, CheckCircle, Loader2 } from 'lucide-react'
 import api from '@/lib/api'
-import { useRouter } from 'next/navigation'
 
 interface User {
   _id: string

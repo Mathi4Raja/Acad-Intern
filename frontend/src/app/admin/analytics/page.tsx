@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { BarChart3, TrendingUp, TrendingDown, Users, Briefcase, Building2, FileText, Calendar, Filter, Download } from 'lucide-react';
+import { BarChart3, TrendingUp, TrendingDown, Users, Briefcase, Building2, FileText, Download } from 'lucide-react';
 
 export default function AnalyticsPage() {
   const [timeRange, setTimeRange] = useState('30days');
-  const [metricType, setMetricType] = useState('all');
 
   // Mock analytics data
   const overviewStats = [

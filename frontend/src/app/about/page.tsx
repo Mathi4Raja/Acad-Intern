@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Target, Users, Shield, TrendingUp, Award, CheckCircle, Zap, Clock, BookOpen, Sparkles, ArrowRight, Mail, Phone, MapPin, Menu, X } from 'lucide-react'
+import { Target, Users, Shield, TrendingUp, Award, CheckCircle, BookOpen, Sparkles, ArrowRight, Mail, Phone, MapPin, Menu, X } from 'lucide-react'
 import { useState } from 'react'
 
 export default function AboutPage() {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, Mail, Phone, Globe, MapPin, Calendar, CheckCircle, XCircle, Shield, Building, Briefcase, Eye, Ban, Trash2, Loader2 } from 'lucide-react'
+import { Search, Filter, Mail, Globe, Calendar, CheckCircle, XCircle, Shield, Ban, Trash2, Loader2 } from 'lucide-react'
 import api from '@/lib/api'
 
 interface Company {

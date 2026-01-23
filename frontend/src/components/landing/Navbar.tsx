@@ -10,6 +10,7 @@ export function Navbar() {
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsMounted(true);
         const handleScroll = () => setIsScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
@@ -17,17 +18,6 @@ export function Navbar() {
     }, []);
 
     const closeMenu = () => setIsMobileMenuOpen(false);
-
-    const handleLinkClick = (href: string) => {
-        closeMenu();
-        // Small delay to allow menu to close, then scroll
-        setTimeout(() => {
-            const element = document.querySelector(href);
-            if (element) {
-                element.scrollIntoView({ behavior: "smooth" });
-            }
-        }, 100);
-    };
 
     const navLinks = [
         { href: "/#features", label: "Features" },

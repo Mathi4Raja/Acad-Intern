@@ -8,8 +8,6 @@ interface SocketContextType {
     socket: Socket | null;
     isConnected: boolean;
     onlineUsers: Set<string>;
-    connect: () => void;
-    disconnect: () => void;
     connectError: string | null;
 }
 
@@ -22,8 +20,10 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     const [connectError, setConnectError] = useState<string | null>(null);
     const { user, isAuthenticated } = useAuth();
 
-    const connect = () => {
-        if (!isAuthenticated || !user) return;
+    useEffect(() => {
+        if (!isAuthenticated || !user) {
+            return;
+        }
 
         // Get auth token from cookies or localStorage
         const token = document.cookie
@@ -32,10 +32,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             ?.split('=')[1] ||
             localStorage.getItem('token');
 
-        // We don't block if token is missing here, as it might be in an HttpOnly cookie
-
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        // Connect to root if API is /api, handle trailing/no trailing
         const socketUrl = apiUrl.endsWith('/api') ? apiUrl.slice(0, -4) : apiUrl;
 
         const socketInstance = io(socketUrl, {
@@ -43,7 +40,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
                 token
             },
             withCredentials: true,
-            transports: ['websocket'] // Force websocket to avoid polling issues
+            transports: ['websocket']
         });
 
         socketInstance.on('connect', () => {
@@ -76,45 +73,23 @@ export function SocketProvider({ children }: { children: ReactNode }) {
             });
         });
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSocket(socketInstance);
-    };
 
-    const disconnect = () => {
-        if (socket) {
-            socket.disconnect();
+        return () => {
+            socketInstance.disconnect();
             setSocket(null);
             setIsConnected(false);
             setOnlineUsers(new Set());
             setConnectError(null);
-        }
-    };
-
-    useEffect(() => {
-        if (isAuthenticated && user) {
-            connect();
-        } else {
-            disconnect();
-        }
-
-        return () => {
-            disconnect();
         };
     }, [isAuthenticated, user]);
-
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            disconnect();
-        };
-    }, []);
 
     return (
         <SocketContext.Provider value={{
             socket,
             isConnected,
             onlineUsers,
-            connect,
-            disconnect,
             connectError
         }}>
             {children}

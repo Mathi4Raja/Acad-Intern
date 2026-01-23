@@ -1,6 +1,6 @@
 'use client'
 
-import { X, Mail, Phone, MapPin, Calendar, Star, FileText, Download, ExternalLink, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { X, Mail, Calendar, Star, FileText, Download, ExternalLink, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Applicant } from './ApplicationCard'
 

@@ -5,6 +5,10 @@ let mongoServer: MongoMemoryServer;
 
 // Connect to in-memory MongoDB before all tests
 beforeAll(async () => {
+    // Set environment variables for testing
+    process.env.JWT_SECRET = 'test_secret';
+    process.env.NODE_ENV = 'test';
+
     mongoServer = await MongoMemoryServer.create();
     const mongoUri = mongoServer.getUri();
 

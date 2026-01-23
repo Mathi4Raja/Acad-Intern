@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import api from '@/lib/api'
+import { AxiosError } from 'axios'
 
 export interface Notification {
     _id: string
@@ -9,7 +10,7 @@ export interface Notification {
     type: 'application' | 'status_update' | 'admin' | 'general'
     title: string
     message: string
-    payload?: Record<string, any>
+    payload?: Record<string, unknown>
     read: boolean
     createdAt: string
 }
@@ -50,10 +51,11 @@ export function useNotifications(): UseNotificationsReturn {
                 setNotifications(items)
                 setUnreadCount(response.data.data.unreadCount)
             }
-        } catch (err: any) {
-            console.error('Failed to fetch notifications:', err)
+        } catch (err) {
+            const error = err as AxiosError;
+            console.error('Failed to fetch notifications:', error)
             // Don't set error for 401 (user just not logged in)
-            if (err?.response?.status !== 401) {
+            if (error.response?.status !== 401) {
                 setError('Failed to load notifications')
             }
         } finally {

@@ -1,9 +1,8 @@
 'use client'
 
-import { TrendingUp, Users, Briefcase, Building, AlertCircle, CheckCircle, XCircle, Clock, ArrowUp, ArrowDown, Eye } from 'lucide-react'
+import { Users, Briefcase, Building, AlertCircle, CheckCircle, Clock } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import api from '@/lib/api'
-import Link from 'next/link'
 
 interface DashboardStats {
     totalUsers: number
