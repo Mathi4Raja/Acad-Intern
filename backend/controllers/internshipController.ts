@@ -13,7 +13,9 @@ const internshipSchema = z.object({
     durationWeeks: z.number().min(1, 'Duration must be at least 1 week'),
     stipend: z.number().min(0, 'Stipend cannot be negative'),
     mode: z.enum(['remote', 'onsite', 'hybrid']),
-    openings: z.number().min(1, 'Must have at least 1 opening')
+    openings: z.number().min(1, 'Must have at least 1 opening'),
+    location: z.string().optional(),
+    deadline: z.string().or(z.date()).optional()
 });
 
 interface InternshipQuery {
@@ -32,16 +34,7 @@ export const matchInternships = async (req: AuthRequest, res: Response, next: Ne
     try {
         const profile = await StudentProfile.findOne({ userId: req.user?._id });
 
-        if (!profile || !profile.skills || profile.skills.length === 0) {
-            res.status(200).json({
-                success: true,
-                data: [],
-                message: 'Add skills to your profile to get matches'
-            });
-            return;
-        }
-
-        const studentSkills = profile.skills.map(s => s.toLowerCase());
+        const studentSkills = (profile?.skills || []).map(s => s.toLowerCase());
 
         const internships = await Internship.find({ isActive: true })
             .populate('companyId', 'companyName website verified')
@@ -60,8 +53,14 @@ export const matchInternships = async (req: AuthRequest, res: Response, next: Ne
         });
 
         const sortedMatches = matches
-            .filter(m => m.matchScore > 0)
-            .sort((a, b) => b.matchScore - a.matchScore);
+            .sort((a, b) => {
+                // First sort by match score
+                if (b.matchScore !== a.matchScore) {
+                    return b.matchScore - a.matchScore;
+                }
+                // Then by creation date (newest first)
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
 
         res.status(200).json({
             success: true,

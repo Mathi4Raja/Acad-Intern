@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Send, Paperclip, X, Check, CheckCheck, Loader2, FileText, Download, Image as ImageIcon } from 'lucide-react';
+import { Send, Paperclip, X, Check, CheckCheck, Loader2, FileText, Download, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { Message, MessageStatus } from '@/types';
 import { useSocket } from '@/lib/SocketContext';
 import { messageApi } from '@/lib/api';
@@ -24,7 +24,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
     const fileInputRef = useRef<HTMLInputElement>(null);
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-    const { socket, joinApplication, leaveApplication, markAsSeen, setTyping } = useSocket();
+    const { socket, joinApplication, leaveApplication, markAsSeen, setTyping, deleteMessage } = useSocket();
 
     // Fetch messages and join application room
     useEffect(() => {
@@ -68,7 +68,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
             if (data.applicationId === applicationId && data.userId !== currentUserId) {
                 setMessages((prev) =>
                     prev.map((msg) =>
-                        msg.senderId._id === currentUserId && msg.status === 'sent'
+                        (typeof msg.senderId === 'object' ? msg.senderId._id : msg.senderId) === currentUserId && msg.status === 'sent'
                             ? { ...msg, status: 'delivered' as MessageStatus }
                             : msg
                     )
@@ -94,16 +94,30 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
             }
         };
 
+        const handleMessageDeleted = (data: { messageId: string; applicationId: string }) => {
+            if (data.applicationId === applicationId) {
+                setMessages((prev) =>
+                    prev.map((msg) =>
+                        msg._id === data.messageId
+                            ? { ...msg, content: 'This message was deleted', attachments: [], isDeleted: true }
+                            : msg
+                    )
+                );
+            }
+        };
+
         socket.on('new-message', handleNewMessage);
         socket.on('messages-delivered', handleMessagesDelivered);
         socket.on('messages-seen', handleMessagesSeen);
         socket.on('user-typing', handleUserTyping);
+        socket.on('message-deleted', handleMessageDeleted);
 
         return () => {
             socket.off('new-message', handleNewMessage);
             socket.off('messages-delivered', handleMessagesDelivered);
             socket.off('messages-seen', handleMessagesSeen);
             socket.off('user-typing', handleUserTyping);
+            socket.off('message-deleted', handleMessageDeleted);
         };
     }, [socket, applicationId, currentUserId, otherPartyName]);
 
@@ -316,8 +330,18 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                                         className={`rounded-2xl px-4 py-3 shadow-sm ${isOwn
                                             ? 'bg-gradient-to-br from-primary to-primary-dark text-white rounded-br-md message-bubble-own'
                                             : 'bg-white text-gray-800 rounded-bl-md message-bubble-other border border-gray-200'
-                                            }`}
+                                            } group relative`}
                                     >
+                                        {/* Delete Button (Only for own messages that aren't deleted) */}
+                                        {isOwn && !(message as any).isDeleted && (
+                                            <button
+                                                onClick={() => deleteMessage(applicationId, message._id)}
+                                                className="absolute -left-8 top-2 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
+                                                title="Delete message"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
                                         {message.content && (
                                             <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                                                 {message.content}
@@ -461,20 +485,20 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                         onClick={handleSendMessage}
                         disabled={sending || (!newMessage.trim() && attachments.length === 0)}
                         className={`group relative flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 transform ${sending || (!newMessage.trim() && attachments.length === 0)
-                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed scale-90'
-                                : 'bg-primary text-white hover:bg-primary-dark hover:scale-110 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-primary/40'
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed scale-90'
+                            : 'bg-primary text-white hover:bg-primary-dark hover:scale-110 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-primary/40'
                             }`}
                     >
                         <div className={`absolute inset-0 rounded-full transition-all duration-300 ${!(sending || (!newMessage.trim() && attachments.length === 0))
-                                ? 'group-hover:bg-white/20 group-active:bg-white/30'
-                                : ''
+                            ? 'group-hover:bg-white/20 group-active:bg-white/30'
+                            : ''
                             }`} />
                         {sending ? (
                             <Loader2 className="w-4 h-4 animate-spin relative z-10" />
                         ) : (
                             <Send className={`w-4 h-4 relative z-10 transition-transform duration-200 ${!(sending || (!newMessage.trim() && attachments.length === 0))
-                                    ? 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5'
-                                    : ''
+                                ? 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5'
+                                : ''
                                 }`} />
                         )}
 

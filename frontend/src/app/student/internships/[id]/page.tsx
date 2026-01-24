@@ -67,9 +67,24 @@ export default function InternshipDetailPage() {
         }
     }
 
-    const handleApply = () => {
-        // TODO: Implement application logic
-        alert('Application feature coming soon!')
+    const [applying, setApplying] = useState(false)
+    const [hasApplied, setHasApplied] = useState(false)
+
+    const handleApply = async () => {
+        try {
+            setApplying(true)
+            const response = await api.post(`/applications/internships/${id}/apply`, { notes: '' })
+            if (response.data.success) {
+                setHasApplied(true)
+                alert('Application submitted successfully!')
+            }
+        } catch (error: any) {
+            console.error('Application failed:', error)
+            const msg = error.response?.data?.message || 'Failed to submit application'
+            alert(msg)
+        } finally {
+            setApplying(false)
+        }
     }
 
     const formatStipend = (stipend: number) => {
@@ -229,9 +244,25 @@ export default function InternshipDetailPage() {
                         <div className="space-y-3">
                             <button
                                 onClick={handleApply}
-                                className="w-full py-3 bg-primary text-white rounded-xl hover:bg-primary/90 font-semibold shadow-lg shadow-primary/25 transition-all text-sm sm:text-base"
+                                disabled={applying || hasApplied}
+                                className={`w-full py-3 text-white rounded-xl font-semibold shadow-lg transition-all text-sm sm:text-base flex items-center justify-center gap-2 ${hasApplied
+                                    ? 'bg-green-600 hover:bg-green-700 shadow-green-500/25'
+                                    : 'bg-primary hover:bg-primary/90 shadow-primary/25'
+                                    } disabled:opacity-70 disabled:cursor-not-allowed`}
                             >
-                                Apply Now
+                                {applying ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        Applying...
+                                    </>
+                                ) : hasApplied ? (
+                                    <>
+                                        <CheckCircle className="w-5 h-5" />
+                                        Applied
+                                    </>
+                                ) : (
+                                    'Apply Now'
+                                )}
                             </button>
                         </div>
 

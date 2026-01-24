@@ -13,6 +13,7 @@ interface SocketContextType {
     sendMessage: (applicationId: string, content: string, tempId?: string) => void;
     markAsSeen: (applicationId: string) => void;
     setTyping: (applicationId: string, isTyping: boolean) => void;
+    deleteMessage: (applicationId: string, messageId: string) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -153,6 +154,12 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         }
     }, [socket]);
 
+    const deleteMessage = useCallback((applicationId: string, messageId: string) => {
+        if (socket) {
+            socket.emit('delete-message', { applicationId, messageId });
+        }
+    }, [socket]);
+
     const value = {
         socket,
         isConnected,
@@ -160,7 +167,8 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         leaveApplication,
         sendMessage,
         markAsSeen,
-        setTyping
+        setTyping,
+        deleteMessage
     };
 
     return (

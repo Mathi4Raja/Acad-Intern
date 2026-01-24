@@ -30,6 +30,7 @@ const server = createServer(app);
 // Initialize Socket.io
 const io = initializeSocket(server);
 console.log('✅ Socket.io Server Initialized');
+app.set('io', io);
 
 // Connect to MongoDB (only if not in test mode)
 if (process.env.NODE_ENV !== 'test') {

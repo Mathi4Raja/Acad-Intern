@@ -2,6 +2,9 @@ import React, { memo } from 'react'
 import { MapPin, Clock, IndianRupee, TrendingUp, ExternalLink, Heart, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { Internship } from '@/types'
+import { useState } from 'react'
+import api from '@/lib/api'
+import { Loader2, CheckCircle } from 'lucide-react'
 
 interface InternshipCardProps {
     internship: Internship
@@ -22,6 +25,29 @@ const InternshipCard = memo(({
     formatDate,
     getModeLabel
 }: InternshipCardProps) => {
+    const [applying, setApplying] = useState(false)
+    const [hasApplied, setHasApplied] = useState(false)
+
+    const handleApply = async (e: React.MouseEvent) => {
+        e.preventDefault() // Prevent navigation to details
+        e.stopPropagation()
+
+        try {
+            setApplying(true)
+            const response = await api.post(`/applications/internships/${internship._id}/apply`, { notes: '' })
+            if (response.data.success) {
+                setHasApplied(true)
+                // Optional: Show a toast or notification
+            }
+        } catch (error: any) {
+            console.error('Application failed:', error)
+            const msg = error.response?.data?.message || 'Failed to submit application'
+            alert(msg)
+        } finally {
+            setApplying(false)
+        }
+    }
+
     return (
         <div className="group relative bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col h-full transform hover:-translate-y-1">
             {/* Background Gradient Effect */}
@@ -119,9 +145,25 @@ const InternshipCard = memo(({
                         >
                             Details
                         </Link>
-                        <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-primary transition-all duration-300 text-sm font-bold shadow-md hover:shadow-lg group/btn">
-                            Apply
-                            <ArrowRight size={16} className="group-hover/btn:translate-x-0.5 transition-transform" />
+                        <button
+                            onClick={handleApply}
+                            disabled={applying || hasApplied}
+                            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg transition-all duration-300 text-sm font-bold shadow-md hover:shadow-lg group/btn disabled:opacity-70 disabled:cursor-not-allowed ${hasApplied ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-900 hover:bg-primary'
+                                }`}
+                        >
+                            {applying ? (
+                                <Loader2 size={16} className="animate-spin" />
+                            ) : hasApplied ? (
+                                <>
+                                    Applied
+                                    <CheckCircle size={16} />
+                                </>
+                            ) : (
+                                <>
+                                    Apply
+                                    <ArrowRight size={16} className="group-hover/btn:translate-x-0.5 transition-transform" />
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

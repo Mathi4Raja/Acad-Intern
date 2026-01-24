@@ -1,121 +1,104 @@
-const API_URL = 'http://localhost:5000/api';
+import 'dotenv/config';
+import mongoose from 'mongoose';
+import User from '../models/User';
+import Company from '../models/Company';
+import Internship from '../models/Internship';
+import Application from '../models/Application';
+import connectDB from '../config/db';
 
-interface AuthResponse {
-    success: boolean;
-    message?: string;
-    data?: {
-        token: string;
-    };
-}
+const populateInternships = async () => {
+    console.log('🌱 Populating Internships & Applications...');
 
-interface InternshipResponse {
-    success: boolean;
-    data?: {
-        _id: string;
-        title: string;
-    };
-}
-
-interface ApplicationResponse {
-    success: boolean;
-}
-
-const login = async (email: string, password: string): Promise<string> => {
-    const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-    });
-    const data = await res.json() as AuthResponse;
-    if (!data.success || !data.data) throw new Error(data.message || 'Login failed');
-    return data.data.token;
-};
-
-const createInternship = async (token: string, internship: {
-    title: string;
-    description: string;
-    skillsRequired: string[];
-    durationWeeks: number;
-    stipend: number;
-    mode: string;
-    openings: number;
-}): Promise<InternshipResponse> => {
-    const res = await fetch(`${API_URL}/internships`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(internship)
-    });
-    return await res.json() as InternshipResponse;
-};
-
-const applyForInternship = async (token: string, internshipId: string): Promise<ApplicationResponse> => {
-    const res = await fetch(`${API_URL}/applications/internships/${internshipId}/apply`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ notes: 'I am highly interested!' })
-    });
-    return await res.json() as ApplicationResponse;
-};
-
-const main = async (): Promise<void> => {
     try {
-        console.log('Logging in as Company...');
-        const companyToken = await login('company@test.com', 'password123');
-        console.log('Company Logged In.');
+        await connectDB();
 
-        console.log('Creating Internships...');
-        const internship1 = await createInternship(companyToken, {
-            title: 'Full Stack Developer Intern',
-            description: 'Join our team to build scalable web apps.',
-            skillsRequired: ['React', 'Node.js', 'MongoDB'],
-            durationWeeks: 12,
-            stipend: 15000,
-            mode: 'remote',
-            openings: 3
-        });
-        console.log('Created:', internship1.data?.title);
+        // Find Company
+        const companyUser = await User.findOne({ email: 'company@test.com' });
+        if (!companyUser) throw new Error('Company user not found. Run seedData.ts first.');
 
-        const internship2 = await createInternship(companyToken, {
-            title: 'Frontend Developer Intern',
-            description: 'Focus on UI/UX and React.',
-            skillsRequired: ['React', 'CSS', 'Figma'],
-            durationWeeks: 8,
-            stipend: 12000,
-            mode: 'hybrid',
-            openings: 2
-        });
-        console.log('Created:', internship2.data?.title);
+        const companyProfile = await Company.findOne({ userId: companyUser._id });
+        if (!companyProfile) throw new Error('Company profile not found.');
 
-        const internship3 = await createInternship(companyToken, {
-            title: 'Backend Engineer Intern',
-            description: 'API development and optimization.',
-            skillsRequired: ['Node.js', 'PostgreSQL'],
-            durationWeeks: 10,
-            stipend: 18000,
-            mode: 'onsite',
-            openings: 2
-        });
-        console.log('Created:', internship3.data?.title);
+        // Find Student
+        const studentUser = await User.findOne({ email: 'student@test.com' });
+        if (!studentUser) throw new Error('Student user not found.');
 
-        console.log('Logging in as Student...');
-        const studentToken = await login('student@test.com', 'password123');
-        console.log('Student Logged In.');
+        // Create 3 Internships
+        const internshipsData = [
+            {
+                title: 'Full Stack Developer Intern',
+                description: 'Join our engineering team to build scalable web applications using MERN stack.',
+                industry: 'Technology',
+                skillsRequired: ['React', 'Node.js', 'MongoDB', 'TypeScript'],
+                durationWeeks: 12,
+                stipend: 15000,
+                location: 'Remote',
+                mode: 'remote',
+                deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+                isActive: true
+            },
+            {
+                title: 'Data Science Intern',
+                description: 'Work on analyzing large datasets and building predictive models.',
+                industry: 'Data Science',
+                skillsRequired: ['Python', 'Pandas', 'scikit-learn', 'SQL'],
+                durationWeeks: 10,
+                stipend: 20000,
+                location: 'New York, NY',
+                mode: 'onsite',
+                deadline: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
+                isActive: true
+            },
+            {
+                title: 'UI/UX Designer Intern',
+                description: 'Design intuitive and beautiful user interfaces for our products.',
+                industry: 'Design',
+                skillsRequired: ['Figma', 'Adobe XD', 'Prototyping'],
+                durationWeeks: 8,
+                stipend: 12000,
+                location: 'San Francisco, CA',
+                mode: 'hybrid',
+                deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+                isActive: true
+            }
+        ];
 
-        console.log('Applying to Internship 1...');
-        if (internship1.data?._id) {
-            const app = await applyForInternship(studentToken, internship1.data._id);
-            console.log('Applied status:', app.success);
+        console.log('📝 Creating Internships...');
+        const createdInternships = [];
+
+        for (const data of internshipsData) {
+            const internship = await Internship.create({
+                companyId: companyProfile._id,
+                ...data,
+                postedAt: new Date()
+            });
+            createdInternships.push(internship);
+            console.log(`   + Created: ${internship.title}`);
         }
 
-    } catch (err) {
-        console.error('Error:', err);
+        // Apply as Student
+        console.log('📝 Creating Applications...');
+
+        for (const internship of createdInternships) {
+            await Application.create({
+                studentId: studentUser._id,
+                internshipId: internship._id,
+                status: 'pending', // Default status
+                notes: 'I am very interested in this role!',
+                appliedAt: new Date()
+            });
+            console.log(`   + Applied to: ${internship.title}`);
+        }
+
+        console.log('\n✨ Internships & Applications successfully populated!');
+
+    } catch (error) {
+        console.error('❌ Population failed:', error);
+        process.exit(1);
+    } finally {
+        await mongoose.connection.close();
+        process.exit(0);
     }
 };
 
-main();
+populateInternships();

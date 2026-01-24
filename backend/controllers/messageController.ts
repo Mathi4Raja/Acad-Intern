@@ -4,6 +4,7 @@ import Application from '../models/Application';
 import Notification from '../models/Notification';
 import { AuthRequest } from '../types';
 import { uploadToR2 } from '../utils/r2Storage';
+import { activeUsers } from '../utils/socketHandler';
 
 // @desc    Get all conversations for a user (grouped by application)
 // @route   GET /api/messages/conversations
@@ -32,7 +33,7 @@ export const getConversations = async (req: AuthRequest, res: Response, next: Ne
             // First, find the company profile for this user
             const Company = require('../models/Company').default;
             const company = await Company.findOne({ userId });
-            
+
             if (!company) {
                 res.status(404).json({
                     success: false,
@@ -126,12 +127,12 @@ export const getMessages = async (req: AuthRequest, res: Response, next: NextFun
 
         // Check if user is student or company owner
         const isStudent = application.studentId.toString() === userId?.toString();
-        
+
         // For company, check if the internship's company has this user
         let isCompany = false;
         if (req.user?.role === 'company' && application.internshipId) {
             const Company = require('../models/Company').default;
-            const company = await Company.findOne({ 
+            const company = await Company.findOne({
                 _id: (application.internshipId as any).companyId,
                 userId: userId
             });
@@ -197,13 +198,13 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
 
         // Check if user is student or company owner
         const isStudent = application.studentId._id.toString() === userId?.toString();
-        
+
         // For company, check if the internship's company has this user
         let isCompany = false;
         let companyDoc = null;
         if (req.user?.role === 'company' && application.internshipId) {
             const Company = require('../models/Company').default;
-            companyDoc = await Company.findOne({ 
+            companyDoc = await Company.findOne({
                 _id: (application.internshipId as any).companyId,
                 userId: userId
             });
@@ -282,10 +283,42 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
         // Populate sender info
         await message.populate('senderId', 'name email role');
 
+        // Socket.io integration
+        const io = req.app.get('io');
+        const receiverSocketId = activeUsers.get(receiverId.toString());
+
+        if (receiverSocketId) {
+            // Receiver is online, mark as delivered
+            message.status = 'delivered';
+            message.deliveredAt = new Date();
+            await message.save();
+        }
+
+        if (io) {
+            // Emit new message to room
+            io.to(`application:${applicationId}`).emit('new-message', {
+                message
+            });
+
+            // Emit notification if receiver is online
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit('new-notification', {
+                    type: 'general',
+                    applicationId
+                });
+
+                io.to(receiverSocketId).emit('conversation-updated', {
+                    applicationId,
+                    message,
+                    unreadCountIncrement: 1
+                });
+            }
+        }
+
         // Create notification for receiver
         await Notification.create({
             userId: receiverId,
-            type: 'new_message',
+            type: 'general',
             title: 'New Message',
             message: `You have a new message from ${req.user?.name}`,
             payload: {
@@ -326,12 +359,12 @@ export const markAsSeen = async (req: AuthRequest, res: Response, next: NextFunc
 
         // Check if user is student or company owner
         const isStudent = application.studentId.toString() === userId?.toString();
-        
+
         // For company, check if the internship's company has this user
         let isCompany = false;
         if (req.user?.role === 'company' && application.internshipId) {
             const Company = require('../models/Company').default;
-            const company = await Company.findOne({ 
+            const company = await Company.findOne({
                 _id: (application.internshipId as any).companyId,
                 userId: userId
             });

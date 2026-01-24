@@ -5,6 +5,7 @@ import Message from '../models/Message';
 import Application from '../models/Application';
 import Notification from '../models/Notification';
 import User from '../models/User';
+import Company from '../models/Company';
 
 interface AuthSocket extends Socket {
     userId?: string;
@@ -23,8 +24,12 @@ const activeUsers = new Map<string, string>();
 export const initializeSocket = (server: HTTPServer): SocketIOServer => {
     const io = new SocketIOServer(server, {
         cors: {
-            origin: (process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map(url => url.trim()),
-            credentials: true
+            // Allow all origins in development/test, or specific origins in production
+            origin: process.env.NODE_ENV === 'production'
+                ? (process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map(url => url.trim())
+                : '*',
+            credentials: true,
+            methods: ["GET", "POST"]
         }
     });
 
@@ -58,6 +63,7 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
         // Get user details for logging
         const user = await User.findById(socket.userId);
         console.log(`✅ Socket.io User Connected: ${user?.name || 'Unknown'} (${socket.userRole}) - ${socket.id}`);
+        console.log(`🔍 [DEBUG] User ID: ${socket.userId}, Role: ${socket.userRole}`);
 
         // Store active user
         if (socket.userId) {
@@ -65,7 +71,44 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
         }
 
         // Join application-specific rooms
+        // Process pending messages (mark as delivered)
+        const processPendingMessages = async () => {
+            try {
+                const pendingMessages = await Message.find({
+                    receiverId: socket.userId,
+                    status: 'sent'
+                });
+
+                if (pendingMessages.length > 0) {
+                    console.log(`📦 [DELIVERY] Found ${pendingMessages.length} pending messages for ${user?.name}`);
+
+                    // Group updates by application to avoid spamming events
+                    const appIdsToNotify = new Set<string>();
+
+                    for (const msg of pendingMessages) {
+                        msg.status = 'delivered';
+                        msg.deliveredAt = new Date();
+                        await msg.save();
+                        appIdsToNotify.add(msg.applicationId.toString());
+                    }
+
+                    // Notify relevant rooms
+                    for (const appId of Array.from(appIdsToNotify)) {
+                        io.to(`application:${appId}`).emit('messages-delivered', {
+                            applicationId: appId,
+                            userId: socket.userId
+                        });
+                        console.log(`   ✅ Notified app ${appId} of delivery`);
+                    }
+                }
+            } catch (error) {
+                console.error('Error processing pending messages:', error);
+            }
+        };
+        processPendingMessages();
+
         socket.on('join-application', async (applicationId: string) => {
+            console.log(`🔍 [DEBUG] ${user?.name} (${socket.userRole}) attempting to join application ${applicationId}`);
             try {
                 // Verify user has access to this application
                 const application = await Application.findById(applicationId)
@@ -78,19 +121,36 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
 
                 // Check if user is student or company owner
                 const isStudent = application.studentId.toString() === socket.userId;
+                console.log(`🔍 [DEBUG] User ${socket.userId} checking access to application ${applicationId}`);
+                console.log(`🔍 [DEBUG] Application studentId: ${application.studentId}`);
+                console.log(`🔍 [DEBUG] Is student: ${isStudent}`);
 
                 // For company, check if the internship's company has this user
                 let isCompany = false;
                 if (socket.userRole === 'company' && application.internshipId) {
-                    const Company = require('../models/Company').default;
-                    const company = await Company.findOne({
-                        _id: (application.internshipId as any).companyId,
-                        userId: socket.userId
-                    });
-                    isCompany = !!company;
+                    // Removed dynamic require
+                    const internship = application.internshipId as any;
+
+                    // console.log(`🔍 [DEBUG] Checking company access for internship: ${internship._id}`);
+
+                    if (internship.companyId) {
+                        const company = await Company.findOne({
+                            _id: internship.companyId,
+                            userId: socket.userId
+                        });
+
+                        // console.log(`🔍 [DEBUG] Company found: ${!!company}`);
+                        if (company) {
+                            // console.log(`🔍 [DEBUG] Company userId: ${company.userId}, Socket userId: ${socket.userId}`);
+                            isCompany = true;
+                        }
+                    }
                 }
 
+                console.log(`🔍 [DEBUG] Final authorization - isStudent: ${isStudent}, isCompany: ${isCompany}`);
+
                 if (!isStudent && !isCompany) {
+                    console.log(`❌ [DEBUG] Authorization failed for user ${socket.userId}`);
                     socket.emit('error', { message: 'Not authorized to access this conversation' });
                     return;
                 }
@@ -160,7 +220,7 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
                 let isCompany = false;
                 let companyUserId = null;
                 if (socket.userRole === 'company' && application.internshipId) {
-                    const Company = require('../models/Company').default;
+                    // Removed dynamic require
                     const company = await Company.findOne({
                         _id: (application.internshipId as any).companyId,
                         userId: socket.userId
@@ -180,12 +240,17 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
                 let receiverId;
                 if (isStudent) {
                     // Student is sending to company - need to get company's userId
-                    const Company = require('../models/Company').default;
+                    // Removed dynamic require
                     const company = await Company.findById((application.internshipId as any).companyId);
                     receiverId = company?.userId;
                 } else {
                     // Company is sending to student
                     receiverId = application.studentId._id;
+                }
+
+                if (!receiverId) {
+                    socket.emit('error', { message: 'Receiver not found', tempId });
+                    return;
                 }
 
                 // Create message
@@ -203,6 +268,7 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
 
                 // Check if receiver is online
                 const receiverSocketId = activeUsers.get(receiverId.toString());
+
                 let messageStatus = 'sent';
 
                 if (receiverSocketId) {
@@ -277,7 +343,7 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
                 // For company, check if the internship's company has this user
                 let isCompany = false;
                 if (socket.userRole === 'company' && application.internshipId) {
-                    const Company = require('../models/Company').default;
+                    // Removed dynamic require
                     const company = await Company.findOne({
                         _id: (application.internshipId as any).companyId,
                         userId: socket.userId
@@ -322,6 +388,40 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
                 userId: socket.userId,
                 isTyping: data.isTyping
             });
+        });
+
+        // Delete message
+        socket.on('delete-message', async (data: { messageId: string; applicationId: string }) => {
+            try {
+                const { messageId, applicationId } = data;
+                const message = await Message.findById(messageId);
+
+                if (!message) return;
+
+                // Only sender can delete
+                if (message.senderId.toString() !== socket.userId) {
+                    socket.emit('error', { message: 'Not authorized to delete this message' });
+                    return;
+                }
+
+                // Soft delete
+                message.isDeleted = true;
+                message.content = 'This message was deleted';
+                message.attachments = []; // Remove attachments
+                message.deletedAt = new Date();
+                await message.save();
+
+                // Notify room
+                io.to(`application:${applicationId}`).emit('message-deleted', {
+                    messageId,
+                    applicationId
+                });
+                console.log(`🗑️  [DELETE] Message ${messageId} deleted by ${socket.userId}`);
+
+            } catch (error) {
+                console.error('Error deleting message:', error);
+                socket.emit('error', { message: 'Failed to delete message' });
+            }
         });
 
         // Disconnect

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { PageHeader } from '@/components/common';
 import ConversationList from '@/components/messages/ConversationList';
@@ -9,6 +10,7 @@ import { MessageCircle } from 'lucide-react';
 
 export default function StudentMessagesPage() {
     const { user } = useAuth();
+    const searchParams = useSearchParams();
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
     const [selectedConversation, setSelectedConversation] = useState<{
         applicationId: string;
@@ -24,6 +26,14 @@ export default function StudentMessagesPage() {
             otherPartyName: 'Company' // This will be updated when we have the full conversation data
         });
     };
+
+    // Handle query param for auto-selection
+    useEffect(() => {
+        const appId = searchParams.get('applicationId');
+        if (appId) {
+            handleSelectConversation(appId);
+        }
+    }, [searchParams]);
 
     if (!user) {
         return (

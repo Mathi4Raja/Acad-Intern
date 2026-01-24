@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react'
 import Link from 'next/link'
-import { Calendar, MapPin, IndianRupee, Clock, ArrowRight, Building2 } from 'lucide-react'
+import { Calendar, MapPin, IndianRupee, Clock, ArrowRight, Building2, MessageCircle } from 'lucide-react'
 import { Application } from '@/types'
 import { CompanyLogo, StatusBadge } from '@/components/common'
 
@@ -101,6 +101,13 @@ const ApplicationCard = memo(({ application, formatDate }: ApplicationCardProps)
 
                     {/* Actions */}
                     <div className="flex items-center justify-end gap-3 pt-2">
+                        <Link
+                            href={`/student/messages?applicationId=${application.id}`}
+                            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary transition-colors px-2 py-1.5 rounded-lg hover:bg-gray-50"
+                        >
+                            <MessageCircle size={18} />
+                            Message
+                        </Link>
                         <Link
                             href={`/student/internships/${application.internshipId}`}
                             className="text-sm font-medium text-gray-600 hover:text-gray-900 hover:underline px-2"

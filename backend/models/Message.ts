@@ -23,6 +23,8 @@ export interface IMessage extends mongoose.Document {
     updatedAt: Date;
     deliveredAt?: Date;
     seenAt?: Date;
+    isDeleted?: boolean;
+    deletedAt?: Date;
 }
 
 const messageSchema = new Schema<IMessage>({
@@ -76,6 +78,13 @@ const messageSchema = new Schema<IMessage>({
         type: Date
     },
     seenAt: {
+        type: Date
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
+    },
+    deletedAt: {
         type: Date
     }
 }, {

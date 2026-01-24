@@ -1,117 +1,94 @@
-import path from 'path';
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import mongoose from 'mongoose';
-
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
-
-// Load Models
 import User from '../models/User';
-import StudentProfile from '../models/StudentProfile';
 import Company from '../models/Company';
+import StudentProfile from '../models/StudentProfile';
 import Internship from '../models/Internship';
 import Application from '../models/Application';
+import Message from '../models/Message';
+import Notification from '../models/Notification';
+import connectDB from '../config/db';
 
-const connectDB = async (): Promise<void> => {
-    try {
-        await mongoose.connect(process.env.MONGODB_URI as string);
-        console.log('MongoDB Connected for Seeding');
-    } catch (err) {
-        console.error('Error connecting to DB:', err);
-        process.exit(1);
-    }
-};
-
-const seedData = async (): Promise<void> => {
-    await connectDB();
+const seedData = async () => {
+    console.log('🌱 Starting Database Seeding...');
 
     try {
-        console.log('Cleaning up database...');
+        await connectDB();
+
+        console.log('🧹 Clearing existing data...');
+        // Clear all relevant collections
         await User.deleteMany({});
-        await StudentProfile.deleteMany({});
         await Company.deleteMany({});
+        await StudentProfile.deleteMany({});
         await Internship.deleteMany({});
         await Application.deleteMany({});
+        await Message.deleteMany({});
+        await Notification.deleteMany({});
 
-        console.log('Creating users...');
-        const studentUser = await User.create({
-            name: 'John Student',
+        console.log('👥 Creating Users...');
+
+        const password = 'password123';
+
+        // 1. Student
+        const student = await User.create({
+            name: 'Test Student',
             email: 'student@test.com',
-            password_hash: 'password123',
-            role: 'student'
+            password_hash: password,
+            role: 'student',
+            isVerified: true,
+            status: 'active'
         });
 
+        await StudentProfile.create({
+            userId: student._id,
+            university: 'Tech University',
+            course: 'Computer Science',
+            graduationYear: 2026,
+            skills: ['JavaScript', 'React', 'Node.js', 'Python'],
+            bio: 'Aspiring Full Stack Developer passionate about building web applications.'
+        });
+        console.log('✅ Created Student: student@test.com');
+
+        // 2. Company
         const companyUser = await User.create({
             name: 'TechCorp Recruiter',
             email: 'company@test.com',
-            password_hash: 'password123',
-            role: 'company'
+            password_hash: password,
+            role: 'company',
+            isVerified: true,
+            status: 'active'
         });
 
-        await User.create({
-            name: 'System Admin',
-            email: 'admin@test.com',
-            password_hash: 'password123',
-            role: 'admin'
-        });
-
-        console.log('Creating profiles...');
-        await StudentProfile.create({
-            userId: studentUser._id,
-            department: 'CSE',
-            semester: 6,
-            skills: ['React', 'Node.js', 'JavaScript', 'MongoDB'],
-            completenessScore: 80
-        });
-
-        const companyProfile = await Company.create({
+        await Company.create({
             userId: companyUser._id,
             companyName: 'TechCorp Solutions',
+            industry: 'Technology',
+            description: 'Leading provider of innovative software solutions for enterprise clients.',
             website: 'https://techcorp.example.com',
-            description: 'Leading provider of tech solutions.',
-            verified: true
+            location: 'San Francisco, CA',
+            size: '50-200'
         });
+        console.log('✅ Created Company: company@test.com (TechCorp Solutions)');
 
-        console.log('Creating internships...');
-        const internships = await Internship.create([
-            {
-                companyId: companyProfile._id,
-                title: 'Full Stack Developer Intern',
-                description: 'Join our team to build scalable web apps. You will work with the MERN stack.',
-                skillsRequired: ['React', 'Node.js', 'MongoDB'],
-                durationWeeks: 12,
-                stipend: 15000,
-                mode: 'remote',
-                openings: 3,
-                isActive: true
-            },
-            {
-                companyId: companyProfile._id,
-                title: 'Backend Developer Intern',
-                description: 'Focus on API development and database optimization.',
-                skillsRequired: ['Node.js', 'Express', 'SQL'],
-                durationWeeks: 10,
-                stipend: 18000,
-                mode: 'onsite',
-                openings: 2,
-                isActive: true
-            }
-        ]);
-
-        console.log('Creating applications...');
-        await Application.create({
-            internshipId: internships[0]._id,
-            studentId: studentUser._id,
-            status: 'pending',
-            appliedAt: new Date(),
-            notes: 'I am very interested!'
+        // 3. Admin
+        const admin = await User.create({
+            name: 'System Admin',
+            email: 'admin@test.com',
+            password_hash: password,
+            role: 'admin',
+            isVerified: true,
+            status: 'active'
         });
+        console.log('✅ Created Admin: admin@test.com');
 
-        console.log('✅ Data Seeding Completed!');
-        process.exit();
-    } catch (err) {
-        console.error('Error seeding data:', err);
+        console.log('\n✨ Database successfully seeded with base users!');
+
+    } catch (error) {
+        console.error('❌ Seeding failed:', error);
         process.exit(1);
+    } finally {
+        await mongoose.connection.close();
+        process.exit(0);
     }
 };
 

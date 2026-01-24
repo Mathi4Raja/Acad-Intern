@@ -1,9 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { IndianRupee, Calendar, MapPin, Clock, Users, Briefcase, FileText, Plus, X } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { IndianRupee, Calendar, MapPin, Clock, Users, Briefcase, FileText, Plus, X, Loader2 } from 'lucide-react'
+import api from '@/lib/api'
 
 export default function PostInternship() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -51,10 +56,41 @@ export default function PostInternship() {
     })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Form submitted:', formData)
-    alert('Internship posted successfully! (This is a demo)')
+    setLoading(true)
+
+    try {
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        skillsRequired: formData.skills,
+        durationWeeks: parseInt(formData.duration),
+        stipend: parseInt(formData.stipend),
+        mode: formData.mode,
+        openings: parseInt(formData.positions),
+        location: formData.location,
+        deadline: formData.deadline
+      }
+
+      const response = await api.post('/internships', payload)
+
+      if (response.data.success) {
+        // Redirect to internships list or company dashboard
+        // Assuming there is a company dashboard or list page
+        router.push('/internships')
+      }
+    } catch (error: any) {
+      console.error('Failed to post internship:', error)
+      const errorMsg = error.response?.data?.message || 'Failed to post internship'
+      const validationErrors = error.response?.data?.errors
+        ? '\n' + error.response.data.errors.map((e: any) => `• ${e.path}: ${e.message}`).join('\n')
+        : ''
+
+      alert(errorMsg + validationErrors)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -211,7 +247,7 @@ export default function PostInternship() {
             <div className="space-y-4 sm:space-y-6">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
-                  Description *
+                  Description * <span className="text-gray-400 font-normal ml-1">(min. 20 characters)</span>
                 </label>
                 <textarea
                   name="description"
@@ -299,11 +335,10 @@ export default function PostInternship() {
                     type="button"
                     onClick={() => addSkill(skill)}
                     disabled={formData.skills.includes(skill)}
-                    className={`px-3 py-1.5 text-xs sm:text-sm rounded-full transition-colors ${
-                      formData.skills.includes(skill)
-                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-gray-100 text-gray-700 hover:bg-primary/20 hover:text-primary'
-                    }`}
+                    className={`px-3 py-1.5 text-xs sm:text-sm rounded-full transition-colors ${formData.skills.includes(skill)
+                      ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-100 text-gray-700 hover:bg-primary/20 hover:text-primary'
+                      }`}
                   >
                     {skill}
                   </button>
@@ -346,9 +381,18 @@ export default function PostInternship() {
             </button>
             <button
               type="submit"
-              className="w-full sm:flex-1 px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold text-sm sm:text-base"
+              className="w-full sm:flex-1 px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
+              disabled={loading}
             >
-              Post Internship
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Posting...
+                </>
+              ) : (
+                'Post Internship'
+              )}
+
             </button>
           </div>
         </form>
@@ -433,9 +477,18 @@ export default function PostInternship() {
             </button>
             <button
               onClick={handleSubmit}
-              className="w-full sm:flex-1 px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold text-sm sm:text-base"
+              className="w-full sm:flex-1 px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
+              disabled={loading}
             >
-              Confirm & Post
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Posting...
+                </>
+              ) : (
+                'Confirm & Post'
+              )}
+
             </button>
           </div>
         </div>
