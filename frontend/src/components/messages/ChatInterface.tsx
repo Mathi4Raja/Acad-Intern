@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Send, Paperclip, X, Check, CheckCheck, Loader2, FileText, Download, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Send, Paperclip, X, Check, CheckCheck, Loader2, FileText, Download, Image as ImageIcon, Trash2, ArrowDown } from 'lucide-react';
 import { Message, MessageStatus } from '@/types';
 import { useSocket } from '@/lib/SocketContext';
 import { messageApi } from '@/lib/api';
@@ -20,9 +20,18 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
     const [typingUser, setTypingUser] = useState<string | null>(null);
+    const [showScrollButton, setShowScrollButton] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleScroll = () => {
+        if (!scrollContainerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 200;
+        setShowScrollButton(!isNearBottom);
+    };
 
     const { socket, joinApplication, leaveApplication, markAsSeen, setTyping, deleteMessage } = useSocket();
 
@@ -222,7 +231,8 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
 
     // Handle Enter key
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        // Send on Cmd+Enter or Ctrl+Enter (optional power user shortcut)
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
             e.preventDefault();
             handleSendMessage();
         }
@@ -246,6 +256,18 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     };
 
+    // Helper to format date for separators
+    const formatDateSeparator = (dateString: string) => {
+        const date = new Date(dateString);
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (date.toDateString() === today.toDateString()) return 'Today';
+        if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+        return date.toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-96">
@@ -255,7 +277,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
     }
 
     return (
-        <div className="flex flex-col h-full bg-white">
+        <div className="flex flex-col h-full bg-white relative">
             {/* Header */}
             <div className="px-4 py-3 border-b border-gray-200 flex items-center gap-3 bg-white sticky top-0 z-10 shadow-sm">
                 {/* Back Button for Mobile */}
@@ -302,7 +324,11 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-3 md:px-4 py-4 space-y-4 bg-gradient-to-b from-gray-50/30 to-white messages-container hide-scrollbar">
+            <div
+                ref={scrollContainerRef}
+                onScroll={handleScroll}
+                className="flex-1 overflow-y-auto px-3 md:px-4 py-4 space-y-1 bg-gradient-to-b from-gray-50/30 to-white messages-container hide-scrollbar"
+            >
                 {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center p-6">
                         <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
@@ -313,80 +339,109 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                     </div>
                 ) : (
                     messages.map((message, index) => {
-                        // Handle different senderId formats (populated object vs raw ID)
-                        const senderId = typeof message.senderId === 'object' && message.senderId !== null
-                            ? (message.senderId._id || message.senderId)
-                            : message.senderId;
+                        const prevMessage = messages[index - 1];
+                        const nextMessage = messages[index + 1];
+
+                        // Handle different senderId formats
+                        const getSenderId = (msg: any) => typeof msg.senderId === 'object' && msg.senderId !== null
+                            ? (msg.senderId._id || msg.senderId)
+                            : msg.senderId;
+
+                        const senderId = getSenderId(message);
+                        const prevSenderId = prevMessage ? getSenderId(prevMessage) : null;
+                        const nextSenderId = nextMessage ? getSenderId(nextMessage) : null;
+
                         const isOwn = String(senderId) === String(currentUserId);
+
+                        // Check if day changed
+                        const isDateChanged = !prevMessage ||
+                            new Date(message.createdAt).toDateString() !== new Date(prevMessage.createdAt).toDateString();
+
+                        // Grouping logic
+                        const isFirstInGroup = isDateChanged || String(senderId) !== String(prevSenderId);
+                        const isLastInGroup = !nextMessage || String(senderId) !== String(nextSenderId) ||
+                            new Date(nextMessage.createdAt).toDateString() !== new Date(message.createdAt).toDateString();
+
                         return (
-                            <div
-                                key={message._id}
-                                className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${isOwn ? 'animate-message-slide-in-right' : 'animate-message-slide-in-left'
-                                    }`}
-                                style={{ animationDelay: `${index * 50}ms` }}
-                            >
-                                <div className={`flex flex-col message-bubble ${isOwn ? 'items-end' : 'items-start'}`}>
-                                    <div
-                                        className={`rounded-2xl px-4 py-3 shadow-sm ${isOwn
-                                            ? 'bg-gradient-to-br from-primary to-primary-dark text-white rounded-br-md message-bubble-own'
-                                            : 'bg-white text-gray-800 rounded-bl-md message-bubble-other border border-gray-200'
-                                            } group relative`}
-                                    >
-                                        {/* Delete Button (Only for own messages that aren't deleted) */}
-                                        {isOwn && !(message as any).isDeleted && (
-                                            <button
-                                                onClick={() => deleteMessage(applicationId, message._id)}
-                                                className="absolute -left-8 top-2 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
-                                                title="Delete message"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        )}
-                                        {message.content && (
-                                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                                                {message.content}
-                                            </p>
-                                        )}
-
-                                        {/* Attachments */}
-                                        {message.attachments.length > 0 && (
-                                            <div className={`mt-3 space-y-2`}>
-                                                {message.attachments.map((attachment, idx) => (
-                                                    <a
-                                                        key={idx}
-                                                        href={attachment.fileUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className={`flex items-center gap-3 p-2.5 rounded-xl transition-all attachment-preview ${isOwn
-                                                            ? 'bg-white/10 hover:bg-white/20 text-white border border-white/10'
-                                                            : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'
-                                                            }`}
-                                                    >
-                                                        <div className={`p-2 rounded-lg ${isOwn ? 'bg-white/20' : 'bg-gray-200'}`}>
-                                                            <FileText className="w-4 h-4" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-sm font-medium truncate">{attachment.fileName}</p>
-                                                            <p className={`text-xs ${isOwn ? 'text-white/70' : 'text-gray-500'}`}>
-                                                                {formatFileSize(attachment.fileSize)}
-                                                            </p>
-                                                        </div>
-                                                        <Download className="w-4 h-4 opacity-70" />
-                                                    </a>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Timestamp and Status */}
-                                    <div className={`flex items-center gap-1.5 mt-1.5 px-1 text-xs text-gray-400 font-medium ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                                        <span>
-                                            {new Date(message.createdAt).toLocaleTimeString([], {
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
+                            <div key={message._id}>
+                                {isDateChanged && (
+                                    <div className="flex justify-center my-6 sticky top-2 z-10">
+                                        <span className="px-3 py-1 bg-white/80 backdrop-blur-sm border border-gray-100 rounded-full text-[10px] font-bold text-gray-400 uppercase tracking-widest shadow-sm">
+                                            {formatDateSeparator(message.createdAt)}
                                         </span>
-                                        {isOwn && renderStatusIcon(message.status)}
+                                    </div>
+                                )}
+
+                                <div
+                                    className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${isOwn ? 'animate-message-slide-in-right' : 'animate-message-slide-in-left'} ${isFirstInGroup ? 'mt-4' : 'mt-0.5'}`}
+                                    style={{ animationDelay: isFirstInGroup ? `${index * 50}ms` : '0ms' }}
+                                >
+                                    <div className={`flex flex-col message-bubble ${isOwn ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-[75%]`}>
+                                        <div
+                                            className={`rounded-2xl px-4 py-2.5 shadow-sm relative group ${isOwn
+                                                ? 'bg-gradient-to-br from-primary to-primary-dark text-white message-bubble-own'
+                                                : 'bg-white text-gray-800 message-bubble-other border border-gray-200'
+                                                } ${isOwn
+                                                    ? (isFirstInGroup ? 'rounded-tr-none' : isLastInGroup ? 'rounded-br-2xl' : 'rounded-r-md')
+                                                    : (isFirstInGroup ? 'rounded-tl-none' : isLastInGroup ? 'rounded-bl-2xl' : 'rounded-l-md')
+                                                }`}
+                                        >
+                                            {/* Delete Button (Only for own messages that aren't deleted) */}
+                                            {isOwn && !(message as any).isDeleted && (
+                                                <button
+                                                    onClick={() => deleteMessage(applicationId, message._id)}
+                                                    className="absolute -left-8 top-2 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200"
+                                                    title="Delete message"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                            {message.content && (
+                                                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                                    {message.content}
+                                                </p>
+                                            )}
+
+                                            {/* Attachments */}
+                                            {message.attachments.length > 0 && (
+                                                <div className={`mt-3 space-y-2`}>
+                                                    {message.attachments.map((attachment, idx) => (
+                                                        <a
+                                                            key={idx}
+                                                            href={attachment.fileUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className={`flex items-center gap-3 p-2.5 rounded-xl transition-all attachment-preview ${isOwn
+                                                                ? 'bg-white/10 hover:bg-white/20 text-white border border-white/10'
+                                                                : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'
+                                                                }`}
+                                                        >
+                                                            <div className={`p-2 rounded-lg ${isOwn ? 'bg-white/20' : 'bg-gray-200'}`}>
+                                                                <FileText className="w-4 h-4" />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium truncate">{attachment.fileName}</p>
+                                                                <p className={`text-xs ${isOwn ? 'text-white/70' : 'text-gray-500'}`}>
+                                                                    {formatFileSize(attachment.fileSize)}
+                                                                </p>
+                                                            </div>
+                                                            <Download className="w-4 h-4 opacity-70" />
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Timestamp and Status */}
+                                        <div className={`flex items-center gap-1.5 mt-1.5 px-1 text-xs text-gray-400 font-medium ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                                            <span>
+                                                {new Date(message.createdAt).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </span>
+                                            {isOwn && renderStatusIcon(message.status)}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -397,11 +452,11 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                 {/* Typing Indicator */}
                 {typingUser && (
                     <div className="flex justify-start animate-message-slide-in-left">
-                        <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2">
+                        <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 mt-2">
                             <div className="flex space-x-1">
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-typing-dots [animation-delay:-0.3s]"></span>
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-typing-dots [animation-delay:-0.15s]"></span>
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-typing-dots"></span>
+                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
                             </div>
                         </div>
                     </div>
@@ -410,38 +465,53 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                 <div ref={messagesEndRef} />
             </div>
 
+            {/* Scroll to Bottom Button */}
+            {
+                showScrollButton && (
+                    <button
+                        onClick={scrollToBottom}
+                        className="absolute bottom-24 right-6 p-2.5 bg-white border border-gray-100 rounded-full shadow-xl text-primary hover:bg-gray-50 transition-all z-20 active:scale-95 animate-bounce-in"
+                    >
+                        <ArrowDown className="w-5 h-5" />
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-white"></div>
+                    </button>
+                )
+            }
+
             {/* Attachments Preview */}
-            {attachments.length > 0 && (
-                <div className="px-3 md:px-4 py-3 border-t border-gray-100 bg-gray-50/50 backdrop-blur-sm animate-in slide-in-from-bottom-4">
-                    <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Attachments</p>
-                    <div className="flex flex-wrap gap-2">
-                        {attachments.map((file, index) => (
-                            <div
-                                key={index}
-                                className="group flex items-center gap-2 bg-white pl-3 pr-2 py-2 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all max-w-[200px]"
-                            >
-                                <div className="p-1.5 bg-primary/10 rounded-lg text-primary flex-shrink-0">
-                                    <FileText className="w-4 h-4" />
-                                </div>
-                                <div className="flex flex-col min-w-0 flex-1">
-                                    <span className="text-xs font-medium text-gray-700 truncate">
-                                        {file.name}
-                                    </span>
-                                    <span className="text-[10px] text-gray-400">
-                                        {formatFileSize(file.size)}
-                                    </span>
-                                </div>
-                                <button
-                                    onClick={() => removeAttachment(index)}
-                                    className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+            {
+                attachments.length > 0 && (
+                    <div className="px-3 md:px-4 py-3 border-t border-gray-100 bg-gray-50/50 backdrop-blur-sm animate-in slide-in-from-bottom-4">
+                        <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Attachments</p>
+                        <div className="flex flex-wrap gap-2">
+                            {attachments.map((file, index) => (
+                                <div
+                                    key={index}
+                                    className="group flex items-center gap-2 bg-white pl-3 pr-2 py-2 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all max-w-[200px]"
                                 >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-                        ))}
+                                    <div className="p-1.5 bg-primary/10 rounded-lg text-primary flex-shrink-0">
+                                        <FileText className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex flex-col min-w-0 flex-1">
+                                        <span className="text-xs font-medium text-gray-700 truncate">
+                                            {file.name}
+                                        </span>
+                                        <span className="text-[10px] text-gray-400">
+                                            {formatFileSize(file.size)}
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={() => removeAttachment(index)}
+                                        className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Input Area */}
             <div className="p-3 md:p-4 border-t border-gray-200 bg-white safe-area-bottom">
@@ -469,7 +539,6 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                             onChange={(e) => {
                                 setNewMessage(e.target.value);
                                 handleTyping();
-                                // Auto-resize textarea
                                 e.target.style.height = 'auto';
                                 e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
                             }}
@@ -501,14 +570,10 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                                 : ''
                                 }`} />
                         )}
-
-                        {/* Ripple effect */}
-                        {!(sending || (!newMessage.trim() && attachments.length === 0)) && (
-                            <div className="absolute inset-0 rounded-full opacity-0 group-active:opacity-100 group-active:animate-ping bg-primary/30 transition-opacity duration-150" />
-                        )}
                     </button>
                 </div>
             </div>
         </div>
     );
 }
+

@@ -166,11 +166,11 @@ export default function ConversationList({
                                 <button
                                     key={conv.application._id}
                                     onClick={() => onSelectConversation(conv.application._id)}
-                                    className={`w-full text-left conversation-item hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 relative animate-fade-in ${isSelected ? 'bg-primary/5 border-r-4 border-r-primary selected' : ''
+                                    className={`w-full text-left conversation-item hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 relative animate-fade-in ${isSelected ? 'bg-primary/10 border-l-4 border-l-primary shadow-sm ring-1 ring-primary/5 z-10' : 'border-l-4 border-l-transparent'
                                         }`}
                                     style={{ animationDelay: `${index * 50}ms` }}
                                 >
-                                    <div className="flex items-start gap-3">
+                                    <div className={`flex items-start gap-3 p-3 md:p-4 ${isSelected ? 'pl-2 md:pl-3' : ''}`}>
                                         {/* Avatar */}
                                         <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary font-bold shadow-inner message-avatar">
                                             {otherParty.charAt(0).toUpperCase()}
