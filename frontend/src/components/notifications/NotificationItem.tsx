@@ -60,28 +60,39 @@ export function NotificationItem({ notification, onMarkAsRead, onClick }: Notifi
     return (
         <div
             className={cn(
-                'flex items-start gap-3 p-3 cursor-pointer transition-colors hover:bg-gray-50',
-                !notification.read && 'bg-primary/5'
+                'flex items-start gap-2.5 p-2 cursor-pointer transition-all duration-200 hover:bg-gray-50/80 group',
+                !notification.read ? 'bg-primary/[0.03]' : 'bg-transparent'
             )}
             onClick={onClick}
         >
             {/* Icon */}
-            <div className={cn('w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0', typeColors[notification.type] || typeColors.general)}>
-                <Icon size={18} />
+            <div className={cn(
+                'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-105',
+                typeColors[notification.type] || typeColors.general
+            )}>
+                <Icon size={14} strokeWidth={2} />
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                    <p className={cn('text-sm', notification.read ? 'text-gray-600' : 'text-gray-900 font-medium')}>
+                <div className="flex items-start justify-between gap-1.5 mb-0">
+                    <p className={cn(
+                        'text-xs font-bold truncate pr-1',
+                        !notification.read ? 'text-gray-900' : 'text-gray-600'
+                    )}>
                         {notification.title}
                     </p>
                     {!notification.read && (
-                        <span className="w-2 h-2 bg-primary rounded-full flex-shrink-0 mt-1.5" />
+                        <span className="w-1.5 h-1.5 bg-primary rounded-full flex-shrink-0 mt-1 ring-2 ring-white shadow-sm" />
                     )}
                 </div>
-                <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{notification.message}</p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className={cn(
+                    'text-[10px] line-clamp-2 leading-relaxed tracking-tight',
+                    !notification.read ? 'text-gray-600' : 'text-gray-500'
+                )}>
+                    {notification.message}
+                </p>
+                <p className="text-[9px] text-gray-400 mt-0.5 font-medium">
                     {notification.time || formatTime(notification.createdAt)}
                 </p>
             </div>

@@ -55,56 +55,63 @@ export function NotificationDropdown({
 
             {/* Dropdown */}
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
+                <div className="fixed top-[65px] right-4 left-4 w-auto sm:absolute sm:right-0 sm:top-auto sm:mt-2 sm:left-auto sm:w-96 bg-white rounded-2xl shadow-xl border border-gray-100/50 ring-1 ring-black/5 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 sm:origin-top-right">
                     {/* Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                        <h3 className="font-semibold text-gray-900">Notifications</h3>
-                        <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between px-3 py-2 border-b border-gray-50 bg-white/50 backdrop-blur-sm sticky top-0 z-10 w-full">
+                        <div className="flex items-center gap-1.5">
+                            <h3 className="font-bold text-gray-900 text-sm">Notifications</h3>
                             {unreadCount > 0 && (
-                                <button
-                                    onClick={onMarkAllAsRead}
-                                    className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1"
-                                >
-                                    <Check size={14} />
-                                    Mark all read
-                                </button>
+                                <span className="bg-primary/10 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                                    {unreadCount} New
+                                </span>
                             )}
                         </div>
+                        {unreadCount > 0 && (
+                            <button
+                                onClick={onMarkAllAsRead}
+                                className="text-[10px] text-primary hover:text-primary/70 font-medium flex items-center gap-1 transition-colors bg-primary/5 hover:bg-primary/10 px-1.5 py-0.5 rounded-md"
+                            >
+                                <Check size={10} strokeWidth={2.5} />
+                                Mark all read
+                            </button>
+                        )}
                     </div>
 
                     {/* Notifications List */}
-                    <div className="max-h-96 overflow-y-auto divide-y divide-gray-100">
+                    <div className="max-h-[12rem] overflow-y-auto custom-scrollbar">
                         {notifications.length === 0 ? (
-                            <div className="p-8 text-center">
-                                <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                                <p className="text-sm text-gray-500">No notifications yet</p>
+                            <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                                <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center mb-2">
+                                    <Bell className="w-5 h-5 text-gray-300" />
+                                </div>
+                                <p className="font-medium text-gray-900 text-xs">No notifications</p>
                             </div>
                         ) : (
-                            notifications.slice(0, 5).map(notification => (
-                                <NotificationItem
-                                    key={notification.id}
-                                    notification={notification}
-                                    onMarkAsRead={onMarkAsRead}
-                                    onClick={() => {
-                                        onMarkAsRead?.(notification.id)
-                                        setIsOpen(false)
-                                    }}
-                                />
-                            ))
+                            <div className="divide-y divide-gray-50">
+                                {notifications.slice(0, 5).map((notification, idx) => (
+                                    <NotificationItem
+                                        key={notification.id}
+                                        notification={notification}
+                                        onMarkAsRead={onMarkAsRead}
+                                        onClick={() => {
+                                            onMarkAsRead?.(notification.id)
+                                            setIsOpen(false)
+                                        }}
+                                    />
+                                ))}
+                            </div>
                         )}
                     </div>
 
                     {/* Footer */}
                     {notifications.length > 0 && (
-                        <div className="p-3 border-t border-gray-100 bg-gray-50">
-                            <Link
-                                href={notificationsHref}
-                                className="block text-center text-sm text-primary hover:text-primary/80 font-medium"
-                                onClick={() => setIsOpen(false)}
-                            >
-                                View All Notifications
-                            </Link>
-                        </div>
+                        <Link
+                            href={notificationsHref}
+                            className="block p-2 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 hover:text-primary hover:bg-gray-50 transition-all border-t border-gray-50"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            View All Notifications
+                        </Link>
                     )}
                 </div>
             )}

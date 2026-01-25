@@ -44,14 +44,9 @@ export default function StudentMessagesPage() {
     }
 
     return (
-        <div className="h-screen flex flex-col md:p-4 lg:p-6 lg:max-w-7xl lg:mx-auto w-full bg-gray-50 md:bg-transparent">
+        <div className="h-full flex flex-col md:p-4 lg:p-6 lg:max-w-7xl lg:mx-auto w-full bg-gray-50 md:bg-transparent">
             {/* Mobile Header */}
-            <div className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-                <h1 className="text-lg font-bold text-gray-900">Messages</h1>
-                <div className="text-sm text-gray-500">
-                    {selectedConversation ? 'Chat' : 'Conversations'}
-                </div>
-            </div>
+            {/* Mobile Header Removed as per request */}
 
             {/* Desktop Header */}
             <div className="hidden md:block mb-4">
@@ -68,6 +63,7 @@ export default function StudentMessagesPage() {
                         selectedApplicationId={selectedApplicationId}
                         onSelectConversation={handleSelectConversation}
                         currentUserRole="student"
+                        currentUserId={user.id}
                     />
                 </div>
 

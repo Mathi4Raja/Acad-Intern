@@ -120,8 +120,8 @@ export default function CompanyNotificationsPage() {
                 <button
                     onClick={() => setFilterType('all')}
                     className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${filterType === 'all'
-                            ? 'bg-primary text-white'
-                            : 'text-gray-600 hover:bg-gray-100'
+                        ? 'bg-primary text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
                         }`}
                 >
                     All ({notifications.length})
@@ -129,8 +129,8 @@ export default function CompanyNotificationsPage() {
                 <button
                     onClick={() => setFilterType('unread')}
                     className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${filterType === 'unread'
-                            ? 'bg-primary text-white'
-                            : 'text-gray-600 hover:bg-gray-100'
+                        ? 'bg-primary text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
                         }`}
                 >
                     Unread ({unreadCount})
@@ -138,8 +138,8 @@ export default function CompanyNotificationsPage() {
                 <button
                     onClick={() => setFilterType('read')}
                     className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${filterType === 'read'
-                            ? 'bg-primary text-white'
-                            : 'text-gray-600 hover:bg-gray-100'
+                        ? 'bg-primary text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
                         }`}
                 >
                     Read ({notifications.length - unreadCount})

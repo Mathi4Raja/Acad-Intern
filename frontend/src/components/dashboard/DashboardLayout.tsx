@@ -53,7 +53,7 @@ export function DashboardLayout({
     const closeSidebar = () => setSidebarOpen(false);
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className={disableContentPadding ? "fixed inset-0 overflow-hidden bg-gray-50 flex flex-col" : "min-h-screen bg-gray-50"}>
             {/* Top Navigation */}
             <TopNavbar
                 variant={variant}
@@ -118,7 +118,10 @@ export function DashboardLayout({
                     )}
 
                     {/* Main Content */}
-                    <main className={`mt-14 sm:mt-16 lg:ml-64 ${disableContentPadding ? 'p-0' : 'p-3 sm:p-6 lg:p-8'}`}>
+                    <main className={disableContentPadding
+                        ? "absolute inset-0 top-14 sm:top-16 lg:left-64 overflow-hidden flex flex-col bg-white"
+                        : "mt-14 sm:mt-16 lg:ml-64 p-3 sm:p-6 lg:p-8"
+                    }>
                         {children}
                     </main>
                 </>
