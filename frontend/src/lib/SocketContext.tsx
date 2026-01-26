@@ -39,8 +39,10 @@ export function SocketProvider({ children }: { children: ReactNode }) {
                 console.log('🔌 User logged out, disconnecting Socket.io...');
                 socketRef.current.close();
                 socketRef.current = null;
-                setSocket(null);
-                setIsConnected(false);
+                setTimeout(() => {
+                    setSocket(null);
+                    setIsConnected(false);
+                }, 0);
             }
             return;
         }

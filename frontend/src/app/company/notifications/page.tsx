@@ -1,54 +1,58 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Bell, Check, CheckCheck, Trash2, Filter, Users, Briefcase, MessageSquare, AlertCircle } from 'lucide-react'
 
 export default function CompanyNotificationsPage() {
     const [filterType, setFilterType] = useState('all')
 
     // Mock data - will be replaced with API
-    const [notifications, setNotifications] = useState([
-        {
-            id: 1,
-            type: 'new_application',
-            title: 'New Application Received',
-            message: 'Alex Johnson has applied for the Software Engineering Intern position.',
-            timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30m ago
-            read: false,
-            icon: <Users className="text-blue-600" />,
-            color: 'text-blue-600'
-        },
-        {
-            id: 2,
-            type: 'message_received',
-            title: 'New Message',
-            message: 'Sarah Williams sent you a message regarding the UI/UX Design internship.',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2h ago
-            read: false,
-            icon: <MessageSquare className="text-green-600" />,
-            color: 'text-green-600'
-        },
-        {
-            id: 3,
-            type: 'internship_approved',
-            title: 'Internship Post Approved',
-            message: 'Your post for "Data Science Intern" has been approved and is now live.',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1d ago
-            read: true,
-            icon: <Briefcase className="text-purple-600" />,
-            color: 'text-purple-600'
-        },
-        {
-            id: 4,
-            type: 'urgent_review',
-            title: 'Action Required',
-            message: '3 applications for "Social Media Intern" are awaiting your review for over 5 days.',
-            timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2d ago
-            read: false,
-            icon: <AlertCircle className="text-orange-600" />,
-            color: 'text-orange-600'
-        }
-    ])
+    const [notifications, setNotifications] = useState<any[]>([]);
+
+    useEffect(() => {
+        setNotifications([
+            {
+                id: 1,
+                type: 'new_application',
+                title: 'New Application Received',
+                message: 'Alex Johnson has applied for the Software Engineering Intern position.',
+                timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30m ago
+                read: false,
+                icon: <Users className="text-blue-600" />,
+                color: 'text-blue-600'
+            },
+            {
+                id: 2,
+                type: 'message_received',
+                title: 'New Message',
+                message: 'Sarah Williams sent you a message regarding the UI/UX Design internship.',
+                timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2h ago
+                read: false,
+                icon: <MessageSquare className="text-green-600" />,
+                color: 'text-green-600'
+            },
+            {
+                id: 3,
+                type: 'internship_approved',
+                title: 'Internship Post Approved',
+                message: 'Your post for "Data Science Intern" has been approved and is now live.',
+                timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1d ago
+                read: true,
+                icon: <Briefcase className="text-purple-600" />,
+                color: 'text-purple-600'
+            },
+            {
+                id: 4,
+                type: 'urgent_review',
+                title: 'Action Required',
+                message: '3 applications for "Social Media Intern" are awaiting your review for over 5 days.',
+                timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2d ago
+                read: false,
+                icon: <AlertCircle className="text-orange-600" />,
+                color: 'text-orange-600'
+            }
+        ]);
+    }, []);
 
     const handleMarkAsRead = (id: number) => {
         setNotifications(notifications.map(notif =>

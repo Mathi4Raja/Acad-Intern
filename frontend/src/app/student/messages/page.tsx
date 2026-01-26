@@ -31,7 +31,7 @@ function MessagesContent() {
     useEffect(() => {
         const appId = searchParams.get('applicationId');
         if (appId) {
-            handleSelectConversation(appId);
+            setTimeout(() => handleSelectConversation(appId), 0);
         }
     }, [searchParams]);
 
