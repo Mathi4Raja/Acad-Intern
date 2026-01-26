@@ -34,6 +34,8 @@ jobs:
       run: npm run build
 
     - name: Run Tests
+      env:
+        JWT_SECRET: "test_secret_for_ci_pipeline_12345"
       run: npm test
 
   docker-build:
