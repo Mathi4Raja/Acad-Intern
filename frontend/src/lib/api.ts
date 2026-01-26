@@ -3,24 +3,8 @@ import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 
 
 // Environment variables for API URLs
 const LOCAL_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-const TUNNEL_API_URL = process.env.NEXT_PUBLIC_TUNNEL_API_URL || '';
-
 // Dynamically determine API URL based on current host
 const getApiUrl = (): string => {
-    // Server-side: use local API
-    if (typeof window === 'undefined') {
-        return LOCAL_API_URL;
-    }
-
-    // Client-side: detect if accessing via dev tunnels
-    const host = window.location.hostname;
-
-    // If accessing via dev tunnels and tunnel URL is configured, use it
-    if (host.includes('devtunnels.ms') && TUNNEL_API_URL) {
-        return TUNNEL_API_URL;
-    }
-
-    // Default: localhost
     return LOCAL_API_URL;
 };
 
@@ -70,7 +54,7 @@ export const messageApi = {
     getMessages: (applicationId: string) => api.get(`/messages/application/${applicationId}`),
 
     // Send a message
-    sendMessage: (applicationId: string, content: string) => 
+    sendMessage: (applicationId: string, content: string) =>
         api.post(`/messages/application/${applicationId}`, { content }),
 
     // Send a message with files
@@ -78,7 +62,7 @@ export const messageApi = {
         const formData = new FormData();
         formData.append('content', content);
         files.forEach(file => formData.append('files', file));
-        
+
         return api.post(`/messages/application/${applicationId}`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
@@ -87,7 +71,7 @@ export const messageApi = {
     },
 
     // Mark messages as seen
-    markAsSeen: (applicationId: string) => 
+    markAsSeen: (applicationId: string) =>
         api.patch(`/messages/application/${applicationId}/seen`),
 
     // Get unread message count

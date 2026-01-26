@@ -49,10 +49,10 @@ const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: process.env.NODE_ENV === 'production' ? 100 : 100000, // 100k for dev
     message: 'Too many requests from this IP, please try again later',
-    validate: { xForwardedForHeader: false } // Disable validation for devtunnels/proxies
+    validate: { xForwardedForHeader: false } // Disable validation for proxies
 });
 
-// Trust proxy for rate limiting when behind a proxy (devtunnels, nginx, etc.)
+// Trust proxy for rate limiting when behind a proxy (nginx, load balancers, etc.)
 app.set('trust proxy', 1);
 
 // Apply middleware

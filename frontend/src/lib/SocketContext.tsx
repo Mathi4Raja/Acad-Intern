@@ -66,13 +66,6 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
             // Determine API URL
             const getSocketUrl = (): string => {
-                const host = window.location.hostname;
-                const tunnelUrl = process.env.NEXT_PUBLIC_TUNNEL_API_URL;
-
-                if (host.includes('devtunnels.ms') && tunnelUrl) {
-                    return tunnelUrl.replace('/api', '');
-                }
-
                 return process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
             };
 
