@@ -3,6 +3,10 @@ import mongoose from 'mongoose';
 
 let mongoServer: MongoMemoryServer;
 
+// Basic variables needed for tests
+process.env.JWT_SECRET = 'test_secret';
+process.env.NODE_ENV = 'test';
+
 // Connect to in-memory MongoDB before all tests
 beforeAll(async () => {
     mongoServer = await MongoMemoryServer.create();
