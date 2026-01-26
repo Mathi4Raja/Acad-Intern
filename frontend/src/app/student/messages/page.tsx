@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { PageHeader } from '@/components/common';
@@ -8,7 +8,7 @@ import ConversationList from '@/components/messages/ConversationList';
 import ChatInterface from '@/components/messages/ChatInterface';
 import { MessageCircle } from 'lucide-react';
 
-export default function StudentMessagesPage() {
+function MessagesContent() {
     const { user } = useAuth();
     const searchParams = useSearchParams();
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
@@ -95,5 +95,19 @@ export default function StudentMessagesPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function StudentMessagesPage() {
+    return (
+        <Suspense fallback={
+            <div className="h-full flex flex-col md:p-4 lg:p-6 lg:max-w-7xl lg:mx-auto w-full bg-gray-50 md:bg-transparent">
+                <div className="flex-1 bg-white md:rounded-2xl flex items-center justify-center">
+                    <p className="text-gray-500">Loading messages...</p>
+                </div>
+            </div>
+        }>
+            <MessagesContent />
+        </Suspense>
     );
 }

@@ -19,7 +19,7 @@ A comprehensive platform connecting students with internship opportunities, feat
 - **Authentication**: JWT + HTTP-only cookies
 - **Validation**: Zod
 - **Security**: Helmet, CORS, Rate Limiting
-- **File Uploads**: Cloudinary
+- **File Uploads**: Cloudflare R2 (via AWS SDK)
 
 ### Frontend
 - **Framework**: Next.js
@@ -32,7 +32,7 @@ A comprehensive platform connecting students with internship opportunities, feat
 ### Prerequisites
 - Node.js (v18 or higher)
 - MongoDB Atlas account
-- Cloudinary account (for file uploads)
+- Cloudflare R2 account (for file uploads)
 
 ### Installation
 
@@ -64,7 +64,7 @@ cp .env.example .env
 3. Update `.env` with your credentials:
    - MongoDB Atlas connection string
    - JWT secret key
-   - Cloudinary credentials (for file uploads)
+   - Cloudflare R2 credentials (account ID, access key, secret, bucket name, public URL)
 
 4. Run development server:
 ```bash

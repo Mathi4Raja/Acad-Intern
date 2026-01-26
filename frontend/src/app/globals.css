@@ -579,6 +579,7 @@
   background: linear-gradient(90deg, var(--foreground) 0%, var(--primary) 50%, var(--foreground) 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: shimmer 3s linear infinite;
 }
@@ -701,6 +702,7 @@
     font-size: 16px;
     /* Prevents zoom on iOS */
     -webkit-appearance: none;
+    appearance: none;
     border-radius: 12px;
   }
 

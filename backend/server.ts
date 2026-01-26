@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import connectDB from './config/db';
 import errorHandler from './middleware/errorHandler';
+import { isR2Configured } from './utils/r2Storage';
 
 // Route imports
 import authRoutes from './routes/auth';
@@ -35,6 +36,12 @@ app.set('io', io);
 // Connect to MongoDB (only if not in test mode)
 if (process.env.NODE_ENV !== 'test') {
     connectDB();
+}
+
+// Validate Cloudflare R2 configuration
+if (process.env.NODE_ENV !== 'test' && !isR2Configured()) {
+    console.warn('⚠️  Cloudflare R2 is not properly configured. File uploads will fail.');
+    console.warn('   Required env vars: R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME, R2_PUBLIC_URL');
 }
 
 // Rate limiting - higher limit for development
