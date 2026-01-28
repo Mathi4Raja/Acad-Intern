@@ -5,18 +5,21 @@ on:
     branches: [ "main" ]
     paths:
       - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
   pull_request:
     branches: [ "main" ]
     paths:
       - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
 
-defaults:
-  run:
-    working-directory: ./backend
+
 
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
     steps:
     - uses: actions/checkout@v4
 
@@ -40,6 +43,9 @@ jobs:
 
   docker-build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
     needs: test-and-build
     steps:
     - uses: actions/checkout@v4
