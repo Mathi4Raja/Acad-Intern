@@ -442,7 +442,7 @@ export default function SignupPage() {
         <div className="mt-8 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-gray-600 bg-white/50 hover:bg-white hover:text-primary rounded-full transition-all duration-200 border border-transparent hover:border-gray-200 hover:shadow-sm group"
+            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-gray-700 bg-white/80 backdrop-blur-sm hover:bg-white hover:text-primary rounded-full transition-all duration-200 border border-gray-200 shadow-sm hover:shadow-md group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
             Back to home
