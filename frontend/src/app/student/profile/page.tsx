@@ -265,23 +265,36 @@ export default function StudentProfile() {
       return
     }
 
-    // For remote files, try to fetch blob to force download
+    // For remote files, use backend proxy to enforce download headers
     try {
-      const response = await fetch(url)
-      if (!response.ok) throw new Error('Network response was not ok')
+      const response = await api.get('/upload/proxy-download', {
+        params: { url: profile.resumeUrl },
+        responseType: 'blob'
+      })
 
-      const blob = await response.blob()
-      const blobUrl = window.URL.createObjectURL(blob)
+      // Extract filename from header if available
+      let filename = 'resume.pdf'
+      const disposition = response.headers['content-disposition']
+      if (disposition && disposition.indexOf('filename=') !== -1) {
+        const matches = /filename="?([^"]+)"?/.exec(disposition)
+        if (matches != null && matches[1]) {
+          filename = matches[1]
+        }
+      } else {
+        filename = `resume_${user?.name?.replace(/\s+/g, '_') || 'student'}.pdf`
+      }
+
+      const blobUrl = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = blobUrl
-      link.download = `resume_${user?.name?.replace(/\s+/g, '_') || 'student'}.pdf`
+      link.download = filename
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(blobUrl)
     } catch (err) {
-      console.error('Download failed, falling back to open:', err)
-      window.open(url, '_blank')
+      console.error('Download failed:', err)
+      setError('Failed to download resume. Please try again.')
     }
   }
 

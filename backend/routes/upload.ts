@@ -1,6 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import upload from '../utils/fileUpload';
-import { uploadToR2, isR2Configured } from '../utils/r2Storage';
+import { uploadToR2, isR2Configured, getKeyFromUrl, getFileStream } from '../utils/r2Storage';
 import { protect } from '../middleware/auth';
 import { AuthRequest } from '../types';
 import StudentProfile from '../models/StudentProfile';
@@ -107,6 +107,47 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
             return;
         }
         next(error);
+    }
+});
+
+// @desc    Proxy download file from R2
+// @route   GET /api/upload/proxy-download
+// @access  Private
+router.get('/proxy-download', protect, async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { url } = req.query;
+
+        if (!url || typeof url !== 'string') {
+            res.status(400).json({ success: false, message: 'Invalid URL' });
+            return;
+        }
+
+        const key = getKeyFromUrl(url);
+        if (!key) {
+            res.status(400).json({ success: false, message: 'Invalid file URL' });
+            return;
+        }
+
+        try {
+            const fileStream = await getFileStream(key);
+
+            // Determine filename
+            const filename = key.split('/').pop() || 'resume.pdf';
+
+            // Set headers for download
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+            // Pipe stream
+            // @ts-ignore - AWS SDK stream types compatible with Node streams in this context
+            fileStream.pipe(res);
+        } catch (streamError) {
+            console.error('Error streaming file:', streamError);
+            res.status(404).json({ success: false, message: 'File not found' });
+        }
+
+    } catch (error) {
+        console.error('Download proxy error:', error);
+        res.status(500).json({ success: false, message: 'Download failed' });
     }
 });
 

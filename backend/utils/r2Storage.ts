@@ -151,4 +151,16 @@ export const hasFile = async (key: string): Promise<boolean> => {
     }
 };
 
+/**
+ * Get file as a stream from R2
+ */
+export const getFileStream = async (key: string) => {
+    const command = new GetObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: key,
+    });
+    const response = await r2Client.send(command);
+    return response.Body;
+};
+
 export { r2Client };
