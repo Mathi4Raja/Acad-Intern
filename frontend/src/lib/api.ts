@@ -11,9 +11,7 @@ const getApiUrl = (): string => {
 // Create an Axios instance - baseURL will be set dynamically per request
 const api: AxiosInstance = axios.create({
     withCredentials: true, // Important for cookies (JWT)
-    headers: {
-        'Content-Type': 'application/json',
-    },
+    headers: {},
 });
 
 // Request interceptor - dynamically set baseURL on each request
@@ -63,11 +61,7 @@ export const messageApi = {
         formData.append('content', content);
         files.forEach(file => formData.append('files', file));
 
-        return api.post(`/messages/application/${applicationId}`, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
+        return api.post(`/messages/application/${applicationId}`, formData);
     },
 
     // Mark messages as seen

@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { z } from 'zod';
 import StudentProfile from '../models/StudentProfile';
 import { AuthRequest } from '../types';
+import { getKeyFromUrl, hasFile } from '../utils/r2Storage';
 
 // Schema
 const profileSchema = z.object({
@@ -29,6 +30,19 @@ export const getMe = async (req: AuthRequest, res: Response, next: NextFunction)
                 message: 'Profile not found'
             });
             return;
+        }
+
+        // Check if resume file actually exists in R2
+        if (profile.resumeUrl) {
+            const key = getKeyFromUrl(profile.resumeUrl);
+            if (key) {
+                const exists = await hasFile(key);
+                if (!exists) {
+                    console.log(`Resume file missing in R2 for user ${req.user?._id}, removing reference.`);
+                    profile.resumeUrl = undefined;
+                    await profile.save();
+                }
+            }
         }
 
         res.status(200).json({

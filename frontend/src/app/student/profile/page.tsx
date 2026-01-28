@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Upload, Save, Plus, X, User, GraduationCap, FileText, Award, Loader2, ExternalLink, CheckCircle } from 'lucide-react'
+import { Upload, Save, Plus, X, User, GraduationCap, FileText, Award, Loader2, ExternalLink, CheckCircle, Download } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuth } from '@/lib/AuthContext'
 import { PageHeader } from '@/components/common'
@@ -31,6 +31,8 @@ export default function StudentProfile() {
   const [skills, setSkills] = useState<string[]>([])
   const [newSkill, setNewSkill] = useState('')
 
+  const [resumeFile, setResumeFile] = useState<File | null>(null)
+
   const [profile, setProfile] = useState<StudentProfile>({
     userId: '',
     department: '',
@@ -59,6 +61,19 @@ export default function StudentProfile() {
   useEffect(() => {
     fetchProfile()
   }, [])
+
+  // Handle local preview URL for resume
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (resumeFile) {
+      const url = URL.createObjectURL(resumeFile)
+      setPreviewUrl(url)
+      return () => URL.revokeObjectURL(url)
+    } else {
+      setPreviewUrl(null)
+    }
+  }, [resumeFile])
 
   const fetchProfile = async () => {
     try {
@@ -112,13 +127,34 @@ export default function StudentProfile() {
 
       const { userId, _id, ...profileData } = profile
 
-      // Filter out undefined values to avoid Zod validation errors
+      // Filter out undefined and null values to avoid Zod validation errors
       const cleanProfileData = Object.fromEntries(
-        Object.entries(profileData).filter(([_, value]) => value !== undefined)
+        Object.entries(profileData).filter(([_, value]) => value !== undefined && value !== null)
       )
+
+      let updatedResumeUrl = profile.resumeUrl
+
+      // Upload resume if a new file is selected
+      if (resumeFile) {
+        try {
+          const formData = new FormData()
+          formData.append('file', resumeFile)
+          formData.append('type', 'resume')
+
+          const uploadResponse = await api.post('/upload', formData)
+
+          if (uploadResponse.data.success) {
+            updatedResumeUrl = uploadResponse.data.data.url
+          }
+        } catch (uploadErr: any) {
+          console.error('Failed to upload resume:', uploadErr)
+          throw new Error(uploadErr?.response?.data?.message || 'Failed to upload resume')
+        }
+      }
 
       const requestData = {
         ...cleanProfileData,
+        resumeUrl: updatedResumeUrl,
         skills
       }
 
@@ -128,19 +164,32 @@ export default function StudentProfile() {
 
       if (response.data.success) {
         setIsEditing(false)
+        setResumeFile(null) // Clear pending file
+        setProfile({ ...profile, resumeUrl: updatedResumeUrl }) // Update local profile state with new URL
         setSuccessMessage('Profile saved successfully!')
         setTimeout(() => setSuccessMessage(null), 3000)
       }
     } catch (err: any) {
       console.error('Failed to save profile:', err)
       console.error('Error response:', err?.response?.data)
-      setError(err?.response?.data?.message || 'Failed to save profile')
+
+      let errorMessage = err?.response?.data?.message || 'Failed to save profile'
+
+      // Handle Zod validation errors
+      if (err?.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        const validationErrors = err.response.data.errors
+          .map((e: any) => `${e.path.join('.')} : ${e.message}`)
+          .join(', ')
+        errorMessage = `Validation error: ${validationErrors}`
+      }
+
+      setError(errorMessage)
     } finally {
       setSaving(false)
     }
   }
 
-  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -154,31 +203,8 @@ export default function StudentProfile() {
       return
     }
 
-    try {
-      setUploading(true)
-      setError(null)
-
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('type', 'resume')
-
-      const response = await api.post('/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
-
-      if (response.data.success) {
-        setProfile({ ...profile, resumeUrl: response.data.data.url })
-        setSuccessMessage('Resume uploaded successfully!')
-        setTimeout(() => setSuccessMessage(null), 3000)
-      }
-    } catch (err: any) {
-      console.error('Failed to upload resume:', err)
-      setError(err?.response?.data?.message || 'Failed to upload resume')
-    } finally {
-      setUploading(false)
-    }
+    setResumeFile(file)
+    setError(null)
   }
 
   const completionPercentage = () => {
@@ -213,6 +239,54 @@ export default function StudentProfile() {
     }
   }
 
+  const isValidUrl = (url?: string) => {
+    if (!url) return false
+    try {
+      new URL(url)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    const url = previewUrl || profile.resumeUrl
+    if (!url) return
+
+    // For local files, strict download
+    if (previewUrl) {
+      const link = document.createElement('a')
+      link.href = url
+      link.download = resumeFile?.name || 'resume.pdf'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
+
+    // For remote files, try to fetch blob to force download
+    try {
+      const response = await fetch(url)
+      if (!response.ok) throw new Error('Network response was not ok')
+
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = `resume_${user?.name?.replace(/\s+/g, '_') || 'student'}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(blobUrl)
+    } catch (err) {
+      console.error('Download failed, falling back to open:', err)
+      window.open(url, '_blank')
+    }
+  }
+
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -239,7 +313,10 @@ export default function StudentProfile() {
         ) : (
           <div className="flex gap-2 w-full sm:w-auto">
             <button
-              onClick={() => setIsEditing(false)}
+              onClick={() => {
+                setIsEditing(false)
+                setResumeFile(null)
+              }}
               className="flex-1 sm:flex-none bg-gray-200 text-gray-700 px-4 sm:px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors font-medium text-sm sm:text-base"
             >
               Cancel
@@ -448,27 +525,42 @@ export default function StudentProfile() {
           <FileText className="text-primary" size={18} />
           Resume
         </h2>
-        {profile.resumeUrl ? (
+        {(isValidUrl(profile.resumeUrl) || resumeFile) ? (
           <div className="bg-green-50 border border-green-200 rounded-lg p-2.5 sm:p-3">
             <div className="flex items-center gap-2 mb-2">
               <FileText className="text-green-600 flex-shrink-0" size={16} />
               <span className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-[180px] sm:max-w-none">
-                {getResumeFileName(profile.resumeUrl)}
+                {resumeFile ? resumeFile.name : getResumeFileName(profile.resumeUrl)}
               </span>
+              {resumeFile && (
+                <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium">
+                  Pending Save
+                </span>
+              )}
             </div>
             <div className="flex gap-2">
               <a
-                href={profile.resumeUrl}
+                href={previewUrl || profile.resumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-1 text-primary text-xs px-2 py-1.5 border border-primary/30 rounded-lg hover:bg-primary/5"
+                className={`flex-1 flex items-center justify-center gap-1 text-primary text-xs px-2 py-1.5 border border-primary/30 rounded-lg hover:bg-primary/5 ${(!previewUrl && !isValidUrl(profile.resumeUrl)) ? 'pointer-events-none opacity-50' : ''}`}
               >
                 <ExternalLink size={12} />
-                View Resume
+                Preview
               </a>
+              {!isEditing && (
+                <button
+                  onClick={handleDownload}
+                  className={`flex-1 flex items-center justify-center gap-1 text-primary text-xs px-2 py-1.5 border border-primary/30 rounded-lg hover:bg-primary/5 ${(!previewUrl && !isValidUrl(profile.resumeUrl)) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  disabled={!previewUrl && !isValidUrl(profile.resumeUrl)}
+                >
+                  <Download size={12} />
+                  Download
+                </button>
+              )}
               {isEditing && (
                 <label className="flex-1 bg-primary text-white px-2 py-1.5 rounded-lg hover:bg-primary/90 cursor-pointer text-xs flex items-center justify-center gap-1">
-                  {uploading ? <Loader2 size={12} className="animate-spin" /> : 'Replace'}
+                  {uploading ? <Loader2 size={12} className="animate-spin" /> : 'Change'}
                   <input type="file" accept=".pdf" onChange={handleResumeUpload} className="hidden" disabled={uploading} />
                 </label>
               )}

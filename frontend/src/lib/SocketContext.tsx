@@ -66,7 +66,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
             // Determine API URL
             const getSocketUrl = (): string => {
-                return process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
+                return process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000';
             };
 
             // Close existing socket before creating new one

@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import connectDB from './config/db';
 import errorHandler from './middleware/errorHandler';
 import { isR2Configured } from './utils/r2Storage';
+import axios from 'axios';
 
 // Route imports
 import authRoutes from './routes/auth';
@@ -112,9 +113,37 @@ app.use(errorHandler);
 
 // Start server (only if not in test mode)
 const PORT = process.env.PORT || 5000;
+
+
 if (process.env.NODE_ENV !== 'test') {
     server.listen(PORT, () => {
         console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+
+        // Keep Render backend active (only in production)
+        if (process.env.NODE_ENV === 'production') {
+            const url = process.env.RENDER_EXTERNAL_URL || process.env.BACKEND_URL || process.env.NEXT_PUBLIC_SOCKET_URL;
+
+            if (url) {
+                const interval = 14 * 60 * 1000; // 14 minutes
+
+                console.log(`🔄 Setting up keep-alive ping for ${url}`);
+
+                // Initial ping
+                setTimeout(() => {
+                    axios.get(`${url}/health`)
+                        .then(() => console.log('✅ Self-ping successful'))
+                        .catch((err: any) => console.error('❌ Self-ping failed:', err.message));
+                }, 5000);
+
+                setInterval(() => {
+                    axios.get(`${url}/health`)
+                        .then(() => console.log('🔄 Reloaded backend to keep it alive'))
+                        .catch((err: any) => console.error('❌ Keep-alive ping failed:', err.message));
+                }, interval);
+            } else {
+                console.warn('⚠️ Keep-alive ping skipped: RENDER_EXTERNAL_URL, BACKEND_URL, or NEXT_PUBLIC_SOCKET_URL not set');
+            }
+        }
     });
 }
 

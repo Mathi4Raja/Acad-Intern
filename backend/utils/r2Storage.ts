@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import path from 'path';
 
@@ -133,6 +133,22 @@ export const getSignedUrlForR2 = async (key: string, expiresIn: number = 3600): 
     });
 
     return await getSignedUrl(r2Client, command, { expiresIn });
+};
+
+/**
+ * Check if a file exists in R2
+ */
+export const hasFile = async (key: string): Promise<boolean> => {
+    try {
+        const command = new HeadObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: key,
+        });
+        await r2Client.send(command);
+        return true;
+    } catch (error) {
+        return false;
+    }
 };
 
 export { r2Client };

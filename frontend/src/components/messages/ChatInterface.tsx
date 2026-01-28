@@ -209,6 +209,13 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
         }, 1000);
     };
 
+    // Auto-scroll when someone starts typing
+    useEffect(() => {
+        if (typingUser) {
+            scrollToBottom('smooth');
+        }
+    }, [typingUser]);
+
     // Handle file selection
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
@@ -582,12 +589,12 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
 
                 {/* Typing Indicator */}
                 {typingUser && (
-                    <div className="flex justify-start animate-message-slide-in-left">
-                        <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-2 mt-2">
-                            <div className="flex space-x-1">
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                    <div className="flex justify-start animate-message-slide-in-left mb-2">
+                        <div className="bg-white border border-gray-100 shadow-sm rounded-2xl rounded-bl-none px-4 py-3 flex items-center gap-2 mt-2">
+                            <div className="flex space-x-1.5">
+                                <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                                <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                                <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></span>
                             </div>
                         </div>
                     </div>
