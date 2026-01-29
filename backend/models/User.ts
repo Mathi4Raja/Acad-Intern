@@ -36,6 +36,14 @@ const userSchema = new Schema<IUser>({
         type: String,
         enum: ['active', 'pending', 'suspended'],
         default: 'active'
+    },
+    resetPasswordToken: {
+        type: String,
+        select: false
+    },
+    resetPasswordExpires: {
+        type: Date,
+        select: false
     }
 });
 

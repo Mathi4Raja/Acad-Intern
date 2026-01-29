@@ -9,6 +9,8 @@ A comprehensive platform connecting students with internship opportunities, feat
 - **system_Architecture**: System architecture documentation
 - **TEST_CREDENTIALS.md**: Test credentials documentation
 - **TRACK_TASKS.md**: Task tracking documentation
+- **PASSWORD_RESET_FEATURE.md**: Complete password reset documentation
+- **PASSWORD_RESET_QUICKSTART.md**: Quick start guide for password reset
 
 ## Tech Stack
 
@@ -94,6 +96,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `POST /api/auth/login` - Login user
 - `GET /api/auth/me` - Get current user
 - `POST /api/auth/logout` - Logout user
+- `POST /api/auth/forgot-password` - Request password reset
+- `GET /api/auth/reset-password/:token` - Verify reset token
+- `POST /api/auth/reset-password/:token` - Reset password
 
 ### Internships
 - `GET /api/internships` - List internships

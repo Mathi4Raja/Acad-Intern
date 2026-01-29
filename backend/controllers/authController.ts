@@ -4,6 +4,7 @@ import User from '../models/User';
 import StudentProfile from '../models/StudentProfile';
 import Company from '../models/Company';
 import { AuthRequest } from '../types';
+import { sendEmail, generateResetToken, hashToken } from '../utils/emailService';
 
 // Validation schemas
 const signupSchema = z.object({
@@ -16,6 +17,14 @@ const signupSchema = z.object({
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
     password: z.string().min(1, 'Password is required')
+});
+
+const forgotPasswordSchema = z.object({
+    email: z.string().email('Invalid email address')
+});
+
+const resetPasswordSchema = z.object({
+    password: z.string().min(6, 'Password must be at least 6 characters')
 });
 
 // @desc    Register new user
@@ -225,6 +234,269 @@ export const logout = async (req: AuthRequest, res: Response, next: NextFunction
             message: 'Logged out successfully'
         });
     } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Request password reset
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const validatedData = forgotPasswordSchema.parse(req.body);
+        const { email } = validatedData;
+
+        const user = await User.findOne({ email });
+
+        // Always return success message to prevent email enumeration
+        if (!user) {
+            res.status(200).json({
+                success: true,
+                message: 'If an account exists with this email, you will receive a password reset link'
+            });
+            return;
+        }
+
+        // Generate reset token
+        const resetToken = generateResetToken();
+        const hashedToken = hashToken(resetToken);
+
+        // Save hashed token to user with expiry (1 hour)
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+        await user.save();
+
+        // Create reset URL
+        const frontendUrls = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',');
+        const frontendUrl = frontendUrls[0].trim();
+        const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+        // Email content
+        const message = `
+You are receiving this email because you (or someone else) has requested to reset your password.
+
+Please click on the following link, or paste it into your browser to complete the process:
+
+${resetUrl}
+
+If you did not request this, please ignore this email and your password will remain unchanged.
+
+This link will expire in 1 hour.
+        `;
+
+        const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .button { 
+            display: inline-block; 
+            padding: 12px 24px; 
+            background-color: #4F46E5; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 6px; 
+            margin: 20px 0;
+        }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Password Reset Request</h2>
+        <p>You are receiving this email because you (or someone else) has requested to reset your password.</p>
+        <p>Please click on the button below to reset your password:</p>
+        <a href="${resetUrl}" class="button">Reset Password</a>
+        <p>Or copy and paste this link into your browser:</p>
+        <p><a href="${resetUrl}">${resetUrl}</a></p>
+        <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+        <p><strong>This link will expire in 1 hour.</strong></p>
+        <div class="footer">
+            <p>This is an automated email from AcadIntern. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>
+        `;
+
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: 'Password Reset Request - AcadIntern',
+                text: message,
+                html: html
+            });
+
+            res.status(200).json({
+                success: true,
+                message: 'If an account exists with this email, you will receive a password reset link'
+            });
+        } catch (emailError) {
+            // If email fails, remove token from database
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpires = undefined;
+            await user.save();
+
+            res.status(500).json({
+                success: false,
+                message: 'Email could not be sent. Please try again later.'
+            });
+            return;
+        }
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            res.status(400).json({
+                success: false,
+                message: 'Validation error',
+                errors: error.errors
+            });
+            return;
+        }
+        next(error);
+    }
+};
+
+// @desc    Verify reset token
+// @route   GET /api/auth/reset-password/:token
+// @access  Public
+export const verifyResetToken = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { token } = req.params;
+
+        if (!token) {
+            res.status(400).json({
+                success: false,
+                message: 'Invalid or missing token'
+            });
+            return;
+        }
+
+        const hashedToken = hashToken(token);
+
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset token'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Token is valid',
+            data: {
+                email: user.email
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Reset password
+// @route   POST /api/auth/reset-password/:token
+// @access  Public
+export const resetPassword = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { token } = req.params;
+        const validatedData = resetPasswordSchema.parse(req.body);
+        const { password } = validatedData;
+
+        if (!token) {
+            res.status(400).json({
+                success: false,
+                message: 'Invalid or missing token'
+            });
+            return;
+        }
+
+        const hashedToken = hashToken(token);
+
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        }).select('+resetPasswordToken +resetPasswordExpires');
+
+        if (!user) {
+            res.status(400).json({
+                success: false,
+                message: 'Invalid or expired reset token'
+            });
+            return;
+        }
+
+        // Set new password (will be hashed by pre-save hook)
+        user.password_hash = password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        // Send confirmation email
+        const message = `
+This is a confirmation that the password for your AcadIntern account (${user.email}) has just been changed.
+
+If you did not make this change, please contact our support team immediately.
+        `;
+
+        const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .alert { background-color: #D1FAE5; border-left: 4px solid #10B981; padding: 12px; margin: 20px 0; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Password Changed Successfully</h2>
+        <div class="alert">
+            <p><strong>Your password has been changed.</strong></p>
+        </div>
+        <p>This is a confirmation that the password for your AcadIntern account (<strong>${user.email}</strong>) has just been changed.</p>
+        <p>If you did not make this change, please contact our support team immediately.</p>
+        <div class="footer">
+            <p>This is an automated email from AcadIntern. Please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html>
+        `;
+
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: 'Password Changed Successfully - AcadIntern',
+                text: message,
+                html: html
+            });
+        } catch (emailError) {
+            // Don't fail the password reset if confirmation email fails
+            console.error('Failed to send confirmation email:', emailError);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Password has been reset successfully. You can now login with your new password.'
+        });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            res.status(400).json({
+                success: false,
+                message: 'Validation error',
+                errors: error.errors
+            });
+            return;
+        }
         next(error);
     }
 };
