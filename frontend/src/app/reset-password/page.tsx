@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,21 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Lock, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
 
-export default function ResetPasswordPage() {
+function LoadingState() {
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
+            <Card className="w-full max-w-md shadow-2xl border-0 bg-white/80 backdrop-blur-xl animate-fade-up">
+                <CardHeader className="text-center py-10">
+                    <div className="mx-auto mb-6 h-12 w-12 rounded-full border-4 border-indigo-100 border-t-indigo-600 animate-spin"></div>
+                    <CardTitle className="text-xl font-medium text-gray-900">Loading...</CardTitle>
+                    <CardDescription className="mt-2 text-gray-500">Please wait a moment.</CardDescription>
+                </CardHeader>
+            </Card>
+        </div>
+    );
+}
+
+function ResetPasswordContent() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -228,5 +242,13 @@ export default function ResetPasswordPage() {
                 </form>
             </Card>
         </div>
+    );
+}
+
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={<LoadingState />}>
+            <ResetPasswordContent />
+        </Suspense>
     );
 }
