@@ -27,6 +27,11 @@ const companySchema = new Schema<ICompany>({
         type: Boolean,
         default: false
     },
+    cin: {
+        type: String,
+        trim: true,
+        default: null
+    },
     logo: {
         type: String,
         default: null

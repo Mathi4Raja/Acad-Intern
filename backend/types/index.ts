@@ -55,6 +55,7 @@ export interface ICompany extends Document {
     website?: string;
     description?: string;
     verified: boolean;
+    cin?: string;
     logo?: string;
     location?: string;
     industry?: string;

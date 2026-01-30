@@ -3,6 +3,7 @@ import { z } from 'zod';
 import User from '../models/User';
 import StudentProfile from '../models/StudentProfile';
 import Company from '../models/Company';
+import SystemSetting from '../models/SystemSetting';
 import { AuthRequest } from '../types';
 import { sendEmail, generateResetToken, hashToken } from '../utils/emailService';
 
@@ -262,14 +263,25 @@ export const forgotPassword = async (req: AuthRequest, res: Response, next: Next
         const hashedToken = hashToken(resetToken);
 
         // Save hashed token to user with expiry (1 hour)
-        user.resetPasswordToken = hashedToken;
-        user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-        await user.save();
-
         // Create reset URL
         const frontendUrls = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',');
         const frontendUrl = frontendUrls[0].trim();
         const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+        // Get dynamic expiration from settings (default 60 minutes)
+        let expiryMinutes = 60;
+        try {
+            const expirySetting = await SystemSetting.findOne({ key: 'security.passwordResetExpiry' });
+            if (expirySetting && expirySetting.value) {
+                expiryMinutes = Number(expirySetting.value);
+            }
+        } catch (err) {
+            console.error('Failed to fetch password reset expiry setting:', err);
+        }
+
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpires = new Date(Date.now() + expiryMinutes * 60 * 1000);
+        await user.save();
 
         // Email content
         const message = `
@@ -281,7 +293,7 @@ ${resetUrl}
 
 If you did not request this, please ignore this email and your password will remain unchanged.
 
-This link will expire in 1 hour.
+This link will expire in ${expiryMinutes} minutes.
         `;
 
         const html = `
@@ -312,7 +324,7 @@ This link will expire in 1 hour.
         <p>Or copy and paste this link into your browser:</p>
         <p><a href="${resetUrl}">${resetUrl}</a></p>
         <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
-        <p><strong>This link will expire in 1 hour.</strong></p>
+        <p><strong>This link will expire in ${expiryMinutes} minutes.</strong></p>
         <div class="footer">
             <p>This is an automated email from AcadIntern. Please do not reply to this email.</p>
         </div>

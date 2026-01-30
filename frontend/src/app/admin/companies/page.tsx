@@ -14,6 +14,7 @@ interface Company {
   }
   website?: string
   description?: string
+  cin?: string
   verified: boolean
   status: 'active' | 'pending' | 'suspended'
   createdAt: string
@@ -329,8 +330,8 @@ export default function ManageCompanies() {
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
-                        <span className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${getStatusColor(company.status)}`}>
-                          {company.status.charAt(0).toUpperCase() + company.status.slice(1)}
+                        <span className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${getStatusColor(company.status || 'unknown')}`}>
+                          {(company.status || 'unknown').charAt(0).toUpperCase() + (company.status || 'unknown').slice(1)}
                         </span>
                         {company.verified ? (
                           <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold flex items-center gap-1">
@@ -345,11 +346,26 @@ export default function ManageCompanies() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-2 text-xs text-gray-600">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-2 text-xs text-gray-600">
                     <div className="flex items-center gap-1">
                       <Mail size={12} className="flex-shrink-0" />
                       <span className="truncate">{company.userId?.email || 'N/A'}</span>
                     </div>
+                    {company.cin && (
+                      <div className="flex items-center gap-1">
+                        <Building size={12} className="flex-shrink-0" />
+                        <span className="font-mono text-[10px]">{company.cin}</span>
+                        <a
+                          href={`https://www.mca.gov.in/mcafoportal/companyLLPMasterData.do`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline ml-1"
+                          title="Verify on MCA Portal"
+                        >
+                          (Verify)
+                        </a>
+                      </div>
+                    )}
                     {company.website && (
                       <div className="flex items-center gap-1">
                         <Globe size={12} className="flex-shrink-0" />

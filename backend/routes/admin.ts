@@ -11,7 +11,9 @@ import {
     updateInternshipStatus,
     deleteInternship,
     getAllReports,
-    updateReportStatus
+    updateReportStatus,
+    getSystemSettings,
+    updateSystemSettings
 } from '../controllers/adminController';
 
 const router = Router();
@@ -40,5 +42,9 @@ router.delete('/internships/:id', deleteInternship);
 // Reports management
 router.get('/reports', getAllReports);
 router.put('/reports/:id', updateReportStatus);
+
+// System Settings
+router.get('/settings', getSystemSettings);
+router.put('/settings', updateSystemSettings);
 
 export default router;

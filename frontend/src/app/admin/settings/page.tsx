@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Settings, Bell, Shield, Database, Mail, Users, Building2, Save, AlertCircle, CheckCircle } from 'lucide-react'
+import { adminApi } from '@/lib/api'
 
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState('general')
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
-  
+
   const [settings, setSettings] = useState({
     // General Settings
     siteName: 'AcadIntern',
@@ -14,47 +15,66 @@ export default function AdminSettingsPage() {
     contactEmail: 'support@acadintern.com',
     maintenanceMode: false,
     allowRegistration: true,
-    
+
     // Email Settings
     emailProvider: 'resend',
     emailFrom: 'noreply@acadintern.com',
     emailApiKey: '••••••••••••••••',
-    
+
     // Notification Settings
     emailNotifications: true,
     applicationNotifications: true,
     reminderNotifications: true,
     marketingEmails: false,
-    
+
     // Security Settings
     requireEmailVerification: true,
+    passwordResetExpiry: 60,
     passwordMinLength: 8,
     sessionTimeout: 24,
     maxLoginAttempts: 5,
-    
+
     // Company Settings
     autoApproveCompanies: false,
     requireCompanyVerification: true,
     maxInternshipsPerCompany: 10,
-    
+
     // Student Settings
     maxApplicationsPerStudent: 20,
     allowResumeUpload: true,
     maxResumeSize: 2,
-    
+
     // Database Settings
     autoBackup: true,
     backupFrequency: 'daily',
     retentionDays: 30
   })
 
-  const handleSave = () => {
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await adminApi.getSettings();
+        if (response.data.data) {
+          // Merge fetched settings with defaults to ensure all keys exist
+          setSettings(prev => ({ ...prev, ...response.data.data }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const handleSave = async () => {
     setSaveStatus('saving')
-    // TODO: Replace with actual API call
-    setTimeout(() => {
+    try {
+      await adminApi.updateSettings(settings);
       setSaveStatus('saved')
       setTimeout(() => setSaveStatus('idle'), 2000)
-    }, 1000)
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      setSaveStatus('error')
+    }
   }
 
   const tabs = [
@@ -104,11 +124,10 @@ export default function AdminSettingsPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                      activeTab === tab.id
-                        ? 'bg-primary/10 text-primary border-l-4 border-primary'
-                        : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${activeTab === tab.id
+                      ? 'bg-primary/10 text-primary border-l-4 border-primary'
+                      : 'text-gray-700 hover:bg-gray-50 border-l-4 border-transparent'
+                      }`}
                   >
                     <Icon className="w-5 h-5" />
                     <span className="font-medium">{tab.label}</span>
@@ -302,6 +321,21 @@ export default function AdminSettingsPage() {
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                     </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Password Reset Token Expiration (minutes)
+                    </label>
+                    <input
+                      type="number"
+                      min="5"
+                      max="1440"
+                      value={settings.passwordResetExpiry}
+                      onChange={(e) => setSettings({ ...settings, passwordResetExpiry: parseInt(e.target.value) })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">How long password reset links remain valid</p>
                   </div>
 
                   <div>

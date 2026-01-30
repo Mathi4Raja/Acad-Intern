@@ -72,6 +72,11 @@ export const messageApi = {
     getUnreadCount: () => api.get('/messages/unread-count'),
 };
 
+export const adminApi = {
+    getSettings: () => api.get('/admin/settings'),
+    updateSettings: (settings: any) => api.put('/admin/settings', settings),
+};
+
 export default api;
 
 

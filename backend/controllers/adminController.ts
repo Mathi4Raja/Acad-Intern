@@ -6,6 +6,7 @@ import StudentProfile from '../models/StudentProfile';
 import Internship from '../models/Internship';
 import Application from '../models/Application';
 import Report from '../models/Report';
+import SystemSetting from '../models/SystemSetting';
 import { AuthRequest, IUser, ICompany, IInternship, IReport } from '../types';
 
 // Validation schemas
@@ -435,10 +436,77 @@ export const updateReportStatus = async (req: AuthRequest, res: Response, next: 
         await report.save();
         res.status(200).json({ success: true, message: `Report ${status}`, data: report });
     } catch (error) {
-        if (error instanceof z.ZodError) {
-            res.status(400).json({ success: false, message: 'Validation error', errors: error.errors });
-            return;
-        }
         next(error);
     }
+};
+
+// @desc    Get system settings
+// @route   GET /api/admin/settings
+// @access  Private (Admin)
+export const getSystemSettings = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const settings = await SystemSetting.find({});
+
+        // Convert array to object for easier frontend consumption
+        const settingsMap: Record<string, any> = {};
+        settings.forEach(setting => {
+            if (setting.group === 'security' && (setting.key === 'passwordResetExpiry' || setting.key.includes('Expiry'))) {
+                // Ensure numeric values are numbers
+                settingsMap[setting.key] = Number(setting.value);
+            } else {
+                settingsMap[setting.key] = setting.value;
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            data: settingsMap
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Update system settings
+// @route   PUT /api/admin/settings
+// @access  Private (Admin)
+export const updateSystemSettings = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const settings = req.body; // Expect key-value object
+
+        const updates = [];
+        for (const [key, value] of Object.entries(settings)) {
+            updates.push(
+                SystemSetting.findOneAndUpdate(
+                    { key },
+                    {
+                        key,
+                        value,
+                        group: getGroupForKey(key),
+                        updatedAt: new Date()
+                    },
+                    { upsert: true, new: true, setDefaultsOnInsert: true }
+                )
+            );
+        }
+
+        await Promise.all(updates);
+
+        res.status(200).json({
+            success: true,
+            message: 'Settings updated successfully'
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Helper to determine group based on key prefix or name
+const getGroupForKey = (key: string): string => {
+    if (key.startsWith('email') || key.includes('Email')) return 'email';
+    if (key.startsWith('security') || key.includes('Password') || key.includes('login')) return 'security';
+    if (key.startsWith('site') || key.includes('maintenance')) return 'general';
+    if (key.startsWith('company')) return 'companies';
+    if (key.startsWith('student')) return 'students';
+    return 'other';
 };
