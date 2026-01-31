@@ -10,9 +10,11 @@ interface AuthContextType {
     profile: StudentProfile | CompanyProfile | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (data: any) => Promise<void>; // Type 'any' for now, can be specific login payload
+    login: (data: any) => Promise<void>;
     signup: (data: any) => Promise<void>;
+    googleLogin: (idToken: string) => Promise<void>;
     logout: () => Promise<void>;
+    deleteAccount: () => Promise<void>;
     refreshUser: () => Promise<void>;
 }
 
@@ -105,6 +107,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const googleLogin = async (idToken: string) => {
+        try {
+            const res = await api.post('/auth/google', { idToken });
+            setUser(res.data.data.user);
+
+            // Store token in an accessible cookie for Socket.IO
+            const token = res.data.data.token;
+            if (token) {
+                setCookie('socket_token', token, 7);
+            }
+
+            await checkAuthStatus();
+
+            // Google OAuth is only for students
+            router.push('/student/dashboard');
+        } catch (error) {
+            throw error;
+        }
+    };
+
     const logout = async () => {
         try {
             await api.post('/auth/logout');
@@ -123,6 +145,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const deleteAccount = async () => {
+        try {
+            await api.delete('/auth/account');
+            // Clear the accessible token cookie
+            clearCookie('socket_token');
+            // Clear state and redirect
+            setUser(null);
+            setProfile(null);
+            router.push('/');
+        } catch (error) {
+            throw error;
+        }
+    };
+
     const refreshUser = async () => {
         await checkAuthStatus();
     };
@@ -135,7 +171,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             isLoading,
             login,
             signup,
+            googleLogin,
             logout,
+            deleteAccount,
             refreshUser
         }}>
             {children}

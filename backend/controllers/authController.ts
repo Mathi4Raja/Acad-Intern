@@ -1,11 +1,17 @@
 import { Response, NextFunction } from 'express';
 import { z } from 'zod';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User';
 import StudentProfile from '../models/StudentProfile';
 import Company from '../models/Company';
+import Application from '../models/Application';
+import Message from '../models/Message';
+import Notification from '../models/Notification';
+import Internship from '../models/Internship';
 import SystemSetting from '../models/SystemSetting';
 import { AuthRequest } from '../types';
 import { sendEmail, generateResetToken, hashToken } from '../utils/emailService';
+
 
 // Validation schemas
 const signupSchema = z.object({
@@ -109,6 +115,124 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
     }
 };
 
+// Google OAuth client
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// @desc    Authenticate with Google
+// @route   POST /api/auth/google
+// @access  Public
+export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { idToken } = req.body;
+
+        if (!idToken) {
+            res.status(400).json({
+                success: false,
+                message: 'ID token is required'
+            });
+            return;
+        }
+
+        // Verify the Google ID token
+        const ticket = await googleClient.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+        if (!payload) {
+            res.status(401).json({
+                success: false,
+                message: 'Invalid Google token'
+            });
+            return;
+        }
+
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email) {
+            res.status(400).json({
+                success: false,
+                message: 'Email not provided by Google'
+            });
+            return;
+        }
+
+        // Check if user exists by googleId or email
+        let user = await User.findOne({
+            $or: [{ googleId }, { email }]
+        });
+
+        let isNewUser = false;
+
+        if (!user) {
+            // Create new student user (Google OAuth is only for students)
+            isNewUser = true;
+            user = await User.create({
+                email,
+                name: name || email.split('@')[0],
+                googleId,
+                role: 'student',
+                status: 'active'
+                // No password_hash for OAuth users
+            });
+
+            // Create student profile
+            await StudentProfile.create({ userId: user._id });
+        } else if (!user.googleId) {
+            // User exists with same email but no googleId - link the accounts
+            user.googleId = googleId;
+            await user.save();
+        }
+
+        const token = user.generateAuthToken();
+
+        // Detect secure context
+        const origin = req.headers.origin || '';
+        const isSecureContext = origin.startsWith('https://') || process.env.NODE_ENV === 'production';
+
+        // HttpOnly cookie for secure API authentication
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: isSecureContext,
+            sameSite: isSecureContext ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        // Accessible cookie for Socket.io client-side authentication
+        res.cookie('socket_token', token, {
+            httpOnly: false,
+            secure: isSecureContext,
+            sameSite: isSecureContext ? 'none' : 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(isNewUser ? 201 : 200).json({
+            success: true,
+            message: isNewUser ? 'Account created successfully' : 'Login successful',
+            data: {
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                },
+                token,
+                isNewUser
+            }
+        });
+    } catch (error: any) {
+        if (error.message?.includes('Token used too late') || error.message?.includes('Invalid token')) {
+            res.status(401).json({
+                success: false,
+                message: 'Invalid or expired Google token'
+            });
+            return;
+        }
+        next(error);
+    }
+};
+
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
@@ -122,6 +246,15 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
             res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
+            });
+            return;
+        }
+
+        // Check if user signed up with Google OAuth only (no password)
+        if (!user.password_hash && user.googleId) {
+            res.status(401).json({
+                success: false,
+                message: 'This account uses Google Sign-In. Please click "Continue with Google" to login.'
             });
             return;
         }
@@ -509,6 +642,85 @@ If you did not make this change, please contact our support team immediately.
             });
             return;
         }
+        next(error);
+    }
+};
+
+// @desc    Delete user account
+// @route   DELETE /api/auth/account
+// @access  Private
+export const deleteAccount = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const userId = req.user?.id;
+
+        if (!userId) {
+            res.status(401).json({
+                success: false,
+                message: 'Not authenticated'
+            });
+            return;
+        }
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+            return;
+        }
+
+        // Block admin users from deleting their account
+        if (user.role === 'admin') {
+            res.status(403).json({
+                success: false,
+                message: 'Admin accounts cannot be deleted through this endpoint'
+            });
+            return;
+        }
+
+        // Delete related data based on user role
+        if (user.role === 'student') {
+            // Delete student's applications
+            await Application.deleteMany({ studentId: userId });
+            // Delete student profile
+            await StudentProfile.deleteOne({ userId });
+        } else if (user.role === 'company') {
+            // Get company to find internships
+            const company = await Company.findOne({ userId });
+            if (company) {
+                // Delete all applications to company's internships
+                const internships = await Internship.find({ companyId: company._id });
+                const internshipIds = internships.map(i => i._id);
+                await Application.deleteMany({ internshipId: { $in: internshipIds } });
+                // Delete company's internships
+                await Internship.deleteMany({ companyId: company._id });
+                // Delete company profile
+                await Company.deleteOne({ userId });
+            }
+        }
+
+        // Delete user's messages (sent and received)
+        await Message.deleteMany({
+            $or: [{ senderId: userId }, { receiverId: userId }]
+        });
+
+        // Delete user's notifications
+        await Notification.deleteMany({ userId });
+
+        // Delete the user account
+        await User.deleteOne({ _id: userId });
+
+        // Clear authentication cookies
+        res.clearCookie('token');
+        res.clearCookie('socket_token');
+
+        res.status(200).json({
+            success: true,
+            message: 'Account deleted successfully'
+        });
+    } catch (error) {
         next(error);
     }
 };

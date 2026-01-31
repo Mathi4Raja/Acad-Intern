@@ -25,6 +25,7 @@ export interface IUser extends Document {
     name: string;
     createdAt: Date;
     status: UserStatus;
+    googleId?: string;
     resetPasswordToken?: string;
     resetPasswordExpires?: Date;
     comparePassword(candidatePassword: string): Promise<boolean>;

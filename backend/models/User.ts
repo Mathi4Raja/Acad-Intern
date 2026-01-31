@@ -14,9 +14,9 @@ const userSchema = new Schema<IUser>({
     },
     password_hash: {
         type: String,
-        required: [true, 'Password is required'],
         minlength: 6,
         select: false
+        // Not required - Google OAuth users won't have passwords
     },
     role: {
         type: String,
@@ -37,6 +37,11 @@ const userSchema = new Schema<IUser>({
         enum: ['active', 'pending', 'suspended'],
         default: 'active'
     },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true // Allows multiple null values
+    },
     resetPasswordToken: {
         type: String,
         select: false
@@ -47,9 +52,9 @@ const userSchema = new Schema<IUser>({
     }
 });
 
-// Hash password before saving
+// Hash password before saving (only if password exists and is modified)
 userSchema.pre('save', async function (next) {
-    if (!this.isModified('password_hash')) {
+    if (!this.password_hash || !this.isModified('password_hash')) {
         return next();
     }
     const salt = await bcrypt.genSalt(10);

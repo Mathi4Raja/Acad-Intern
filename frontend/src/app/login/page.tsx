@@ -1,13 +1,27 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle, ArrowLeft } from 'lucide-react'
 
 import { useAuth } from '@/lib/AuthContext'
 
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
+
 export default function LoginPage() {
-  const { login } = useAuth()
+  const { login, googleLogin } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
@@ -15,6 +29,7 @@ export default function LoginPage() {
   })
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,6 +44,72 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   }
+
+  // Handle Google Sign-In callback
+  const handleGoogleCallback = async (response: { credential: string }) => {
+    setIsGoogleLoading(true);
+    setError('');
+    try {
+      await googleLogin(response.credential);
+      // Redirect handled in AuthContext
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Google sign-in failed. Please try again.');
+      setIsGoogleLoading(false);
+    }
+  };
+
+  // Track when Google script is ready
+  const [isGoogleReady, setIsGoogleReady] = useState(false);
+  const googleButtonContainerRef = useRef<HTMLDivElement>(null);
+
+  // Load Google Identity Services script
+  useEffect(() => {
+    // Check if script is already loaded
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        callback: handleGoogleCallback,
+      });
+      setIsGoogleReady(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+          callback: handleGoogleCallback,
+        });
+        setIsGoogleReady(true);
+      }
+    };
+
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, []);
+
+  // Render Google button when script is ready and container exists
+  useEffect(() => {
+    if (isGoogleReady && googleButtonContainerRef.current && window.google) {
+      googleButtonContainerRef.current.innerHTML = '';
+      window.google.accounts.id.renderButton(googleButtonContainerRef.current, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        width: googleButtonContainerRef.current.offsetWidth || 280,
+      });
+    }
+  }, [isGoogleReady]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-8">
@@ -147,7 +228,29 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Divider */}
+          {/* Google Sign-In Divider */}
+          <div className="mt-6 relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">or continue with</span>
+            </div>
+          </div>
+
+          {/* Google Sign-In Button */}
+          <div className="mt-4">
+            {isGoogleLoading ? (
+              <div className="flex items-center justify-center gap-2 w-full py-3 px-4 border border-gray-300 rounded-lg bg-gray-50">
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-gray-600">Signing in with Google...</span>
+              </div>
+            ) : (
+              <div ref={googleButtonContainerRef} className="w-full flex justify-center"></div>
+            )}
+          </div>
+
+          {/* Signup Link Divider */}
           <div className="mt-6 relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>

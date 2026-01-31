@@ -1,20 +1,35 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Eye, EyeOff, Mail, Lock, User, Building2, GraduationCap, ArrowRight, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
 
 type UserRole = 'student' | 'company' | null
 
 import { useAuth } from '@/lib/AuthContext'
 
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void;
+          renderButton: (element: HTMLElement, config: any) => void;
+          prompt: () => void;
+        };
+      };
+    };
+  }
+}
+
 export default function SignupPage() {
-  const { signup } = useAuth()
+  const { signup, googleLogin } = useAuth()
   const [selectedRole, setSelectedRole] = useState<UserRole>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -78,6 +93,74 @@ export default function SignupPage() {
     }
   }
 
+  // Handle Google Sign-In callback
+  const handleGoogleCallback = async (response: { credential: string }) => {
+    setIsGoogleLoading(true);
+    setError('');
+    try {
+      await googleLogin(response.credential);
+      // Redirect handled in AuthContext
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Google sign-in failed. Please try again.');
+      setIsGoogleLoading(false);
+    }
+  };
+
+  // Track when Google script is ready
+  const [isGoogleReady, setIsGoogleReady] = useState(false);
+  const googleButtonContainerRef = useRef<HTMLDivElement>(null);
+
+  // Load Google Identity Services script
+  useEffect(() => {
+    // Check if script is already loaded
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        callback: handleGoogleCallback,
+      });
+      setIsGoogleReady(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    script.onload = () => {
+      if (window.google) {
+        window.google.accounts.id.initialize({
+          client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+          callback: handleGoogleCallback,
+        });
+        setIsGoogleReady(true);
+      }
+    };
+
+    return () => {
+      // Only remove if we added it
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+    };
+  }, []);
+
+  // Render Google button when script is ready and container exists
+  useEffect(() => {
+    if (isGoogleReady && googleButtonContainerRef.current && window.google) {
+      // Clear any existing button first
+      googleButtonContainerRef.current.innerHTML = '';
+      window.google.accounts.id.renderButton(googleButtonContainerRef.current, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        width: googleButtonContainerRef.current.offsetWidth || 280,
+      });
+    }
+  }, [isGoogleReady]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
       {/* Background decorative elements - pointer-events-none to not block clicks */}
@@ -98,19 +181,16 @@ export default function SignupPage() {
         {!selectedRole ? (
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {/* Student Role */}
-            <button
-              onClick={() => setSelectedRole('student')}
-              className="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-100 hover:border-primary hover:shadow-xl transition-all group"
-            >
+            <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-100">
               <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                   <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">I'm a Student</h2>
                 <p className="text-sm sm:text-base text-gray-600 mb-4">
                   Looking for internship opportunities to gain practical experience
                 </p>
-                <div className="space-y-2 text-left w-full">
+                <div className="space-y-2 text-left w-full mb-4">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <CheckCircle className="w-4 h-4 text-green-500" />
                     <span>Browse internships</span>
@@ -124,8 +204,37 @@ export default function SignupPage() {
                     <span>Track applications</span>
                   </div>
                 </div>
+
+                {/* Google Sign-In Button */}
+                <div className="w-full mb-3">
+                  {isGoogleLoading ? (
+                    <div className="flex items-center justify-center gap-2 w-full py-3 px-4 border border-gray-300 rounded-lg bg-gray-50">
+                      <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-gray-600">Signing in...</span>
+                    </div>
+                  ) : (
+                    <div ref={googleButtonContainerRef} className="w-full flex justify-center"></div>
+                  )}
+                </div>
+
+                <div className="relative w-full my-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="px-2 bg-white text-gray-500">or</span>
+                  </div>
+                </div>
+
+                {/* Manual signup button */}
+                <button
+                  onClick={() => setSelectedRole('student')}
+                  className="w-full mt-2 py-2 px-4 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors"
+                >
+                  Sign up with email
+                </button>
               </div>
-            </button>
+            </div>
 
             {/* Company Role */}
             <button
