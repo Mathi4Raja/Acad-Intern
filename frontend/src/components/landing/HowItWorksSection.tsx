@@ -42,10 +42,10 @@ export function HowItWorksSection() {
     }, []);
 
     return (
-        <section id="how-it-works" ref={ref} className="py-12 md:py-24 lg:py-32 bg-muted/40 relative overflow-hidden">
+        <section id="how-it-works" ref={ref} className="py-10 md:py-16 lg:py-20 bg-muted/40 relative overflow-hidden">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
                 {/* Header */}
-                <div className="text-center max-w-3xl mx-auto mb-8 md:mb-16">
+                <div className="text-center max-w-3xl mx-auto mb-6 md:mb-10">
                     <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-5 reveal">
                         How It <span className="gradient-text">Works</span>
                     </h2>
@@ -59,28 +59,28 @@ export function HowItWorksSection() {
                     {/* Connection line - desktop only */}
                     <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30 -translate-y-1/2" />
 
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 lg:gap-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                         {steps.map((step, i) => (
                             <div
                                 key={i}
                                 className="reveal relative"
                                 style={{ transitionDelay: `${i * 100}ms` }}
                             >
-                                <div className="bg-card border border-border/60 rounded-xl md:rounded-2xl p-4 md:p-7 card-hover relative z-10 h-full group">
+                                <div className="bg-card border border-border/60 rounded-lg md:rounded-xl p-3 md:p-5 card-hover relative z-10 h-full group">
                                     {/* Step number badge */}
-                                    <div className="absolute -top-2 -right-2 md:-top-4 md:-right-4 w-8 h-8 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-xs md:text-sm shadow-lg shadow-primary/25 group-hover:scale-110 transition-transform">
+                                    <div className="absolute -top-1.5 -right-1.5 md:-top-3 md:-right-3 w-6 h-6 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-[10px] md:text-xs shadow-lg shadow-primary/25 group-hover:scale-110 transition-transform">
                                         {step.num}
                                     </div>
 
                                     {/* Icon */}
-                                    <div className="w-10 h-10 md:w-14 md:h-14 rounded-lg md:rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center text-primary mb-3 md:mb-5 icon-float">
-                                        <svg className="w-5 h-5 md:w-7 md:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                                    <div className="w-8 h-8 md:w-11 md:h-11 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center text-primary mb-2 md:mb-3 icon-float">
+                                        <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d={step.icon} />
                                         </svg>
                                     </div>
 
-                                    <h3 className="text-sm md:text-lg font-semibold mb-1 md:mb-2">{step.title}</h3>
-                                    <p className="text-xs md:text-base text-muted-foreground leading-relaxed">{step.desc}</p>
+                                    <h3 className="text-xs md:text-base font-semibold mb-0.5 md:mb-1">{step.title}</h3>
+                                    <p className="text-[10px] md:text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
                                 </div>
                             </div>
                         ))}

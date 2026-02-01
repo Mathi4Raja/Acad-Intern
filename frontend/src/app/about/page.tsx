@@ -68,7 +68,7 @@ export default function AboutPage() {
 
   const team = [
     {
-      name: 'Mathivanan',
+      name: 'Mathiraja',
       role: 'Founder & Developer',
       description: 'Full-stack developer passionate about education technology'
     }
@@ -150,12 +150,12 @@ export default function AboutPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/10 to-white">
+      <section className="pt-24 pb-10 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/10 to-white">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Connecting Students with <span className="text-primary">Real Opportunities</span>
           </h1>
-          <p className="text-base sm:text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+          <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
             AcadIntern is a student-first platform designed to bridge the gap between academic learning
             and industry experience through meaningful internship opportunities.
           </p>
@@ -163,18 +163,18 @@ export default function AboutPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-10 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                    <stat.icon className="w-8 h-8 text-primary" />
+              <div key={index} className="text-center p-5 bg-gray-50 rounded-xl">
+                <div className="flex justify-center mb-3">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <stat.icon className="w-6 h-6 text-primary" />
                   </div>
                 </div>
-                <div className="text-4xl font-bold text-gray-900 mb-2">{stat.value}</div>
-                <div className="text-gray-600">{stat.label}</div>
+                <div className="text-2xl md:text-3xl font-bold text-gray-900 mb-1">{stat.value}</div>
+                <div className="text-sm text-gray-600">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -182,38 +182,37 @@ export default function AboutPage() {
       </section>
 
       {/* Mission Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section className="py-10 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
-              <p className="text-lg text-gray-600 mb-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Our Mission</h2>
+              <p className="text-base text-gray-600 mb-4">
                 We believe that every student deserves access to quality internship opportunities
                 that complement their academic journey and prepare them for successful careers.
               </p>
-              <p className="text-lg text-gray-600 mb-6">
+              <p className="text-base text-gray-600 mb-5">
                 AcadIntern was created to solve the common challenges students face: finding relevant
-                opportunities, navigating complex application processes, and getting timely responses
-                from companies.
+                opportunities, navigating complex application processes, and getting timely responses.
               </p>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
-                  <span className="text-gray-700">Simplified application process</span>
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-base text-gray-700">Simplified application process</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
-                  <span className="text-gray-700">Transparent communication</span>
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-base text-gray-700">Transparent communication</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
-                  <span className="text-gray-700">Quality-focused opportunities</span>
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-base text-gray-700">Quality-focused opportunities</span>
                 </div>
               </div>
             </div>
-            <div className="relative">
-              <div className="bg-gradient-to-br from-primary/20 to-purple-100 rounded-2xl p-8 h-96 flex items-center justify-center">
-                <Sparkles className="w-32 h-32 text-primary" />
+            <div className="relative hidden md:block">
+              <div className="bg-gradient-to-br from-primary/20 to-purple-100 rounded-2xl p-8 h-72 flex items-center justify-center">
+                <Sparkles className="w-24 h-24 text-primary" />
               </div>
             </div>
           </div>
@@ -221,23 +220,23 @@ export default function AboutPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-10 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose AcadIntern?</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Why Choose AcadIntern?</h2>
+            <p className="text-base text-gray-600 max-w-2xl mx-auto">
               Built with students in mind, packed with features to make your internship search effortless
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6">
             {features.map((feature, index) => (
-              <div key={index} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <div key={index} className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-shadow">
+                <div className="w-11 h-11 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                   <feature.icon className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{feature.title}</h3>
+                <p className="text-sm text-gray-600">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -245,24 +244,22 @@ export default function AboutPage() {
       </section>
 
       {/* Values Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <section className="py-10 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Core Values</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              The principles that guide everything we do
-            </p>
+          <div className="text-center mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Our Core Values</h2>
+            <p className="text-base text-gray-600">The principles that guide everything we do</p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {values.map((value, index) => (
               <div key={index} className="text-center">
-                <div className="bg-white rounded-xl p-6 h-full border border-gray-200">
-                  <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-white font-bold text-xl">{index + 1}</span>
+                <div className="bg-white rounded-xl p-5 h-full border border-gray-200">
+                  <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-white font-bold">{index + 1}</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{value.title}</h3>
-                  <p className="text-gray-600">{value.description}</p>
+                  <h3 className="text-base font-semibold text-gray-900 mb-2">{value.title}</h3>
+                  <p className="text-sm text-gray-600">{value.description}</p>
                 </div>
               </div>
             ))}
@@ -271,24 +268,22 @@ export default function AboutPage() {
       </section>
 
       {/* Team Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-10 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Meet the Team</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Passionate individuals working to make internships accessible to everyone
-            </p>
+          <div className="text-center mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Meet the Team</h2>
+            <p className="text-base text-gray-600">Passionate individuals making internships accessible</p>
           </div>
 
           <div className="flex justify-center">
             {team.map((member, index) => (
-              <div key={index} className="bg-white border border-gray-200 rounded-xl p-8 max-w-sm text-center hover:shadow-lg transition-shadow">
-                <div className="w-24 h-24 bg-gradient-to-br from-primary/40 to-purple-400 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <span className="text-3xl font-bold text-white">{member.name.charAt(0)}</span>
+              <div key={index} className="bg-white border border-gray-200 rounded-xl p-6 max-w-sm text-center hover:shadow-lg transition-shadow">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary/40 to-purple-400 rounded-full mx-auto mb-4 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-white">{member.name.charAt(0)}</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">{member.name}</h3>
-                <p className="text-primary font-medium mb-3">{member.role}</p>
-                <p className="text-gray-600">{member.description}</p>
+                <h3 className="text-lg font-semibold text-gray-900">{member.name}</h3>
+                <p className="text-primary font-medium mb-2">{member.role}</p>
+                <p className="text-sm text-gray-600">{member.description}</p>
               </div>
             ))}
           </div>
@@ -296,35 +291,28 @@ export default function AboutPage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/10 to-purple-50">
+      <section className="py-10 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-primary/10 to-purple-50">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Getting started is simple and takes just a few minutes
-            </p>
+          <div className="text-center mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">How It Works</h2>
+            <p className="text-base text-gray-600">Getting started is simple and takes just a few minutes</p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {[
-              { step: '1', title: 'Sign Up', description: 'Create your account as a student or company in minutes' },
-              { step: '2', title: 'Complete Profile', description: 'Add your details, skills, and preferences' },
-              { step: '3', title: 'Browse & Apply', description: 'Find opportunities and apply with one click' },
-              { step: '4', title: 'Get Hired', description: 'Connect with companies and start your internship' }
+              { step: '1', title: 'Sign Up', description: 'Create your account in minutes' },
+              { step: '2', title: 'Complete Profile', description: 'Add your details and skills' },
+              { step: '3', title: 'Browse & Apply', description: 'Find and apply with one click' },
+              { step: '4', title: 'Get Hired', description: 'Start your internship journey' }
             ].map((item, index) => (
               <div key={index} className="text-center">
-                <div className="bg-white rounded-xl p-6 shadow-lg">
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-white">{item.step}</span>
+                <div className="bg-white rounded-xl p-5 shadow-md">
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-xl font-bold text-white">{item.step}</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{item.title}</h3>
-                  <p className="text-gray-600">{item.description}</p>
+                  <h3 className="text-base font-semibold text-gray-900 mb-1">{item.title}</h3>
+                  <p className="text-sm text-gray-600">{item.description}</p>
                 </div>
-                {index < 3 && (
-                  <div className="hidden md:block absolute top-1/3 left-full w-full">
-                    <ArrowRight className="w-6 h-6 text-primary/40 mx-auto" />
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -332,20 +320,18 @@ export default function AboutPage() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-white">
+      <section className="py-10 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Get in Touch</h2>
-          <p className="text-lg text-gray-600 mb-12">
-            Have questions or suggestions? We'd love to hear from you!
-          </p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Get in Touch</h2>
+          <p className="text-base text-gray-600 mb-8">Have questions? We'd love to hear from you!</p>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
+          <div className="grid grid-cols-3 gap-6">
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-3">
                 <Mail className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-              <a href="mailto:support@acadintern.com" className="text-primary hover:text-primary/80 transition-colors">
+              <a href="mailto:support@acadintern.com" className="text-sm text-primary hover:text-primary/80 transition-colors">
                 support@acadintern.com
               </a>
             </div>
@@ -355,7 +341,7 @@ export default function AboutPage() {
                 <Phone className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">Phone</h3>
-              <a href="tel:+1234567890" className="text-primary hover:text-primary/80 transition-colors">
+              <a href="tel:+1234567890" className="text-sm text-primary hover:text-primary/80 transition-colors">
                 +1 (234) 567-890
               </a>
             </div>
@@ -365,32 +351,30 @@ export default function AboutPage() {
                 <MapPin className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">Location</h3>
-              <p className="text-gray-600">Online Platform</p>
+              <p className="text-sm text-gray-600">Online Platform</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary to-accent">
+      <section className="py-10 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary to-accent">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to Start Your Journey?
-          </h2>
-          <p className="text-xl text-white/80 mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Ready to Start Your Journey?</h2>
+          <p className="text-base text-white/80 mb-6">
             Join thousands of students already finding their dream internships
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/signup"
-              className="bg-white text-primary px-8 py-3 rounded-lg font-bold hover:bg-white/90 transition-all shadow-xl hover:-translate-y-1 inline-flex items-center justify-center gap-2"
+              className="bg-white text-primary px-7 py-2.5 rounded-lg font-semibold hover:bg-white/90 transition-all shadow-lg inline-flex items-center justify-center gap-2"
             >
               Get Started Free
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               href="/internships"
-              className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:text-primary transition-all inline-flex items-center justify-center gap-2"
+              className="bg-transparent border-2 border-white text-white px-7 py-2.5 rounded-lg font-medium hover:bg-white hover:text-primary transition-all inline-flex items-center justify-center gap-2"
             >
               Browse Internships
             </Link>
@@ -399,22 +383,22 @@ export default function AboutPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+      <footer className="bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
-          <Link href="/" className="text-2xl font-bold text-white hover:text-primary/80 transition-colors">
+          <Link href="/" className="text-xl font-bold text-white hover:text-primary/80 transition-colors">
             AcadIntern
           </Link>
-          <p className="mt-4 text-gray-400">
+          <p className="mt-3 text-sm text-gray-400">
             © 2026 AcadIntern. All rights reserved.
           </p>
-          <div className="mt-6 flex justify-center gap-6">
-            <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
+          <div className="mt-4 flex justify-center gap-5">
+            <Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors">
               Terms
             </Link>
-            <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
+            <Link href="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
               Privacy
             </Link>
-            <Link href="/about" className="text-gray-400 hover:text-white transition-colors">
+            <Link href="/about" className="text-sm text-gray-400 hover:text-white transition-colors">
               About
             </Link>
           </div>

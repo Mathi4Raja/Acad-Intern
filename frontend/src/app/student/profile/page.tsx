@@ -33,6 +33,7 @@ export default function StudentProfile() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
+  const [resumeVersion, setResumeVersion] = useState(Date.now())
 
   const [resumeFile, setResumeFile] = useState<File | null>(null)
 
@@ -170,6 +171,7 @@ export default function StudentProfile() {
         setIsEditing(false)
         setResumeFile(null) // Clear pending file
         setProfile({ ...profile, resumeUrl: updatedResumeUrl }) // Update local profile state with new URL
+        setResumeVersion(Date.now()) // Update version to bust cache
         setSuccessMessage('Profile saved successfully!')
         setTimeout(() => setSuccessMessage(null), 3000)
       }
@@ -198,12 +200,21 @@ export default function StudentProfile() {
     if (!file) return
 
     // Validate file
-    if (file.type !== 'application/pdf') {
-      setError('Please upload a PDF file')
+    // Validate file
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/jpeg',
+      'image/png'
+    ]
+
+    if (!allowedTypes.includes(file.type)) {
+      setError('Please upload a PDF, Word document, or Image')
       return
     }
-    if (file.size > 2 * 1024 * 1024) {
-      setError('File size must be less than 2MB')
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size must be less than 5MB')
       return
     }
 
@@ -569,7 +580,7 @@ export default function StudentProfile() {
             </div>
             <div className="flex gap-2">
               <a
-                href={previewUrl || profile.resumeUrl}
+                href={previewUrl || (profile.resumeUrl ? `${profile.resumeUrl}?t=${resumeVersion}` : '#')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`flex-1 flex items-center justify-center gap-1 text-primary text-xs px-2 py-1.5 border border-primary/30 rounded-lg hover:bg-primary/5 ${(!previewUrl && !isValidUrl(profile.resumeUrl)) ? 'pointer-events-none opacity-50' : ''}`}
@@ -590,7 +601,13 @@ export default function StudentProfile() {
               {isEditing && (
                 <label className="flex-1 bg-primary text-white px-2 py-1.5 rounded-lg hover:bg-primary/90 cursor-pointer text-xs flex items-center justify-center gap-1">
                   {uploading ? <Loader2 size={12} className="animate-spin" /> : 'Change'}
-                  <input type="file" accept=".pdf" onChange={handleResumeUpload} className="hidden" disabled={uploading} />
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    onChange={handleResumeUpload}
+                    className="hidden"
+                    disabled={uploading}
+                  />
                 </label>
               )}
             </div>
@@ -598,7 +615,7 @@ export default function StudentProfile() {
         ) : (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center">
             <Upload className="mx-auto text-gray-400 mb-2" size={32} />
-            <p className="text-gray-600 mb-2 text-xs sm:text-sm">Upload resume (PDF, max 2MB)</p>
+            <p className="text-gray-600 mb-2 text-xs sm:text-sm">Upload resume (PDF, DOC/X, Image - max 5MB)</p>
             {isEditing && (
               <label className={`inline-flex items-center gap-1.5 bg-primary text-white px-3 py-1.5 rounded-lg cursor-pointer text-xs sm:text-sm ${uploading ? 'opacity-50' : ''}`}>
                 {uploading ? (
@@ -609,7 +626,13 @@ export default function StudentProfile() {
                 ) : (
                   'Choose File'
                 )}
-                <input type="file" accept=".pdf" onChange={handleResumeUpload} className="hidden" disabled={uploading} />
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  onChange={handleResumeUpload}
+                  className="hidden"
+                  disabled={uploading}
+                />
               </label>
             )}
           </div>

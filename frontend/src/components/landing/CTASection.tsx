@@ -17,7 +17,7 @@ export function CTASection() {
     }, []);
 
     return (
-        <section ref={ref} className="py-12 md:py-24 lg:py-32 relative overflow-hidden">
+        <section ref={ref} className="py-10 md:py-16 lg:py-20 relative overflow-hidden">
             {/* Background */}
             <div className="absolute inset-0 -z-10">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent" />

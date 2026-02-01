@@ -471,6 +471,20 @@
   animation-delay: 100ms;
 }
 
+/* Custom Utilities */
+.bg-gradient-conic {
+  background-image: conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops));
+}
+
+@keyframes grid-move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 60px 60px;
+  }
+}
+
 .delay-200 {
   animation-delay: 200ms;
 }

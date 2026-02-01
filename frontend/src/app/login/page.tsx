@@ -104,7 +104,7 @@ export default function LoginPage() {
       window.google.accounts.id.renderButton(googleButtonContainerRef.current, {
         type: 'standard',
         theme: 'outline',
-        size: 'large',
+        size: 'medium',
         text: 'continue_with',
         width: googleButtonContainerRef.current.offsetWidth || 280,
       });
@@ -112,40 +112,49 @@ export default function LoginPage() {
   }, [isGoogleReady]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-8">
-      {/* Background decorative elements - pointer-events-none to not block clicks */}
-      <div className="absolute top-20 left-10 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float pointer-events-none"></div>
-      <div className="absolute bottom-20 right-10 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float pointer-events-none" style={{ animationDelay: '2s' }}></div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-8 relative">
+      {/* Back Arrow - Top Left */}
+      <Link
+        href="/"
+        className="absolute top-4 left-4 p-2 rounded-full bg-white/80 hover:bg-white shadow-sm hover:shadow-md text-gray-600 hover:text-primary transition-all z-20"
+        aria-label="Back to home"
+      >
+        <ArrowLeft className="w-5 h-5" />
+      </Link>
 
-      <div className="max-w-md w-full relative z-10">
+      {/* Background decorative elements */}
+      <div className="absolute top-20 left-10 w-56 h-56 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float pointer-events-none"></div>
+      <div className="absolute bottom-20 right-10 w-56 h-56 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float pointer-events-none" style={{ animationDelay: '2s' }}></div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Header */}
-        <div className="text-center mb-6">
-          <Link href="/" className="text-xl sm:text-2xl font-bold text-primary hover:text-primary transition-colors">
+        <div className="text-center mb-5">
+          <Link href="/" className="text-2xl font-bold text-primary hover:text-primary transition-colors">
             AcadIntern
           </Link>
-          <h1 className="mt-4 text-xl sm:text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="mt-1 text-xs sm:text-sm text-gray-600">Login to your account to continue</p>
+          <h1 className="mt-3 text-xl font-bold text-gray-900">Welcome back</h1>
+          <p className="mt-1 text-sm text-gray-500">Login to your account</p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100">
+        <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-100">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm">{error}</span>
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg flex items-center gap-2 text-xs">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{error}</span>
               </div>
             )}
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
                 Email Address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   id="email"
@@ -153,7 +162,7 @@ export default function LoginPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="block w-full pl-10 pr-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm sm:text-base"
+                  className="block w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
                   placeholder="you@example.com"
                 />
               </div>
@@ -161,12 +170,12 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
                 Password
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   id="password"
@@ -174,7 +183,7 @@ export default function LoginPage() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="block w-full pl-10 pr-10 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm sm:text-base"
+                  className="block w-full pl-9 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm"
                   placeholder="••••••••"
                 />
                 <button
@@ -183,27 +192,27 @@ export default function LoginPage() {
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                   )}
                 </button>
               </div>
             </div>
 
             {/* Remember Me & Forgot Password */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
                   id="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  className="h-3.5 w-3.5 text-primary focus:ring-primary border-gray-300 rounded"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-xs sm:text-sm text-gray-700">
+                <label htmlFor="remember-me" className="ml-1.5 block text-xs text-gray-600">
                   Remember me
                 </label>
               </div>
-              <Link href="/forgot-password" className="text-xs sm:text-sm font-medium text-primary hover:text-primary/90">
+              <Link href="/forgot-password" className="text-xs font-medium text-primary hover:text-primary/90">
                 Forgot password?
               </Link>
             </div>
@@ -212,77 +221,53 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 focus:ring-4 focus:ring-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2 px-4 rounded-lg font-medium text-sm hover:bg-primary/90 focus:ring-4 focus:ring-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   Logging in...
                 </>
               ) : (
                 <>
                   Login
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
           {/* Google Sign-In Divider */}
-          <div className="mt-6 relative">
+          <div className="mt-4 relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-gray-200"></div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">or continue with</span>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-2 bg-white text-gray-400">or continue with</span>
             </div>
           </div>
 
           {/* Google Sign-In Button */}
-          <div className="mt-4">
+          <div className="mt-3">
             {isGoogleLoading ? (
-              <div className="flex items-center justify-center gap-2 w-full py-3 px-4 border border-gray-300 rounded-lg bg-gray-50">
-                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-gray-600">Signing in with Google...</span>
+              <div className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-gray-300 rounded-lg bg-gray-50 text-sm">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-gray-600">Signing in...</span>
               </div>
             ) : (
               <div ref={googleButtonContainerRef} className="w-full flex justify-center"></div>
             )}
           </div>
 
-          {/* Signup Link Divider */}
-          <div className="mt-6 relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Don't have an account?</span>
-            </div>
-          </div>
-
           {/* Sign Up Link */}
-          <div className="mt-6">
-            <Link
-              href="/signup"
-              className="w-full flex items-center justify-center gap-2 bg-white text-primary py-3 px-4 rounded-lg font-medium border-2 border-primary hover:bg-primary/5 transition-all"
-            >
-              Create an account
+          <div className="mt-4 pt-3 border-t border-gray-100 text-center">
+            <span className="text-xs text-gray-500">Don't have an account? </span>
+            <Link href="/signup" className="text-xs font-medium text-primary hover:text-primary/90">
+              Create one
             </Link>
           </div>
         </div>
-
-        {/* Back to Home */}
-        {/* Back to Home */}
-        <div className="mt-8 text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-gray-700 bg-white/80 backdrop-blur-sm hover:bg-white hover:text-primary rounded-full transition-all duration-200 border border-gray-200 shadow-sm hover:shadow-md group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
-            Back to home
-          </Link>
-        </div>
-      </div >
-    </div >
+      </div>
+    </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Search, MapPin, Clock, DollarSign, Briefcase, Building2, Filter, X, ChevronDown, Menu } from 'lucide-react'
+import { Search, MapPin, Clock, Building2, Filter, X, Menu } from 'lucide-react'
 import api from '@/lib/api'
 
 // Helper to format "x days ago"
@@ -28,6 +28,7 @@ export default function InternshipsPage() {
   const [allInternships, setAllInternships] = useState<any[]>([])
   const [filteredInternships, setFilteredInternships] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [sortBy, setSortBy] = useState('recent')
 
   useEffect(() => {
     const fetchInternships = async () => {
@@ -93,8 +94,21 @@ export default function InternshipsPage() {
       return matchesSearch && matchesMode && matchesDuration && matchesStipend;
     });
 
-    setFilteredInternships(result);
-  }, [searchQuery, filters, allInternships, isLoading]);
+    // Apply sorting
+    const sorted = [...result].sort((a, b) => {
+      if (sortBy === 'stipend') {
+        return b.stipend - a.stipend; // Highest first
+      } else if (sortBy === 'duration') {
+        const weeksA = parseInt(a.duration.split(' ')[0]) || 0;
+        const weeksB = parseInt(b.duration.split(' ')[0]) || 0;
+        return weeksA - weeksB; // Shortest first
+      }
+      // Default: recent (by index, since data is already sorted by createdAt desc)
+      return 0;
+    });
+
+    setFilteredInternships(sorted);
+  }, [searchQuery, filters, allInternships, isLoading, sortBy]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -172,35 +186,32 @@ export default function InternshipsPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-24 pb-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary to-accent">
+      <section className="pt-20 pb-6 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary to-accent">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center text-white mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-4">Find Your Dream Internship</h1>
-            <p className="text-base sm:text-xl text-white/80">
+          <div className="text-center text-white mb-5">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Find Your Dream Internship</h1>
+            <p className="text-sm sm:text-base text-white/80">
               Explore {allInternships.length}+ opportunities from top companies
             </p>
           </div>
 
           {/* Search Bar */}
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-white rounded-lg shadow-lg p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <Search className="hidden sm:block w-5 h-5 text-gray-400 ml-2" />
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white rounded-lg shadow-lg flex items-center gap-2 px-3 py-2">
+              <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Search by title, company, or skills..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-2 py-2 sm:py-3 focus:outline-none text-sm sm:text-base"
+                className="flex-1 py-1 focus:outline-none text-sm bg-transparent"
               />
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm sm:text-base"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${showFilters ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
               >
-                <Filter className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Filters</span>
-              </button>
-              <button className="bg-primary text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm sm:text-base">
-                Search
+                <Filter className="w-4 h-4" />
+                Filters
               </button>
             </div>
           </div>
@@ -278,82 +289,97 @@ export default function InternshipsPage() {
       )}
 
       {/* Results */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8">
+      <section className="py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-6">
+          <div className="flex items-center justify-between mb-6">
             <p className="text-gray-600">
-              Showing <span className="font-semibold text-gray-900">{filteredInternships.length}</span> internships
+              <span className="font-bold text-gray-900">{filteredInternships.length}</span> internships found
             </p>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span>Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="border-0 bg-transparent font-medium text-gray-700 focus:ring-0 cursor-pointer pr-6"
+              >
+                <option value="recent">Most Recent</option>
+                <option value="stipend">Highest Stipend</option>
+                <option value="duration">Shortest Duration</option>
+              </select>
+            </div>
           </div>
 
-          {/* Internship Cards */}
-          <div className="space-y-6">
+          {/* Internship Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {filteredInternships.map((internship) => (
               <div
                 key={internship.id}
-                className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow p-4 border border-gray-100"
+                className="group bg-white rounded-xl border border-gray-100 p-5 hover:shadow-lg hover:border-primary/20 transition-all duration-200 flex flex-col"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{internship.title}</h3>
-                    <div className="flex items-center gap-2 text-gray-600 mb-2">
+                {/* Header Row */}
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base font-bold text-gray-900 group-hover:text-primary transition-colors truncate mb-1">
+                      {internship.title}
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
                       <Building2 className="w-4 h-4" />
-                      <span className="font-medium">{internship.company}</span>
+                      <span className="truncate font-medium">{internship.company}</span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-primary">
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-base font-bold text-primary">
                       ₹{internship.stipend.toLocaleString()}
                     </div>
-                    <div className="text-sm text-gray-500">per month</div>
+                    <div className="text-xs text-gray-400">/month</div>
                   </div>
                 </div>
 
-                <p className="text-gray-600 mb-4">{internship.description}</p>
-
-                <div className="flex flex-wrap gap-4 mb-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    <span>{internship.location}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Briefcase className="w-4 h-4" />
-                    <span>{internship.mode}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{internship.duration}</span>
-                  </div>
-                  <div className="text-green-600 font-medium">
-                    {internship.openings} opening{internship.openings > 1 ? 's' : ''}
-                  </div>
-                </div>
-
+                {/* Quick Info Pills */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {internship.skills.map((skill: string, index: number) => (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 text-gray-600 rounded text-sm">
+                    <MapPin className="w-3.5 h-3.5" />{internship.mode}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-50 text-gray-600 rounded text-sm">
+                    <Clock className="w-3.5 h-3.5" />{internship.duration}
+                  </span>
+                  <span className="px-2.5 py-1 bg-green-50 text-green-700 rounded text-sm font-medium">
+                    {internship.openings} opening{internship.openings > 1 ? 's' : ''}
+                  </span>
+                </div>
+
+                {/* Skills Tags */}
+                <div className="flex flex-wrap gap-2 mb-4 flex-1">
+                  {internship.skills.slice(0, 3).map((skill: string, index: number) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
+                      className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded text-sm font-medium"
                     >
                       {skill}
                     </span>
                   ))}
+                  {internship.skills.length > 3 && (
+                    <span className="px-2.5 py-1 bg-gray-100 text-gray-500 rounded text-sm">
+                      +{internship.skills.length - 3}
+                    </span>
+                  )}
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <span className="text-sm text-gray-500">Posted {internship.postedAt}</span>
-                  <div className="flex gap-3">
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
+                  <span className="text-xs text-gray-400">{internship.postedAt}</span>
+                  <div className="flex gap-2">
                     <Link
                       href={`/login?redirect=/internships/${internship.id}`}
-                      className="px-6 py-2 border border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors font-medium"
+                      className="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:border-primary hover:text-primary transition-colors font-medium"
                     >
-                      View Details
+                      Details
                     </Link>
                     <Link
                       href="/signup"
-                      className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                      className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
                     >
-                      Apply Now
+                      Apply
                     </Link>
                   </div>
                 </div>
@@ -363,18 +389,18 @@ export default function InternshipsPage() {
 
           {/* No Results */}
           {filteredInternships.length === 0 && (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-12 h-12 text-gray-400" />
+            <div className="text-center py-16">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No internships found</h3>
-              <p className="text-gray-600 mb-6">Try adjusting your search or filters</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">No internships found</h3>
+              <p className="text-gray-500 text-sm mb-4">Try adjusting your search or filters</p>
               <button
                 onClick={() => {
                   setSearchQuery('')
                   setFilters({ mode: 'all', duration: 'all', stipend: 'all', skills: [] })
                 }}
-                className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
               >
                 Clear Search
               </button>
@@ -383,32 +409,16 @@ export default function InternshipsPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary to-accent">
-        <div className="max-w-4xl mx-auto text-center text-white">
-          <h2 className="text-3xl font-bold mb-4">Ready to Apply?</h2>
-          <p className="text-xl text-white/80 mb-8">
-            Create your account to start applying to internships with one click
-          </p>
-          <Link
-            href="/signup"
-            className="inline-block bg-white text-primary px-8 py-3 rounded-lg font-bold hover:bg-white/90 transition-all shadow-xl hover:-translate-y-1"
-          >
-            Get Started Free
-          </Link>
-        </div>
-      </section>
-
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8">
+      <footer className="bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
-          <Link href="/" className="text-2xl font-bold text-white hover:text-primary/80 transition-colors">
+          <Link href="/" className="text-xl font-bold text-white hover:text-primary/80 transition-colors">
             AcadIntern
           </Link>
-          <p className="mt-4 text-gray-400">
+          <p className="mt-2 text-gray-400 text-sm">
             © 2026 AcadIntern. All rights reserved.
           </p>
-          <div className="mt-6 flex justify-center gap-6">
+          <div className="mt-4 flex justify-center gap-6 text-sm">
             <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
               Terms
             </Link>

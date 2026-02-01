@@ -58,10 +58,10 @@ export function FeaturesSection() {
     }, []);
 
     return (
-        <section id="features" ref={ref} className="py-12 md:py-24 lg:py-32">
+        <section id="features" ref={ref} className="py-10 md:py-16 lg:py-20">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
                 {/* Header */}
-                <div className="text-center max-w-3xl mx-auto mb-8 md:mb-16">
+                <div className="text-center max-w-3xl mx-auto mb-6 md:mb-10">
                     <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-5 reveal">
                         Everything to <span className="gradient-text">Succeed</span>
                     </h2>
@@ -71,24 +71,24 @@ export function FeaturesSection() {
                 </div>
 
                 {/* Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 lg:gap-8">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                     {features.map((f, i) => (
                         <div
                             key={i}
-                            className="reveal group p-4 md:p-7 rounded-xl md:rounded-2xl border border-border/60 bg-card/60 backdrop-blur-sm card-hover relative overflow-hidden"
+                            className="reveal group p-3 md:p-5 rounded-lg md:rounded-xl border border-border/60 bg-card/60 backdrop-blur-sm card-hover relative overflow-hidden"
                             style={{ transitionDelay: `${i * 80}ms` }}
                         >
                             {/* Gradient bg on hover */}
                             <div className={`absolute inset-0 bg-gradient-to-br ${f.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
 
                             <div className="relative z-10">
-                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl bg-primary/10 flex items-center justify-center mb-3 md:mb-5 icon-float group-hover:bg-primary/15 transition-colors">
-                                    <svg className="w-5 h-5 md:w-6 md:h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-2 md:mb-3 icon-float group-hover:bg-primary/15 transition-colors">
+                                    <svg className="w-4 h-4 md:w-5 md:h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d={f.icon} />
                                     </svg>
                                 </div>
-                                <h3 className="text-sm md:text-lg font-semibold mb-1 md:mb-2">{f.title}</h3>
-                                <p className="text-xs md:text-base text-muted-foreground leading-relaxed">{f.desc}</p>
+                                <h3 className="text-xs md:text-base font-semibold mb-0.5 md:mb-1">{f.title}</h3>
+                                <p className="text-[10px] md:text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
                             </div>
                         </div>
                     ))}

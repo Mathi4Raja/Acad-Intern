@@ -36,10 +36,8 @@ export default function SignupPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    // Student specific
     department: '',
     semester: '',
-    // Company specific
     companyName: '',
     website: '',
     description: ''
@@ -49,7 +47,6 @@ export default function SignupPage() {
     e.preventDefault()
     setError('')
 
-    // Validation
     if (!selectedRole) {
       setError('Please select a role')
       return
@@ -68,7 +65,6 @@ export default function SignupPage() {
     setIsLoading(true)
 
     try {
-      // Prepare payload based on role
       const payload: any = {
         name: formData.name,
         email: formData.email,
@@ -81,38 +77,30 @@ export default function SignupPage() {
         payload.semester = formData.semester;
       } else if (selectedRole === 'company') {
         payload.companyName = formData.companyName;
-        // payload.website = formData.website; // Ensure backend accepts these
-        // payload.description = formData.description;
       }
 
       await signup(payload);
-      // Redirect is handled in AuthContext
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
       setIsLoading(false);
     }
   }
 
-  // Handle Google Sign-In callback
   const handleGoogleCallback = async (response: { credential: string }) => {
     setIsGoogleLoading(true);
     setError('');
     try {
       await googleLogin(response.credential);
-      // Redirect handled in AuthContext
     } catch (err: any) {
       setError(err.response?.data?.message || 'Google sign-in failed. Please try again.');
       setIsGoogleLoading(false);
     }
   };
 
-  // Track when Google script is ready
   const [isGoogleReady, setIsGoogleReady] = useState(false);
   const googleButtonContainerRef = useRef<HTMLDivElement>(null);
 
-  // Load Google Identity Services script
   useEffect(() => {
-    // Check if script is already loaded
     if (window.google?.accounts?.id) {
       window.google.accounts.id.initialize({
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
@@ -139,202 +127,219 @@ export default function SignupPage() {
     };
 
     return () => {
-      // Only remove if we added it
       if (script.parentNode) {
         script.parentNode.removeChild(script);
       }
     };
   }, []);
 
-  // Render Google button when script is ready and container exists
   useEffect(() => {
     if (isGoogleReady && googleButtonContainerRef.current && window.google) {
-      // Clear any existing button first
       googleButtonContainerRef.current.innerHTML = '';
       window.google.accounts.id.renderButton(googleButtonContainerRef.current, {
         type: 'standard',
         theme: 'outline',
-        size: 'large',
-        text: 'continue_with',
+        size: 'medium',
+        text: 'signup_with',
         width: googleButtonContainerRef.current.offsetWidth || 280,
       });
     }
-  }, [isGoogleReady]);
+  }, [isGoogleReady, selectedRole]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
-      {/* Background decorative elements - pointer-events-none to not block clicks */}
-      <div className="absolute top-20 left-10 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float pointer-events-none"></div>
-      <div className="absolute bottom-20 right-10 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float pointer-events-none" style={{ animationDelay: '2s' }}></div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-8 relative">
+      {/* Background decorative elements */}
+      <div className="absolute top-20 left-10 w-56 h-56 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float pointer-events-none"></div>
+      <div className="absolute bottom-20 right-10 w-56 h-56 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float pointer-events-none" style={{ animationDelay: '2s' }}></div>
 
-      <div className="max-w-4xl mx-auto relative z-10">
+      <div className={`w-full relative z-10 transition-all duration-300 ${selectedRole ? 'max-w-2xl' : 'max-w-lg'}`}>
         {/* Header */}
-        <div className="text-center mb-6">
-          <Link href="/" className="text-xl sm:text-2xl font-bold text-primary hover:text-primary transition-colors">
+        <div className="text-center mb-5">
+          <Link href="/" className="text-2xl font-bold text-primary hover:text-primary transition-colors">
             AcadIntern
           </Link>
-          <h1 className="mt-4 text-xl sm:text-2xl font-bold text-gray-900">Create your account</h1>
-          <p className="mt-1 text-xs sm:text-sm text-gray-600">Join AcadIntern and start your journey</p>
+          <h1 className="mt-3 text-xl font-bold text-gray-900">Create your account</h1>
+          <p className="mt-1 text-sm text-gray-500">Join AcadIntern and start your journey</p>
         </div>
 
         {/* Role Selection */}
         {!selectedRole ? (
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {/* Student Role */}
-            <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-100">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                  <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600" />
+          <div className="space-y-4">
+            {/* Student Card */}
+            <div className="group bg-white rounded-2xl shadow-lg border-2 border-gray-100 hover:border-blue-200 overflow-hidden transition-all duration-300 hover:shadow-xl">
+              {/* Card Header with gradient accent */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b border-blue-100/50">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <GraduationCap className="w-7 h-7 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-lg font-bold text-gray-900">I'm a Student</h2>
+                    <p className="text-sm text-gray-600">Find your dream internship</p>
+                  </div>
                 </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">I'm a Student</h2>
-                <p className="text-sm sm:text-base text-gray-600 mb-4">
-                  Looking for internship opportunities to gain practical experience
-                </p>
-                <div className="space-y-2 text-left w-full mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Browse internships</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Apply with one click</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Track applications</span>
-                  </div>
+              </div>
+
+              {/* Card Body */}
+              <div className="p-4 space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">
+                    <CheckCircle className="w-3.5 h-3.5" />Browse internships
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-medium">
+                    <CheckCircle className="w-3.5 h-3.5" />One-click apply
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-xs font-medium">
+                    <CheckCircle className="w-3.5 h-3.5" />Track progress
+                  </span>
                 </div>
 
-                {/* Google Sign-In Button */}
-                <div className="w-full mb-3">
+                <div className="space-y-2.5">
                   {isGoogleLoading ? (
-                    <div className="flex items-center justify-center gap-2 w-full py-3 px-4 border border-gray-300 rounded-lg bg-gray-50">
-                      <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-gray-600">Signing in...</span>
+                    <div className="w-full flex items-center justify-center gap-2 py-2.5 px-3 border border-gray-200 rounded-xl bg-gray-50 text-sm">
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-gray-600">Signing up...</span>
                     </div>
                   ) : (
                     <div ref={googleButtonContainerRef} className="w-full flex justify-center"></div>
                   )}
+                  <button
+                    onClick={() => setSelectedRole('student')}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-sm hover:shadow-md"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Sign up with Email
+                  </button>
                 </div>
+              </div>
+            </div>
 
-                <div className="relative w-full my-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200"></div>
+            {/* Company Card */}
+            <button
+              onClick={() => setSelectedRole('company')}
+              className="w-full group bg-white rounded-2xl shadow-lg border-2 border-gray-100 hover:border-purple-200 overflow-hidden transition-all duration-300 hover:shadow-xl text-left"
+            >
+              {/* Card Header with gradient accent */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 border-b border-purple-100/50">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-white rounded-2xl shadow-sm flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+                    <Building2 className="w-7 h-7 text-purple-600" />
                   </div>
-                  <div className="relative flex justify-center text-xs">
-                    <span className="px-2 bg-white text-gray-500">or</span>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-lg font-bold text-gray-900">I'm a Company</h2>
+                    <p className="text-sm text-gray-600">Hire top talent for your team</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center flex-shrink-0 group-hover:bg-purple-600 group-hover:shadow-md transition-all duration-300">
+                    <ArrowRight className="w-5 h-5 text-purple-400 group-hover:text-white group-hover:translate-x-0.5 transition-all duration-300" />
                   </div>
                 </div>
+              </div>
 
-                {/* Manual signup button */}
+              {/* Card Body */}
+              <div className="p-4">
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-xs font-medium">
+                    <CheckCircle className="w-3.5 h-3.5" />Post internships
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-pink-50 text-pink-700 rounded-full text-xs font-medium">
+                    <CheckCircle className="w-3.5 h-3.5" />Manage applications
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium">
+                    <CheckCircle className="w-3.5 h-3.5" />Find talent
+                  </span>
+                </div>
+              </div>
+            </button>
+
+            {/* Login link */}
+            <div className="text-center pt-3">
+              <span className="text-sm text-gray-500">Already have an account? </span>
+              <Link href="/login" className="text-sm font-semibold text-primary hover:text-primary/80 underline-offset-2 hover:underline">
+                Login
+              </Link>
+            </div>
+          </div>
+        ) : (
+          /* Registration Form */
+          <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-100 overflow-hidden">
+            {/* Form Header with gradient */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100/50 p-4 border-b">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {selectedRole === 'student' ? (
+                    <>
+                      <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                        <GraduationCap className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-bold text-gray-900">Student Registration</h2>
+                        <p className="text-xs text-gray-500">Fill in your details to get started</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-bold text-gray-900">Company Registration</h2>
+                        <p className="text-xs text-gray-500">Set up your company profile</p>
+                      </div>
+                    </>
+                  )}
+                </div>
                 <button
-                  onClick={() => setSelectedRole('student')}
-                  className="w-full mt-2 py-2 px-4 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors"
+                  onClick={() => setSelectedRole(null)}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg transition-colors text-blue-600 hover:bg-blue-100"
                 >
-                  Sign up with email
+                  Change
                 </button>
               </div>
             </div>
 
-            {/* Company Role */}
-            <button
-              onClick={() => setSelectedRole('company')}
-              className="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-100 hover:border-purple-500 hover:shadow-xl transition-all group"
-            >
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-purple-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-purple-200 transition-colors">
-                  <Building2 className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600" />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">I'm a Company</h2>
-                <p className="text-sm sm:text-base text-gray-600 mb-4">
-                  Looking to hire talented interns for my organization
-                </p>
-                <div className="space-y-2 text-left w-full">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Post internships</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Manage applications</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span>Find top talent</span>
-                  </div>
-                </div>
-              </div>
-            </button>
-          </div>
-        ) : (
-          <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-100">
-            {/* Role Badge */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                {selectedRole === 'student' ? (
-                  <>
-                    <GraduationCap className="w-6 h-6 text-blue-600" />
-                    <span className="text-lg font-semibold text-gray-900">Student Registration</span>
-                  </>
-                ) : (
-                  <>
-                    <Building2 className="w-6 h-6 text-purple-600" />
-                    <span className="text-lg font-semibold text-gray-900">Company Registration</span>
-                  </>
-                )}
-              </div>
-              <button
-                onClick={() => setSelectedRole(null)}
-                className="text-sm text-gray-600 hover:text-gray-900"
-              >
-                Change role
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Form Body */}
+            <form onSubmit={handleSubmit} className="p-4 space-y-3">
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-sm">{error}</span>
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2.5 rounded-xl flex items-center gap-2 text-sm">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{error}</span>
                 </div>
               )}
 
               {/* Common Fields */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     {selectedRole === 'student' ? 'Full Name' : 'Contact Person'}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <User className="h-5 w-5 text-gray-400" />
+                      <User className="h-4 w-4 text-gray-400" />
                     </div>
                     <input
                       type="text"
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 transition-all text-sm bg-gray-50/50 focus:bg-white focus:ring-blue-500/20 focus:border-blue-400"
                       placeholder="John Doe"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
+                      <Mail className="h-4 w-4 text-gray-400" />
                     </div>
                     <input
                       type="email"
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 transition-all text-sm bg-gray-50/50 focus:bg-white focus:ring-blue-500/20 focus:border-blue-400"
                       placeholder="you@example.com"
                     />
                   </div>
@@ -343,16 +348,14 @@ export default function SignupPage() {
 
               {/* Student Specific Fields */}
               {selectedRole === 'student' && (
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Department
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Department</label>
                     <select
                       required
                       value={formData.department}
                       onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-sm bg-gray-50/50 focus:bg-white"
                     >
                       <option value="">Select Department</option>
                       <option value="CSE">Computer Science</option>
@@ -365,18 +368,16 @@ export default function SignupPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Current Semester
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Current Semester</label>
                     <select
                       required
                       value={formData.semester}
                       onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                      className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-sm bg-gray-50/50 focus:bg-white"
                     >
                       <option value="">Select Semester</option>
                       {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                        <option key={sem} value={sem}>{sem}</option>
+                        <option key={sem} value={sem}>Semester {sem}</option>
                       ))}
                     </select>
                   </div>
@@ -385,72 +386,66 @@ export default function SignupPage() {
 
               {/* Company Specific Fields */}
               {selectedRole === 'company' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company Name
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Building2 className="h-5 w-5 text-gray-400" />
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Company Name</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <Building2 className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          value={formData.companyName}
+                          onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                          className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-sm bg-gray-50/50 focus:bg-white"
+                          placeholder="Acme Corporation"
+                        />
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Website (Optional)</label>
+                      <input
+                        type="url"
+                        value={formData.website}
+                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                        className="block w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-sm bg-gray-50/50 focus:bg-white"
+                        placeholder="https://example.com"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
                       <input
                         type="text"
                         required
-                        value={formData.companyName}
-                        onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                        placeholder="Acme Corporation"
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="block w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-sm bg-gray-50/50 focus:bg-white"
+                        placeholder="Brief company description"
                       />
                     </div>
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Website (Optional)
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.website}
-                      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                      placeholder="https://example.com"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company Description
-                    </label>
-                    <textarea
-                      required
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      rows={3}
-                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                      placeholder="Tell us about your company..."
-                    />
-                  </div>
-                </>
+                </div>
               )}
 
               {/* Password Fields */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Password
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-4 w-4 text-gray-400" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                      placeholder="••••••••"
+                      className="block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 transition-all text-sm bg-gray-50/50 focus:bg-white focus:ring-blue-500/20 focus:border-blue-400"
+                      placeholder="Min. 8 characters"
                     />
                     <button
                       type="button"
@@ -458,29 +453,27 @@ export default function SignupPage() {
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
                       {showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                       ) : (
-                        <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                       )}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Confirm Password
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-4 w-4 text-gray-400" />
                     </div>
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       required
                       value={formData.confirmPassword}
                       onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                      className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                      placeholder="••••••••"
+                      className="block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 transition-all text-sm bg-gray-50/50 focus:bg-white focus:ring-blue-500/20 focus:border-blue-400"
+                      placeholder="Re-enter password"
                     />
                     <button
                       type="button"
@@ -488,32 +481,28 @@ export default function SignupPage() {
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
                       {showConfirmPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                       ) : (
-                        <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                       )}
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Terms & Conditions */}
-              <div className="flex items-start">
+              {/* Terms */}
+              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
                 <input
                   id="terms"
                   type="checkbox"
                   required
-                  className="h-4 w-4 mt-1 text-primary focus:ring-primary border-gray-300 rounded"
+                  className="h-4 w-4 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
+                <label htmlFor="terms" className="text-sm text-gray-600">
                   I agree to the{' '}
-                  <Link href="/terms" className="text-primary hover:text-primary/90 font-medium">
-                    Terms and Conditions
-                  </Link>{' '}
-                  and{' '}
-                  <Link href="/privacy" className="text-primary hover:text-primary/90 font-medium">
-                    Privacy Policy
-                  </Link>
+                  <Link href="/terms" className="font-medium hover:underline text-blue-600">Terms of Service</Link>
+                  {' '}and{' '}
+                  <Link href="/privacy" className="font-medium hover:underline text-blue-600">Privacy Policy</Link>
                 </label>
               </div>
 
@@ -521,43 +510,32 @@ export default function SignupPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 bg-primary text-white py-3 px-4 rounded-lg font-medium hover:bg-primary/90 focus:ring-4 focus:ring-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm text-white transition-all duration-300 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
               >
                 {isLoading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Creating account...
                   </>
                 ) : (
                   <>
                     Create Account
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
-            </form>
 
-            {/* Login Link */}
-            <div className="mt-6 text-center">
-              <span className="text-gray-600">Already have an account? </span>
-              <Link href="/login" className="text-primary hover:text-primary/90 font-medium text-lg">
-                Login
-              </Link>
-            </div>
+              {/* Login Link */}
+              <div className="text-center pt-3 border-t border-gray-100">
+                <span className="text-sm text-gray-500">Already have an account? </span>
+                <Link href="/login" className="text-sm font-semibold hover:underline underline-offset-2 text-blue-600">
+                  Login
+                </Link>
+              </div>
+            </form>
           </div>
         )}
-
-        {/* Back to Home */}
-        <div className="mt-8 text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-gray-700 bg-white/80 backdrop-blur-sm hover:bg-white hover:text-primary rounded-full transition-all duration-200 border border-gray-200 shadow-sm hover:shadow-md group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
-            Back to home
-          </Link>
-        </div>
       </div>
-    </div >
+    </div>
   )
 }

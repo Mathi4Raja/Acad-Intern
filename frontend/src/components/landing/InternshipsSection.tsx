@@ -93,10 +93,10 @@ export function InternshipsSection() {
     }, []);
 
     return (
-        <section id="internships" ref={ref} className="py-12 md:py-24 lg:py-32">
+        <section id="internships" ref={ref} className="py-10 md:py-16 lg:py-20">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
                 {/* Header */}
-                <div className="text-center max-w-3xl mx-auto mb-8 md:mb-16">
+                <div className="text-center max-w-3xl mx-auto mb-6 md:mb-10">
                     <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-5 reveal">
                         Featured <span className="gradient-text">Internships</span>
                     </h2>
@@ -105,21 +105,21 @@ export function InternshipsSection() {
                     </p>
                 </div>
 
-                {/* Grid - Persistent Layout Design */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                {/* Grid - Compact Layout */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
                     {internships.map((job, i) => (
                         <div
                             key={i}
-                            className="reveal group flex flex-col bg-background/50 backdrop-blur-md border border-border/50 rounded-3xl p-6 md:p-8 hover:border-primary/50 transition-all duration-300 hover:shadow-xl overflow-hidden"
+                            className="reveal group flex flex-col bg-background/50 backdrop-blur-md border border-border/50 rounded-2xl p-4 md:p-5 hover:border-primary/50 transition-all duration-300 hover:shadow-xl overflow-hidden"
                             style={{ transitionDelay: `${i * 80}ms` }}
                         >
                             {/* Top: Logo & Badge */}
-                            <div className="flex items-start justify-between mb-6">
-                                <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br ${job.gradient} flex items-center justify-center text-white shadow-lg shadow-black/5 group-hover:rotate-3 transition-transform duration-300`}>
+                            <div className="flex items-start justify-between mb-4">
+                                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${job.gradient} flex items-center justify-center text-white shadow-lg shadow-black/5 group-hover:rotate-3 transition-transform duration-300`}>
                                     {job.logo}
                                 </div>
                                 {job.isNew && (
-                                    <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                                    <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-xs">
                                         New
                                     </Badge>
                                 )}
@@ -127,31 +127,30 @@ export function InternshipsSection() {
 
                             {/* Middle: Info */}
                             <div className="flex-grow">
-                                <h3 className="text-lg md:text-xl font-bold mb-1 group-hover:text-primary transition-colors duration-300">
+                                <h3 className="text-base md:text-lg font-bold mb-0.5 group-hover:text-primary transition-colors duration-300">
                                     {job.title}
                                 </h3>
-                                <p className="text-sm md:text-base text-muted-foreground font-medium mb-4">
+                                <p className="text-sm text-muted-foreground font-medium mb-3">
                                     {job.company}
                                 </p>
 
-                                <div className="flex flex-wrap items-center gap-2 mb-6">
+                                <div className="flex flex-wrap items-center gap-1.5 mb-4">
                                     {job.skills.map((skill, j) => (
-                                        <span key={j} className="text-xs font-medium px-2.5 py-1 rounded-full bg-secondary/50 text-secondary-foreground border border-secondary">
+                                        <span key={j} className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary/50 text-secondary-foreground border border-secondary">
                                             {skill}
                                         </span>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Bottom: Info Row & Fixed Action */}
-                            <div className="pt-4 border-t border-dashed border-border/60 mt-auto flex items-center justify-between gap-4">
+                            {/* Bottom: Info Row & Action */}
+                            <div className="pt-3 border-t border-dashed border-border/60 mt-auto flex items-center justify-between gap-3">
                                 <div className="flex flex-col">
                                     <span className="text-xs text-muted-foreground">Stipend</span>
                                     <span className="text-sm font-bold text-foreground">{job.stipend}</span>
                                 </div>
 
-                                {/* Button - Always visible, persistent layout */}
-                                <Button className="h-9 md:h-10 px-4 md:px-5 bg-primary hover:bg-primary/90 shadow-md transition-all duration-300 md:w-auto md:min-w-[100px] whitespace-nowrap">
+                                <Button className="h-8 md:h-9 px-3 md:px-4 text-sm bg-primary hover:bg-primary/90 shadow-md transition-all duration-300">
                                     Apply Now
                                 </Button>
                             </div>
