@@ -58,8 +58,8 @@ export function FeaturesSection() {
     }, []);
 
     return (
-        <section id="features" ref={ref} className="py-10 md:py-16 lg:py-20">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+        <section id="features" ref={ref} className="py-10 md:py-16 lg:py-20 scroll-mt-28">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="text-center max-w-3xl mx-auto mb-6 md:mb-10">
                     <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-5 reveal">

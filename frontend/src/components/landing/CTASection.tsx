@@ -29,7 +29,7 @@ export function CTASection() {
                 <div className="hidden md:block absolute top-1/3 right-1/5 w-5 h-5 bg-white/20 rounded-full animate-float-reverse delay-400" />
             </div>
 
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl relative z-10 text-center">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-3 md:mb-5 reveal">
                     Ready to Start?
                 </h2>

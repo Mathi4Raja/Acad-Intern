@@ -52,7 +52,7 @@ export function Navbar() {
                     : "bg-transparent py-2 md:py-5"
                     }`}
             >
-                <div className="container mx-auto px-3 sm:px-6 lg:px-8 max-w-6xl">
+                <div className="container mx-auto px-3 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-10 md:h-14">
                         {/* Logo */}
                         <Link href="/" className="flex items-center gap-2 group" onClick={closeMenu}>
