@@ -94,7 +94,7 @@ export default function PostInternship() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto p-3 sm:p-4">
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Post New Internship</h1>
         <p className="text-sm sm:text-base text-gray-600">Fill in the details to create a new internship opportunity</p>

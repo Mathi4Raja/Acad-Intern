@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Building, Mail, Phone, MapPin, Globe, Users, Edit, Save, X, Briefcase, Calendar, CheckCircle, Upload, AlertCircle, Shield, Loader2, Trash2, AlertTriangle } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuth } from '@/lib/AuthContext'
+import { PageHeader } from '@/components/common'
 
 interface CompanyProfile {
   _id: string;
@@ -224,41 +225,41 @@ export default function CompanyProfilePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-0.5">Company Profile</h1>
-          <p className="text-xs sm:text-sm text-gray-600">Manage your company information</p>
-        </div>
-        {!isEditing ? (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm w-full sm:w-auto justify-center"
-          >
-            <Edit size={18} />
-            Edit Profile
-          </button>
-        ) : (
-          <div className="flex gap-2">
+    <div className="max-w-5xl mx-auto p-3 sm:p-4">
+      <PageHeader
+        title="Company Profile"
+        subtitle="Manage your company information and verification details."
+        action={
+          !isEditing ? (
             <button
-              onClick={handleCancel}
-              disabled={isSaving}
-              className="flex-1 sm:flex-none flex items-center gap-1.5 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 text-sm justify-center disabled:opacity-50"
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm w-full sm:w-auto justify-center shadow-sm"
             >
-              <X size={16} />
-              Cancel
+              <Edit size={18} />
+              Edit Profile
             </button>
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex-1 sm:flex-none flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary/90 text-sm justify-center disabled:opacity-50"
-            >
-              {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-              Save
-            </button>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={handleCancel}
+                disabled={isSaving}
+                className="flex items-center gap-1.5 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                <X size={16} />
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary/90 text-sm font-medium transition-colors disabled:opacity-50 shadow-sm"
+              >
+                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                Save
+              </button>
+            </div>
+          )
+        }
+      />
 
       {/* Verification Status */}
       {profile?.verified ? (

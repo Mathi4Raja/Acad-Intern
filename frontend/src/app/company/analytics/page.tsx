@@ -2,6 +2,7 @@
 
 import { Users, Briefcase, Eye, TrendingUp, Target, Clock, CheckCircle, XCircle } from 'lucide-react'
 import { StatCard, BarChart, LineChart } from '@/components/analytics'
+import { PageHeader } from '@/components/common'
 
 export default function CompanyAnalyticsPage() {
     // Mock analytics data
@@ -46,12 +47,11 @@ export default function CompanyAnalyticsPage() {
     ]
 
     return (
-        <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <div className="mb-6 sm:mb-8">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Company Analytics</h1>
-                <p className="text-sm sm:text-base text-gray-600">Track your hiring performance and optimize your internship postings</p>
-            </div>
+        <div className="max-w-7xl mx-auto p-3 sm:p-4">
+            <PageHeader
+                title="Analytics"
+                subtitle="Track your hiring performance and optimize your internship postings."
+            />
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

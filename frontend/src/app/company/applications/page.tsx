@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, User, Briefcase, Star, Mail, Calendar, CheckCircle, XCircle, Clock, Loader2 } from 'lucide-react'
+import { Search, Filter, User, Briefcase, Star, Mail, Calendar, CheckCircle, XCircle, Clock, Loader2, Users } from 'lucide-react'
 import api from '@/lib/api'
+import { PageHeader } from '@/components/common'
+import { StatCard } from '@/components/analytics/StatCard'
 
 interface Application {
   id: string
@@ -186,7 +188,7 @@ export default function Applications() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         <div className="flex items-center justify-center py-16">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -195,11 +197,11 @@ export default function Applications() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Applications</h1>
-        <p className="text-sm sm:text-base text-gray-600">Review and manage student applications</p>
-      </div>
+    <div className="max-w-7xl mx-auto p-3 sm:p-4">
+      <PageHeader
+        title="Applications"
+        subtitle="Review and manage student applications across all your internships."
+      />
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -208,31 +210,46 @@ export default function Applications() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 sm:p-4">
-          <p className="text-xs sm:text-sm text-gray-600 mb-1">Total</p>
-          <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 sm:p-4">
-          <p className="text-xs sm:text-sm text-gray-600 mb-1">Pending</p>
-          <p className="text-xl sm:text-2xl font-bold text-yellow-600">{stats.pending}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 sm:p-4">
-          <p className="text-xs sm:text-sm text-gray-600 mb-1">Shortlisted</p>
-          <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.shortlisted}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 sm:p-4">
-          <p className="text-xs sm:text-sm text-gray-600 mb-1">Accepted</p>
-          <p className="text-xl sm:text-2xl font-bold text-blue-600">{stats.accepted}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 sm:p-4">
-          <p className="text-xs sm:text-sm text-gray-600 mb-1">Rejected</p>
-          <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.rejected}</p>
-        </div>
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+        <StatCard
+          title="Total"
+          value={stats.total}
+          icon={Users}
+          iconColor="text-gray-600"
+          iconBg="bg-gray-100"
+        />
+        <StatCard
+          title="Pending"
+          value={stats.pending}
+          icon={Clock}
+          iconColor="text-yellow-600"
+          iconBg="bg-yellow-50"
+        />
+        <StatCard
+          title="Shortlisted"
+          value={stats.shortlisted}
+          icon={Star}
+          iconColor="text-green-600"
+          iconBg="bg-green-50"
+        />
+        <StatCard
+          title="Accepted"
+          value={stats.accepted}
+          icon={CheckCircle}
+          iconColor="text-blue-600"
+          iconBg="bg-blue-50"
+        />
+        <StatCard
+          title="Rejected"
+          value={stats.rejected}
+          icon={XCircle}
+          iconColor="text-red-600"
+          iconBg="bg-red-50"
+        />
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
           <div className="relative sm:col-span-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -241,7 +258,7 @@ export default function Applications() {
               placeholder="Search by name or position..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
             />
           </div>
           <div className="relative">
@@ -249,7 +266,7 @@ export default function Applications() {
             <select
               value={filterInternship}
               onChange={(e) => setFilterInternship(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent appearance-none bg-white"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none appearance-none bg-white cursor-pointer"
             >
               <option value="all">All Internships</option>
               {internships.map(internship => (
@@ -264,7 +281,7 @@ export default function Applications() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent appearance-none bg-white"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none appearance-none bg-white cursor-pointer"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -277,25 +294,25 @@ export default function Applications() {
 
         {/* Bulk Actions */}
         {selectedApplications.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-4 border-t border-gray-200">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-4 border-t border-gray-100">
             <span className="text-xs sm:text-sm text-gray-600 font-medium">
               {selectedApplications.length} selected
             </span>
             <button
               onClick={() => handleBulkAction('shortlisted')}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-semibold"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-semibold shadow-sm"
             >
               Shortlist All
             </button>
             <button
               onClick={() => handleBulkAction('rejected')}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs sm:text-sm font-semibold"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs sm:text-sm font-semibold shadow-sm"
             >
               Reject All
             </button>
             <button
               onClick={() => setSelectedApplications([])}
-              className="px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs sm:text-sm font-semibold"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs sm:text-sm font-semibold"
             >
               Clear Selection
             </button>
@@ -306,12 +323,12 @@ export default function Applications() {
       {/* Select All */}
       {filteredApplications.length > 0 && (
         <div className="mb-4">
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer hover:text-gray-900 selection:bg-transparent">
             <input
               type="checkbox"
               checked={selectedApplications.length === filteredApplications.length && filteredApplications.length > 0}
               onChange={handleSelectAll}
-              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-2 focus:ring-primary"
+              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
             />
             <span className="font-medium">Select All ({filteredApplications.length})</span>
           </label>
@@ -322,7 +339,7 @@ export default function Applications() {
       <div className="space-y-4">
         {filteredApplications.length > 0 ? (
           filteredApplications.map((app) => (
-            <div key={app.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow">
+            <div key={app.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 hover:shadow-md transition-shadow">
               <div className="flex flex-col lg:flex-row gap-4">
                 {/* Checkbox */}
                 <div className="flex items-start pt-1">
@@ -330,7 +347,7 @@ export default function Applications() {
                     type="checkbox"
                     checked={selectedApplications.includes(app.id)}
                     onChange={() => handleSelectApplication(app.id)}
-                    className="w-5 h-5 text-primary border-gray-300 rounded focus:ring-2 focus:ring-primary"
+                    className="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
                   />
                 </div>
 
@@ -348,10 +365,10 @@ export default function Applications() {
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(app.status)}`}>
-                        {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                      <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border bg-opacity-50 border-opacity-20 ${getStatusColor(app.status)}`}>
+                        {app.status}
                       </span>
-                      <span className="px-2.5 sm:px-3 py-1 bg-primary/20 text-primary rounded-full text-xs font-semibold flex items-center gap-1">
+                      <span className="px-2.5 sm:px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold flex items-center gap-1 border border-primary/20">
                         <Star size={14} />
                         {app.matchScore}% match
                       </span>
@@ -360,22 +377,22 @@ export default function Applications() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-gray-600">
                     <div className="flex items-center gap-1.5">
-                      <Mail size={14} />
+                      <Mail size={14} className="text-gray-400" />
                       {app.studentEmail}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Calendar size={14} />
+                      <Calendar size={14} className="text-gray-400" />
                       Applied: {formatDate(app.appliedDate)}
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-50">
                     {app.status === 'pending' && (
                       <>
                         <button
                           onClick={() => handleUpdateStatus(app.id, 'shortlisted')}
                           disabled={actionLoading === app.id}
-                          className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50"
+                          className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50 shadow-sm"
                         >
                           {actionLoading === app.id ? (
                             <Loader2 size={14} className="animate-spin" />
@@ -387,7 +404,7 @@ export default function Applications() {
                         <button
                           onClick={() => handleUpdateStatus(app.id, 'rejected')}
                           disabled={actionLoading === app.id}
-                          className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50"
+                          className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50 shadow-sm"
                         >
                           <XCircle size={14} />
                           Reject
@@ -398,7 +415,7 @@ export default function Applications() {
                       <button
                         onClick={() => handleUpdateStatus(app.id, 'accepted')}
                         disabled={actionLoading === app.id}
-                        className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50 shadow-sm"
                       >
                         {actionLoading === app.id ? (
                           <Loader2 size={14} className="animate-spin" />
@@ -408,6 +425,13 @@ export default function Applications() {
                         Accept
                       </button>
                     )}
+                    <button
+                      onClick={() => alert('View Profile Details (Coming Soon)')}
+                      className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium"
+                    >
+                      <User size={14} />
+                      View Profile
+                    </button>
                   </div>
                 </div>
               </div>
@@ -415,6 +439,9 @@ export default function Applications() {
           ))
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-12 text-center">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Users className="text-gray-300" size={32} />
+            </div>
             <p className="text-gray-500 text-base sm:text-lg">
               {applications.length === 0
                 ? "No applications yet. Post internships to receive applications from students!"

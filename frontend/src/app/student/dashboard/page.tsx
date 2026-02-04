@@ -114,7 +114,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+    <div className="max-w-7xl mx-auto p-3 sm:p-4">
       <PageHeader
         title={`Welcome back, ${user?.name || 'Student'}! 👋`}
         subtitle="Here's what's happening with your internship search today."

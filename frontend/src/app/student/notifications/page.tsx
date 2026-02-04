@@ -5,7 +5,7 @@ import { Bell, Check, CheckCheck, Trash2, Filter } from 'lucide-react'
 
 export default function NotificationsPage() {
   const [filterType, setFilterType] = useState('all')
-  
+
   // Mock data - will be replaced with API
   const [notifications, setNotifications] = useState([
     {
@@ -108,12 +108,12 @@ export default function NotificationsPage() {
     const date = new Date(timestamp)
     const now = new Date()
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-    
+
     if (diffInSeconds < 60) return 'Just now'
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
     if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
-    
+
     // Format date consistently (DD/MM/YYYY)
     const day = date.getDate().toString().padStart(2, '0')
     const month = (date.getMonth() + 1).toString().padStart(2, '0')
@@ -121,16 +121,16 @@ export default function NotificationsPage() {
     return `${day}/${month}/${year}`
   }
 
-  const filteredNotifications = filterType === 'all' 
-    ? notifications 
+  const filteredNotifications = filterType === 'all'
+    ? notifications
     : filterType === 'unread'
-    ? notifications.filter(n => !n.read)
-    : notifications.filter(n => n.read)
+      ? notifications.filter(n => !n.read)
+      : notifications.filter(n => n.read)
 
   const unreadCount = notifications.filter(n => !n.read).length
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto p-3 sm:p-4">
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
@@ -160,31 +160,28 @@ export default function NotificationsPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1.5 sm:p-2 mb-4 sm:mb-6 flex gap-1.5 sm:gap-2">
         <button
           onClick={() => setFilterType('all')}
-          className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-            filterType === 'all'
+          className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${filterType === 'all'
               ? 'bg-primary text-white'
               : 'text-gray-600 hover:bg-gray-100'
-          }`}
+            }`}
         >
           All ({notifications.length})
         </button>
         <button
           onClick={() => setFilterType('unread')}
-          className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-            filterType === 'unread'
+          className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${filterType === 'unread'
               ? 'bg-primary text-white'
               : 'text-gray-600 hover:bg-gray-100'
-          }`}
+            }`}
         >
           Unread ({unreadCount})
         </button>
         <button
           onClick={() => setFilterType('read')}
-          className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-            filterType === 'read'
+          className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${filterType === 'read'
               ? 'bg-primary text-white'
               : 'text-gray-600 hover:bg-gray-100'
-          }`}
+            }`}
         >
           Read ({notifications.length - unreadCount})
         </button>
@@ -206,9 +203,8 @@ export default function NotificationsPage() {
           filteredNotifications.map((notification) => (
             <div
               key={notification.id}
-              className={`bg-white rounded-xl shadow-sm border p-3 sm:p-4 hover:shadow-md transition-all ${
-                notification.read ? 'border-gray-100' : 'border-primary/30 bg-primary/10/30'
-              }`}
+              className={`bg-white rounded-xl shadow-sm border p-3 sm:p-4 hover:shadow-md transition-all ${notification.read ? 'border-gray-100' : 'border-primary/30 bg-primary/10/30'
+                }`}
             >
               <div className="flex items-start gap-3 sm:gap-4">
                 <div className="text-2xl sm:text-3xl flex-shrink-0">{notification.icon}</div>

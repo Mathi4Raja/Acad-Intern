@@ -2,6 +2,7 @@ import 'dotenv/config';
 import mongoose from 'mongoose';
 import User from '../models/User';
 import Company from '../models/Company';
+import StudentProfile from '../models/StudentProfile';
 import Internship from '../models/Internship';
 import Application from '../models/Application';
 import connectDB from '../config/db';
@@ -63,6 +64,15 @@ const populateInternships = async () => {
             }
         ];
 
+        // Create 2 Additional Students for diverse applicants
+        const student2 = await User.create({ name: 'Alice Smith', email: 'alice@test.com', password_hash: 'password123', role: 'student', isVerified: true, status: 'active' });
+        await StudentProfile.create({ userId: student2._id, university: 'Stanford', skills: ['Python', 'AI'], bio: 'AI Researcher' });
+
+        const student3 = await User.create({ name: 'Bob Jones', email: 'bob@test.com', password_hash: 'password123', role: 'student', isVerified: true, status: 'active' });
+        await StudentProfile.create({ userId: student3._id, university: 'MIT', skills: ['UX', 'Figma'], bio: 'Designer' });
+
+        const students = [studentUser, student2, student3];
+
         console.log('📝 Creating Internships...');
         const createdInternships = [];
 
@@ -70,24 +80,31 @@ const populateInternships = async () => {
             const internship = await Internship.create({
                 companyId: companyProfile._id,
                 ...data,
-                postedAt: new Date()
+                postedAt: new Date(Date.now() - Math.random() * 10 * 24 * 60 * 60 * 1000) // Random posted date within last 10 days
             });
             createdInternships.push(internship);
             console.log(`   + Created: ${internship.title}`);
         }
 
-        // Apply as Student
+        // Apply with diverse statuses
         console.log('📝 Creating Applications...');
+        const statuses = ['pending', 'shortlisted', 'rejected', 'accepted', 'pending', 'shortlisted'];
 
         for (const internship of createdInternships) {
-            await Application.create({
-                studentId: studentUser._id,
-                internshipId: internship._id,
-                status: 'pending', // Default status
-                notes: 'I am very interested in this role!',
-                appliedAt: new Date()
-            });
-            console.log(`   + Applied to: ${internship.title}`);
+            for (const student of students) {
+                // Randomize status
+                const status = statuses[Math.floor(Math.random() * statuses.length)];
+                const appliedAt = new Date(Date.now() - Math.random() * 5 * 24 * 60 * 60 * 1000);
+
+                await Application.create({
+                    studentId: student._id,
+                    internshipId: internship._id,
+                    status: status,
+                    notes: `I am interested in this ${internship.title} role!`,
+                    appliedAt: appliedAt
+                });
+                console.log(`   + Applied: ${student.name} -> ${internship.title} [${status}]`);
+            }
         }
 
         console.log('\n✨ Internships & Applications successfully populated!');
