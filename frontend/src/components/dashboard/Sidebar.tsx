@@ -57,10 +57,10 @@ export function Sidebar({
     return (
         <aside
             className={cn(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out",
+                "fixed inset-y-0 left-0 z-50 w-56 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out",
                 // All variants stay fixed
                 isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-                variant === "admin" ? "top-16 bottom-0 w-72 sm:w-64" : "mt-14 sm:mt-16",
+                variant === "admin" ? "top-16 bottom-0 w-56" : "mt-14 sm:mt-16",
                 className
             )}
         >
@@ -91,7 +91,7 @@ export function Sidebar({
                                 href={item.href}
                                 onClick={onClose}
                                 className={cn(
-                                    "flex items-center gap-3 px-3 sm:px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium",
+                                    "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium",
                                     isActive ? styles.active : styles.hover
                                 )}
                             >

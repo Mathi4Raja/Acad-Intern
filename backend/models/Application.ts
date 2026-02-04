@@ -14,7 +14,7 @@ const applicationSchema = new Schema<IApplication>({
     },
     status: {
         type: String,
-        enum: ['pending', 'shortlisted', 'rejected', 'accepted'],
+        enum: ['pending', 'reviewed', 'shortlisted', 'interview_scheduled', 'rejected', 'accepted'],
         default: 'pending'
     },
     appliedAt: {

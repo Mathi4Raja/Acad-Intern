@@ -93,7 +93,7 @@ export function DashboardLayout({
                     )}
 
                     {/* Main Content */}
-                    <main className={`lg:ml-64 pt-16 ${disableContentPadding ? '' : ''}`}>
+                    <main className={`lg:ml-56 pt-16 ${disableContentPadding ? '' : ''}`}>
                         {children}
                     </main>
                 </>

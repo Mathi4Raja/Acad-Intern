@@ -143,8 +143,8 @@ export default function ManageReports() {
   }
 
   return (
-    <div className="p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      <div className="mb-4 sm:mb-6 flex items-start justify-between">
+    <div className="p-3 sm:p-4 max-w-7xl mx-auto">
+      <div className="mb-4 flex items-start justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Reports & Moderation</h1>
           <p className="text-xs text-gray-600">Review and handle reported content and user complaints</p>
@@ -295,7 +295,7 @@ export default function ManageReports() {
       }
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 mb-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2 sm:p-4">
           <p className="text-[10px] sm:text-xs text-gray-600 mb-0.5 sm:mb-1">Total Reports</p>
           <p className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900">{stats.total}</p>
@@ -359,7 +359,7 @@ export default function ManageReports() {
           <div className="p-12 text-center flex justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>
         ) : reports.length > 0 ? (
           reports.map((report) => (
-            <div key={report.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-all duration-200 hover:border-gray-300">
+            <div key={report.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-2 sm:p-3 hover:shadow-md transition-all duration-200 hover:border-gray-300">
               <div className="flex gap-3">
                 {/* Report Content */}
                 <div className="flex-1 min-w-0 space-y-3">
@@ -441,7 +441,7 @@ export default function ManageReports() {
                     </button>
                     <button
                       onClick={() => handleAction(report.id, 'dismissed')}
-                      className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-1 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                       title="Dismiss"
                     >
                       <XCircle size={16} />

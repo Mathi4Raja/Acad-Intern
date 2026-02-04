@@ -13,7 +13,8 @@ import {
     getAllReports,
     updateReportStatus,
     getSystemSettings,
-    updateSystemSettings
+    updateSystemSettings,
+    getAnalyticsStats
 } from '../controllers/adminController';
 
 const router = Router();
@@ -24,6 +25,7 @@ router.use(authorize('admin'));
 
 // Dashboard
 router.get('/stats', getDashboardStats);
+router.get('/analytics', getAnalyticsStats);
 
 // Users management
 router.get('/users', getAllUsers);

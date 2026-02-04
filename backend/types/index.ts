@@ -5,7 +5,7 @@ import { Document, Types } from 'mongoose';
 export type UserRole = 'student' | 'company' | 'admin';
 
 // Application status enum
-export type ApplicationStatus = 'pending' | 'shortlisted' | 'rejected' | 'accepted';
+export type ApplicationStatus = 'pending' | 'reviewed' | 'shortlisted' | 'interview_scheduled' | 'rejected' | 'accepted';
 
 // Report status enum
 export type ReportStatus = 'open' | 'under_review' | 'resolved' | 'dismissed';
@@ -47,6 +47,8 @@ export interface IStudentProfile extends Document {
     cgpa?: number;
     linkedIn?: string;
     github?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 // Company interface
@@ -70,6 +72,8 @@ export interface ICompany extends Document {
     };
     about?: string;
     benefits?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 // Internship interface
@@ -84,6 +88,7 @@ export interface IInternship extends Document {
     openings: number;
     createdAt: Date;
     isActive: boolean;
+    status: 'active' | 'inactive' | 'completed' | 'in_progress' | 'rejected';
     location?: string;
     deadline?: Date;
 }
@@ -96,6 +101,8 @@ export interface IApplication extends Document {
     appliedAt: Date;
     notes?: string;
     coverLetter?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 // Report interface

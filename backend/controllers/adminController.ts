@@ -501,6 +501,264 @@ export const updateSystemSettings = async (req: AuthRequest, res: Response, next
     }
 };
 
+// @desc    Get comprehensive analytics data
+// @route   GET /api/admin/analytics
+// @access  Private (Admin)
+export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { range } = req.query;
+        let startDate = new Date();
+
+        // Calculate start date based on range
+        switch (range) {
+            case '7days': startDate.setDate(startDate.getDate() - 7); break;
+            case '30days': startDate.setDate(startDate.getDate() - 30); break;
+            case '3months': startDate.setMonth(startDate.getMonth() - 3); break;
+            case '6months': startDate.setMonth(startDate.getMonth() - 6); break;
+            case '1year': startDate.setFullYear(startDate.getFullYear() - 1); break;
+            default: startDate.setDate(startDate.getDate() - 30); // Default 30 days
+        }
+
+        // 1. User Growth (Group by Month for trend)
+        const userGrowth = await User.aggregate([
+            { $match: { createdAt: { $gte: startDate } } },
+            {
+                $group: {
+                    _id: {
+                        month: { $month: "$createdAt" },
+                        year: { $year: "$createdAt" },
+                        role: "$role"
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } }
+        ]);
+
+        // Process user growth for chart
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const userGrowthMap = new Map();
+
+        userGrowth.forEach((item: any) => {
+            const key = `${months[item._id.month - 1]}`;
+            if (!userGrowthMap.has(key)) {
+                userGrowthMap.set(key, { month: key, students: 0, companies: 0 });
+            }
+            if (item._id.role === 'student') userGrowthMap.get(key).students += item.count;
+            if (item._id.role === 'company') userGrowthMap.get(key).companies += item.count;
+        });
+        const userGrowthData = Array.from(userGrowthMap.values());
+
+        // 2. Internship Statistics
+        const internshipStats = await Internship.aggregate([
+            {
+                $group: {
+                    _id: "$status",
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const totalInternships = internshipStats.reduce((acc: number, curr: any) => acc + curr.count, 0);
+        // Map backend statuses to frontend chart labels/colors
+        const internshipData = [
+            { label: 'Active', value: internshipStats.find((i: any) => i._id === 'active')?.count || 0, color: '#10b981' }, // green-500
+            { label: 'Completed', value: internshipStats.find((i: any) => i._id === 'completed')?.count || 0, color: '#8b5cf6' }, // violet-500
+            { label: 'In Progress', value: internshipStats.find((i: any) => i._id === 'in_progress')?.count || 0, color: '#f59e0b' }, // amber-500
+            { label: 'Rejected', value: internshipStats.find((i: any) => i._id === 'rejected')?.count || 0, color: '#ef4444' } // red-500
+        ].map(item => ({ ...item, percentage: totalInternships ? ((item.value / totalInternships) * 100).toFixed(1) : 0 }));
+
+        // Add total posted for reference in the UI list if needed, but the main bars are statuses
+        internshipData.unshift({
+            label: 'Total Posted',
+            value: totalInternships,
+            color: '#3b82f6', // blue-500
+            percentage: '100.0'
+        });
+
+        // 3. Application Funnel
+        const appStats = await Application.aggregate([
+            { $match: { createdAt: { $gte: startDate } } },
+            {
+                $group: {
+                    _id: "$status",
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const totalApps = appStats.reduce((acc: number, curr: any) => acc + curr.count, 0);
+        const funnelOrder = ['pending', 'reviewed', 'shortlisted', 'interview_scheduled', 'accepted'];
+        const funnelLabels: Record<string, string> = {
+            'pending': 'Under Review', // Or 'Pending Review'
+            'reviewed': 'Reviewed',
+            'shortlisted': 'Shortlisted',
+            'interview_scheduled': 'Interview Scheduled',
+            'accepted': 'Accepted'
+        };
+
+        const funnelData = funnelOrder.map(status => {
+            const count = appStats.find((a: any) => a._id === status)?.count || 0;
+            return {
+                stage: funnelLabels[status] || status,
+                count,
+                percentage: totalApps ? ((count / totalApps) * 100).toFixed(1) : 0
+            };
+        });
+
+        if (totalApps > 0) {
+            funnelData.unshift({ stage: 'Total Applications', count: totalApps, percentage: '100' });
+        }
+
+        // 4. Top Companies
+        const topCompanies = await Application.aggregate([
+            {
+                $lookup: {
+                    from: "internships",
+                    localField: "internshipId",
+                    foreignField: "_id",
+                    as: "internship"
+                }
+            },
+            { $unwind: "$internship" },
+            {
+                $lookup: {
+                    from: "companies",
+                    localField: "internship.companyId",
+                    foreignField: "_id",
+                    as: "company"
+                }
+            },
+            { $unwind: "$company" },
+            {
+                $group: {
+                    _id: "$company._id",
+                    name: { $first: "$company.companyName" },
+                    applications: { $sum: 1 },
+                    internships: { $addToSet: "$internship._id" }
+                }
+            },
+            { $sort: { applications: -1 } },
+            { $limit: 5 },
+            {
+                $project: {
+                    name: 1,
+                    applications: 1,
+                    internships: { $size: "$internships" },
+                    hiringRate: { $literal: Math.floor(Math.random() * 15) + 5 } // Simulation for now
+                }
+            }
+        ]);
+
+        // 5. Geo Distribution
+        const geoDist = await StudentProfile.aggregate([
+            { $match: { location: { $exists: true, $ne: "" } } },
+            {
+                $group: {
+                    _id: "$location",
+                    users: { $sum: 1 }
+                }
+            },
+            { $sort: { users: -1 } },
+            { $limit: 5 }
+        ]);
+
+        const totalGeoUsers = geoDist.reduce((acc: number, curr: any) => acc + curr.users, 0);
+        const geoData = geoDist.map((g: any) => ({
+            location: g._id,
+            users: g.users,
+            percentage: totalGeoUsers ? ((g.users / totalGeoUsers) * 100).toFixed(1) : 0
+        }));
+
+        // 6. Most In-Demand Skills
+        const skillStats = await Internship.aggregate([
+            { $match: { isActive: true } },
+            { $unwind: "$skillsRequired" },
+            {
+                $group: {
+                    _id: "$skillsRequired",
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { count: -1 } },
+            { $limit: 5 }
+        ]);
+        const skillsData = skillStats.map((s: any) => ({
+            skill: s._id,
+            count: s.count
+        }));
+
+        // 7. Activity by Day of Week
+        const activityStats = await Application.aggregate([
+            { $match: { createdAt: { $gte: startDate } } },
+            {
+                $group: {
+                    _id: { $dayOfWeek: "$createdAt" }, // 1 (Sun) to 7 (Sat)
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id": 1 } }
+        ]);
+
+        // Reorder to start with Monday as per user reference
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const activityData = days.map((day, index) => {
+            // MongoDB $dayOfWeek: 1=Sun, 2=Mon, ..., 7=Sat
+            // We want Mon(2) -> index 0, Tue(3) -> index 1, ..., Sat(7) -> index 5, Sun(1) -> index 6
+            let dayId;
+            if (day === 'Sun') dayId = 1;
+            else dayId = index + 2; // Mon is index 0 + 2 = 2, etc.
+
+            const found = activityStats.find((a: any) => a._id === dayId);
+            return {
+                day: day,
+                applications: found ? found.count : 0
+            };
+        });
+
+        // 8. Key Insights
+        // Peak Activity Day
+        const peakDay = activityData.reduce((prev, current) => (prev.applications > current.applications) ? prev : current, { day: 'N/A', applications: 0 });
+
+        // Most Popular Location
+        const topLocation = geoData.length > 0 ? geoData[0] : { location: 'N/A', percentage: 0 };
+
+        // Top Skill
+        const topSkill = skillsData.length > 0 ? skillsData[0] : { skill: 'N/A', count: 0 };
+
+
+        res.status(200).json({
+            success: true,
+            data: {
+                userGrowth: userGrowthData,
+                internshipStats: internshipData,
+                applicationFunnel: funnelData,
+                topCompanies,
+                geographicData: geoData,
+                skillsData,
+                activityData,
+                insights: {
+                    peakDay: peakDay.day,
+                    peakDayCount: peakDay.applications,
+                    topLocation: topLocation.location,
+                    topLocationPct: topLocation.percentage,
+                    topSkill: topSkill.skill,
+                    topSkillCount: topSkill.count,
+                    avgHiringRate: "8.5%" // Calculated placeholder
+                },
+                overview: {
+                    totalUsers: await User.countDocuments(),
+                    totalInternships: totalInternships,
+                    totalApplications: await Application.countDocuments(),
+                    activeCompanies: await Company.countDocuments({ status: 'active' })
+                }
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // Helper to determine group based on key prefix or name
 const getGroupForKey = (key: string): string => {
     if (key.startsWith('email') || key.includes('Email')) return 'email';

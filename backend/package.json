@@ -10,7 +10,8 @@
                 "build": "tsc",
                 "test": "jest",
                 "test:coverage": "jest --coverage",
-                "test:watch": "jest --watch"
+                "test:watch": "jest --watch",
+                "seed:admin": "ts-node scripts/seedAdminData.ts"
         },
         "keywords": [
                 "internship",

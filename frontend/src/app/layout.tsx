@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
 import { SocketProvider } from "@/lib/SocketContext";
+import { Toaster } from 'react-hot-toast';
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-geist-sans",
@@ -58,6 +59,7 @@ export default function RootLayout({
       <body className={`${jakarta.variable} font-sans`} suppressHydrationWarning>
         <AuthProvider>
           <SocketProvider>
+            <Toaster position="top-right" />
             {children}
           </SocketProvider>
         </AuthProvider>
