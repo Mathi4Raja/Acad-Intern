@@ -179,6 +179,38 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
                         userId: socket.userId
                     });
                 }
+
+                // Determine other party ID to check online status
+                let otherPartyId: string | undefined;
+                if (isStudent) {
+                    // If current user is student, other party is company
+                    // removed dynamic require
+                    const company = await Company.findById((application.internshipId as any).companyId);
+                    otherPartyId = company?.userId.toString();
+                } else {
+                    // If current user is company, other party is student
+                    otherPartyId = application.studentId.toString();
+                }
+
+                // Check online status of other party
+                let isOtherPartyOnline = false;
+                if (otherPartyId) {
+                    isOtherPartyOnline = activeUsers.has(otherPartyId);
+                }
+
+                // Emit joined event with status info
+                socket.emit('joined-conversation', {
+                    applicationId,
+                    otherPartyId,
+                    isOnline: isOtherPartyOnline
+                });
+
+                // Notify room that this user is online
+                socket.to(`application:${applicationId}`).emit('user-status', {
+                    userId: socket.userId,
+                    isOnline: true,
+                    applicationId
+                });
             } catch (error) {
                 console.error('Error joining application:', error);
                 socket.emit('error', { message: 'Failed to join conversation' });
@@ -425,6 +457,20 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
         });
 
         // Disconnect
+        socket.on('disconnecting', () => {
+            // Notify rooms that user is going offline
+            for (const room of socket.rooms) {
+                if (room.startsWith('application:')) {
+                    const applicationId = room.split(':')[1];
+                    socket.to(room).emit('user-status', {
+                        userId: socket.userId,
+                        isOnline: false,
+                        applicationId
+                    });
+                }
+            }
+        });
+
         socket.on('disconnect', async () => {
             const user = await User.findById(socket.userId);
             if (socket.userId) {

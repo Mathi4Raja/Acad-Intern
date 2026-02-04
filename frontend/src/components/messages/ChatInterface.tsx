@@ -20,6 +20,8 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
     const [typingUser, setTypingUser] = useState<string | null>(null);
+    const [isOnline, setIsOnline] = useState(false);
+    const [otherPartyId, setOtherPartyId] = useState<string | null>(null);
     const [showScrollButton, setShowScrollButton] = useState(false);
     const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -140,11 +142,26 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
             }
         };
 
+        const handleJoinedConversation = (data: { applicationId: string; otherPartyId: string; isOnline: boolean }) => {
+            if (data.applicationId === applicationId) {
+                setOtherPartyId(data.otherPartyId);
+                setIsOnline(data.isOnline);
+            }
+        };
+
+        const handleUserStatus = (data: { userId: string; isOnline: boolean; applicationId: string }) => {
+            if (data.applicationId === applicationId && data.userId === otherPartyId) {
+                setIsOnline(data.isOnline);
+            }
+        };
+
         socket.on('new-message', handleNewMessage);
         socket.on('messages-delivered', handleMessagesDelivered);
         socket.on('messages-seen', handleMessagesSeen);
         socket.on('user-typing', handleUserTyping);
         socket.on('message-deleted', handleMessageDeleted);
+        socket.on('joined-conversation', handleJoinedConversation);
+        socket.on('user-status', handleUserStatus);
 
         return () => {
             socket.off('new-message', handleNewMessage);
@@ -152,8 +169,10 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
             socket.off('messages-seen', handleMessagesSeen);
             socket.off('user-typing', handleUserTyping);
             socket.off('message-deleted', handleMessageDeleted);
+            socket.off('joined-conversation', handleJoinedConversation);
+            socket.off('user-status', handleUserStatus);
         };
-    }, [socket, applicationId, currentUserId, otherPartyName]);
+    }, [socket, applicationId, currentUserId, otherPartyName, otherPartyId]);
 
     // Mark messages as seen when viewing
     useEffect(() => {
@@ -419,9 +438,9 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                             {typingUser ? (
                                 <span className="text-primary animate-pulse">typing...</span>
                             ) : (
-                                <span className="flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-green-500"></span>
-                                    Online
+                                <span className={`flex items-center gap-1 ${isOnline ? 'text-green-600' : 'text-gray-400'}`}>
+                                    <span className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                                    {isOnline ? 'Online' : 'Offline'}
                                 </span>
                             )}
                         </p>

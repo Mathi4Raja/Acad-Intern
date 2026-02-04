@@ -62,7 +62,11 @@ export function StatCard({
                 {change && (
                     <div className={cn('flex items-center gap-0.5 text-[10px] font-medium', getTrendColor())}>
                         {getTrendIcon()}
-                        <span>{change.value > 0 ? '+' : ''}{change.value}%</span>
+                        <span>
+                            {change.value > 100
+                                ? '100%+'
+                                : `${change.value}%`}
+                        </span>
                     </div>
                 )}
             </div>

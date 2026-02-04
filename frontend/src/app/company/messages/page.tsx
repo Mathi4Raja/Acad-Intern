@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { PageHeader } from '@/components/common';
+
 import ConversationList from '@/components/messages/ConversationList';
 import ChatInterface from '@/components/messages/ChatInterface';
 import { MessageCircle } from 'lucide-react';
@@ -34,15 +34,7 @@ export default function CompanyMessagesPage() {
     return (
         <div className="h-full flex flex-col md:p-4 lg:p-6 lg:max-w-7xl lg:mx-auto w-full bg-gray-50 md:bg-transparent">
             {/* Mobile Header */}
-            {/* Mobile Header Removed as per request */}
-
-            {/* Desktop Header */}
-            <div className="hidden md:block mb-4">
-                <PageHeader
-                    title="Messages"
-                    subtitle="Communicate with applicants about internship opportunities"
-                />
-            </div>
+            {/* Desktop Header - Removed */}{/* Mobile Header - Removed */}
 
             <div className="flex-1 bg-white md:rounded-2xl md:shadow-sm md:border md:border-gray-200 overflow-hidden flex min-h-0">
                 {/* Conversations List */}

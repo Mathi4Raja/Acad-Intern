@@ -21,6 +21,7 @@ import reportRoutes from './routes/reports';
 import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/upload';
 import messageRoutes from './routes/messages';
+import analyticsRoutes from './routes/analytics';
 import { initializeSocket } from './utils/socketHandler';
 
 // Initialize Express app
@@ -99,6 +100,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

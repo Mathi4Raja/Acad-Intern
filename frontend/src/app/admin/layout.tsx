@@ -18,7 +18,7 @@ const navigation = [
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-    const { user, isLoading: authLoading } = useAuth()
+    const { user, logout, isLoading: authLoading } = useAuth()
     const router = useRouter()
     const [quickStats, setQuickStats] = useState([
         { label: 'Total Users', value: '-' },
@@ -69,6 +69,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             userName={user.name || 'Admin User'}
             userEmail={user.email || 'admin@acadintern.com'}
             quickStats={quickStats}
+            onLogout={logout}
         >
             {children}
         </DashboardLayout>
