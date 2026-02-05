@@ -73,10 +73,11 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
         if (type === 'resume') {
             const isAllowed = allowResumeSetting ? (allowResumeSetting.value === true || allowResumeSetting.value === 'true') : true; // Default to true if not set
             if (!isAllowed) {
-                return res.status(403).json({
+                res.status(403).json({
                     success: false,
                     message: 'Resume uploads are currently disabled by the administrator.'
                 });
+                return;
             }
         }
 
@@ -85,10 +86,11 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
         const maxSizeBytes = maxFileSizeSetting ? (Number(maxFileSizeSetting.value) * 1024 * 1024) : 10 * 1024 * 1024;
 
         if (req.file.size > maxSizeBytes) {
-            return res.status(400).json({
+            res.status(400).json({
                 success: false,
                 message: `File too large. Maximum size is ${maxFileSizeSetting?.value || 10}MB`
             });
+            return;
         }
 
         if (!isR2Configured()) {
