@@ -3,6 +3,7 @@ import { z } from 'zod';
 import Internship from '../models/Internship';
 import Company from '../models/Company';
 import StudentProfile from '../models/StudentProfile';
+import Application from '../models/Application';
 import { AuthRequest } from '../types';
 
 // Validation schemas
@@ -34,49 +35,12 @@ export const matchInternships = async (req: AuthRequest, res: Response, next: Ne
     try {
         const profile = await StudentProfile.findOne({ userId: req.user?._id });
 
+        // Get user's applications to mark applied internships
+        const applications = await Application.find({ studentId: req.user?._id }).select('internshipId');
+        const appliedInternshipIds = new Set(applications.map(app => app.internshipId.toString()));
+
         const studentSkills = (profile?.skills || []).map(s => s.toLowerCase());
 
-        const internships = await Internship.find({ isActive: true })
-            .populate('companyId', 'companyName website verified')
-            .lean();
-
-        const matches = internships.map(internship => {
-            if (!internship.skillsRequired || internship.skillsRequired.length === 0) {
-                return { ...internship, matchScore: 0 };
-            }
-
-            const jobSkills = internship.skillsRequired.map(s => s.toLowerCase());
-            const intersection = jobSkills.filter(skill => studentSkills.includes(skill));
-            const matchScore = Math.round((intersection.length / jobSkills.length) * 100);
-
-            return { ...internship, matchScore };
-        });
-
-        const sortedMatches = matches
-            .sort((a, b) => {
-                // First sort by match score
-                if (b.matchScore !== a.matchScore) {
-                    return b.matchScore - a.matchScore;
-                }
-                // Then by creation date (newest first)
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            });
-
-        res.status(200).json({
-            success: true,
-            count: sortedMatches.length,
-            data: sortedMatches
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-// @desc    Get all internships with filtering and search
-// @route   GET /api/internships
-// @access  Public
-export const getInternships = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-    try {
         const { search, mode, minStipend, duration, skills } = req.query;
 
         const query: InternshipQuery = { isActive: true };
@@ -104,12 +68,99 @@ export const getInternships = async (req: AuthRequest, res: Response, next: Next
 
         const internships = await Internship.find(query)
             .populate('companyId', 'companyName website verified')
-            .sort({ createdAt: -1 });
+            .lean();
+
+        const matches = internships.map(internship => {
+            if (!internship.skillsRequired || internship.skillsRequired.length === 0) {
+                return { ...internship, matchScore: 0 };
+            }
+
+            const jobSkills = internship.skillsRequired.map(s => s.toLowerCase());
+            const intersection = jobSkills.filter(skill => studentSkills.includes(skill));
+            const matchScore = Math.round((intersection.length / jobSkills.length) * 100);
+
+            return {
+                ...internship,
+                matchScore,
+                hasApplied: appliedInternshipIds.has(internship._id.toString())
+            };
+        });
+
+        const sortedMatches = matches
+            .sort((a, b) => {
+                // First sort by match score
+                if (b.matchScore !== a.matchScore) {
+                    return b.matchScore - a.matchScore;
+                }
+                // Then by creation date (newest first)
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
 
         res.status(200).json({
             success: true,
-            count: internships.length,
-            data: internships
+            count: sortedMatches.length,
+            data: sortedMatches
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Get all internships with filtering and search
+// @route   GET /api/internships
+// @access  Public
+export const getInternships = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { search, mode, minStipend, duration, skills, companyId } = req.query;
+
+        const query: any = { isActive: true };
+
+        if (search && typeof search === 'string') {
+            query.$text = { $search: search };
+        }
+
+        if (mode && typeof mode === 'string') {
+            query.mode = mode;
+        }
+
+        if (minStipend && typeof minStipend === 'string') {
+            query.stipend = { $gte: parseInt(minStipend) };
+        }
+
+        if (duration && typeof duration === 'string') {
+            query.durationWeeks = { $lte: parseInt(duration) };
+        }
+
+        if (skills && typeof skills === 'string') {
+            const skillsArray = skills.split(',').map(s => s.trim());
+            query.skillsRequired = { $in: skillsArray };
+        }
+
+        if (companyId && typeof companyId === 'string') {
+            query.companyId = companyId;
+        }
+
+        const internships = await Internship.find(query)
+            .populate('companyId', 'companyName website verified')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        // Check for applications if user is logged in
+        let internshipsWithStatus = internships;
+        if (req.user) {
+            const applications = await Application.find({ studentId: req.user._id }).select('internshipId');
+            const appliedInternshipIds = new Set(applications.map(app => app.internshipId.toString()));
+
+            internshipsWithStatus = internships.map(internship => ({
+                ...internship,
+                hasApplied: appliedInternshipIds.has(internship._id.toString())
+            }));
+        }
+
+        res.status(200).json({
+            success: true,
+            count: internshipsWithStatus.length,
+            data: internshipsWithStatus
         });
     } catch (error) {
         next(error);
@@ -128,6 +179,23 @@ export const getInternship = async (req: AuthRequest, res: Response, next: NextF
             res.status(404).json({
                 success: false,
                 message: 'Internship not found'
+            });
+            return;
+        }
+
+        let internshipData = internship.toObject();
+
+        if (req.user) {
+            const application = await Application.findOne({
+                internshipId: internship._id,
+                studentId: req.user._id
+            });
+            res.status(200).json({
+                success: true,
+                data: {
+                    ...internshipData,
+                    hasApplied: !!application
+                }
             });
             return;
         }

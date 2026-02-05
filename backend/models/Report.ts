@@ -7,6 +7,11 @@ const reportSchema = new Schema<IReport>({
         ref: 'Internship',
         default: null
     },
+    applicationId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Application',
+        default: null
+    },
     reporterId: {
         type: Schema.Types.ObjectId,
         ref: 'User',

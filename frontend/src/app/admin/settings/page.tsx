@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { Settings, Bell, Shield, Database, Mail, Users, Building2, Save, AlertCircle, CheckCircle, RotateCcw, AlertTriangle } from 'lucide-react'
+import { Settings, Bell, Shield, Database, Mail, Users, Building2, Save, AlertCircle, CheckCircle, RotateCcw, AlertTriangle, FileText } from 'lucide-react'
 import { adminApi } from '@/lib/api'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'react-hot-toast'
@@ -32,6 +32,8 @@ interface SettingsData {
   maxApplicationsPerStudent: number;
   allowResumeUpload: boolean;
   maxResumeSize: number;
+  maxFileSize: number;
+  maxMessageSize: number;
   autoBackup: boolean;
   backupFrequency: string;
   retentionDays: number;
@@ -73,6 +75,8 @@ const defaultSettings: SettingsData = {
   maxApplicationsPerStudent: 20,
   allowResumeUpload: true,
   maxResumeSize: 2,
+  maxFileSize: 5,
+  maxMessageSize: 15,
 
   // Database Settings
   autoBackup: true,
@@ -150,6 +154,7 @@ function AdminSettingsContent() {
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'companies', label: 'Companies', icon: Building2 },
     { id: 'students', label: 'Students', icon: Users },
+    { id: 'files', label: 'Files', icon: FileText },
     { id: 'database', label: 'Database', icon: Database }
   ]
 
@@ -452,6 +457,60 @@ function AdminSettingsContent() {
                           onChange={(e) => setSettings({ ...settings, passwordResetExpiry: parseInt(e.target.value) })}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                         />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* File Settings */}
+              {activeTab === 'files' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-100">File Upload Settings</h2>
+                    <div className="grid gap-6 max-w-xl">
+                      <div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Standard Upload Size (MB)</label>
+                          <p className="text-sm text-gray-500 mb-2">Limit for Profile Pictures, Banners, and Resumes (Max 10MB).</p>
+                          <input
+                            type="number"
+                            min="1"
+                            max="10"
+                            value={settings.maxFileSize || 5}
+                            onChange={(e) => setSettings({ ...settings, maxFileSize: Math.min(10, Math.max(1, parseInt(e.target.value) || 1)) })}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Message Attachment Size (MB)</label>
+                          <p className="text-sm text-gray-500 mb-2">Limit for files sent in chat messages (No hard limit).</p>
+                          <input
+                            type="number"
+                            min="1"
+                            max="500"
+                            value={settings.maxMessageSize || 15}
+                            onChange={(e) => setSettings({ ...settings, maxMessageSize: Math.max(1, parseInt(e.target.value) || 1) })}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+                          <div>
+                            <div className="font-medium text-gray-900">Allow Resume Uploads</div>
+                            <div className="text-sm text-gray-600">Enable or disable resume uploads for students</div>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={settings.allowResumeUpload}
+                              onChange={(e) => setSettings({ ...settings, allowResumeUpload: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -67,10 +67,28 @@ export default function StudentAnalyticsPage() {
     return (
         <div className="max-w-7xl mx-auto p-3 sm:p-4">
             {/* Header */}
-            <PageHeader
-                title="Profile Analytics"
-                subtitle="Track your visibility and optimize your profile for better matches"
-            />
+            {/* Header */}
+            <div className="mb-6 flex flex-col items-center sm:flex-row justify-between gap-4">
+                <div className="bg-gradient-to-br from-white to-blue-50/50 rounded-2xl shadow-sm border border-blue-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
+                    <div className="relative z-10 flex items-center gap-3">
+                        <div className="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
+                            <TrendingUp size={20} className="fill-blue-400/20" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight">
+                                Profile Analytics
+                            </h1>
+                            <p className="text-xs text-gray-600 font-medium">
+                                Track your visibility and optimize your profile
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Decorative elements */}
+                    <div className="absolute -right-6 -top-6 w-20 h-20 bg-blue-100/50 rounded-full blur-2xl group-hover:bg-blue-100/80 transition-colors" />
+                    <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-cyan-100/50 rounded-full blur-2xl group-hover:bg-cyan-100/80 transition-colors" />
+                </div>
+            </div>
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">

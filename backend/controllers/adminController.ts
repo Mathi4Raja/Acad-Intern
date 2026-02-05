@@ -98,7 +98,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
             Report.countDocuments({ priority: 'high' }),
             User.find().sort({ createdAt: -1 }).limit(5).select('name email role createdAt status'),
             Internship.find().sort({ createdAt: -1 }).limit(5).populate('companyId', 'companyName').select('title companyId createdAt isActive'),
-            Report.find({ status: { $in: ['open', 'under_review'] } }).sort({ createdAt: -1 }).limit(5).populate('internshipId', 'title').populate('reporterId', 'name')
+            Report.find({ status: { $in: ['open', 'under_review'] } }).sort({ createdAt: -1 }).limit(5).populate('internshipId', 'title').populate('applicationId').populate('reporterId', 'name')
         ]);
 
         res.status(200).json({
@@ -403,8 +403,11 @@ export const getAllReports = async (req: AuthRequest, res: Response, next: NextF
         res.status(200).json({
             success: true, count: reports.length,
             data: reports.map((report: any) => ({
-                id: report._id, type: 'internship', internshipTitle: report.internshipId?.title || 'Unknown',
-                internshipId: report.internshipId?._id, companyName: report.internshipId?.companyId?.companyName || 'Unknown',
+                id: report._id, type: report.applicationId ? 'chat' : 'internship',
+                internshipTitle: report.internshipId?.title || 'Unknown',
+                internshipId: report.internshipId?._id,
+                applicationId: report.applicationId?._id || report.applicationId,
+                companyName: report.internshipId?.companyId?.companyName || 'Unknown',
                 reportedBy: report.reporterId?.name || 'Unknown', reporterEmail: report.reporterId?.email,
                 reporterId: report.reporterId?._id, reason: report.reason, status: report.status,
                 priority: report.priority || 'medium', resolution: report.resolution,
@@ -766,5 +769,6 @@ const getGroupForKey = (key: string): string => {
     if (key.startsWith('site') || key.includes('maintenance')) return 'general';
     if (key.startsWith('company')) return 'companies';
     if (key.startsWith('student')) return 'students';
+    if (key.startsWith('maxFile') || key.startsWith('maxMessage') || key.includes('Upload')) return 'files';
     return 'other';
 };

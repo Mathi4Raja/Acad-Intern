@@ -69,6 +69,14 @@ const studentProfileSchema = new Schema<IStudentProfileWithMethods>({
         type: String,
         trim: true,
         default: ''
+    },
+    profilePicture: {
+        type: String,
+        default: null
+    },
+    bannerImage: {
+        type: String,
+        default: null
     }
 }, {
     timestamps: true

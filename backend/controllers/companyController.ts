@@ -162,6 +162,29 @@ export const verifyCin = async (req: AuthRequest, res: Response, next: NextFunct
             });
             return;
         }
+    }
+};
+
+// @desc    Get company profile by ID
+// @route   GET /api/companies/:id
+// @access  Private (Authenticated)
+export const getProfileById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const profile = await Company.findById(req.params.id);
+
+        if (!profile) {
+            res.status(404).json({
+                success: false,
+                message: 'Company profile not found'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            data: profile
+        });
+    } catch (error) {
         next(error);
     }
 };

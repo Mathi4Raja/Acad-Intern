@@ -6,7 +6,9 @@ import {
     getMessages,
     sendMessage,
     markAsSeen,
-    getUnreadCount
+    getUnreadCount,
+    muteConversation,
+    getPreferences
 } from '../controllers/messageController';
 
 const router = express.Router();
@@ -16,7 +18,7 @@ const storage = multer.memoryStorage();
 const upload = multer({
     storage,
     limits: {
-        fileSize: 15 * 1024 * 1024 // 15MB max
+        fileSize: 100 * 1024 * 1024 // 100MB max (Safety cap, admin setting is source of truth)
     }
 });
 
@@ -37,5 +39,11 @@ router.post('/application/:applicationId', upload.array('files', 5), sendMessage
 
 // Mark messages as seen
 router.patch('/application/:applicationId/seen', markAsSeen);
+
+// Mute/Unmute conversation
+router.post('/application/:applicationId/mute', muteConversation);
+
+// Get conversation preferences
+router.get('/application/:applicationId/preferences', getPreferences);
 
 export default router;

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { CheckCircle, XCircle, AlertCircle, Filter, Search, Loader2, Clock } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { CheckCircle, XCircle, AlertCircle, Filter, Search, Loader2, Clock, FileText } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
 import { Application, ApplicationStatus } from '@/types'
 import ApplicationCard from '@/components/applications/ApplicationCard'
@@ -23,6 +24,20 @@ export default function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const searchParams = useSearchParams()
+  const highlightedId = searchParams.get('highlight')
+
+  // Effect to scroll to highlighted application
+  useEffect(() => {
+    if (!loading && highlightedId) {
+      const element = document.getElementById(`application-${highlightedId}`)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        // Optional: clear param after scroll? Maybe keep it for reference.
+      }
+    }
+  }, [loading, highlightedId])
 
   // Fetch applications from API
   useEffect(() => {
@@ -64,6 +79,7 @@ export default function ApplicationsPage() {
     all: applications.length,
     pending: applications.filter(app => app.status === 'pending').length,
     shortlisted: applications.filter(app => app.status === 'shortlisted').length,
+    assessment_completed: applications.filter(app => app.status === 'assessment_completed').length,
     accepted: applications.filter(app => app.status === 'accepted').length,
     rejected: applications.filter(app => app.status === 'rejected').length,
   }
@@ -91,12 +107,38 @@ export default function ApplicationsPage() {
     )
   }
 
+  const statusLabels: Record<string, string> = {
+    pending: 'Pending',
+    shortlisted: 'Shortlisted',
+    assessment_completed: 'Assessment Done',
+    accepted: 'Accepted',
+    rejected: 'Rejected'
+  }
+
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-4">
-      <PageHeader
-        title="My Applications"
-        subtitle="Track and manage all your internship applications in one place."
-      />
+      {/* Header */}
+      <div className="mb-6 flex flex-col items-center sm:flex-row justify-between gap-4">
+        <div className="bg-gradient-to-br from-white to-purple-50/50 rounded-2xl shadow-sm border border-purple-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="p-2 bg-purple-600 rounded-lg text-white shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform duration-300">
+              <FileText size={20} className="fill-purple-400/20" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight">
+                My Applications
+              </h1>
+              <p className="text-xs text-gray-600 font-medium">
+                Track and manage all your internship applications.
+              </p>
+            </div>
+          </div>
+
+          {/* Decorative elements */}
+          <div className="absolute -right-6 -top-6 w-20 h-20 bg-purple-100/50 rounded-full blur-2xl group-hover:bg-purple-100/80 transition-colors" />
+          <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-pink-100/50 rounded-full blur-2xl group-hover:bg-pink-100/80 transition-colors" />
+        </div>
+      </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
@@ -106,11 +148,12 @@ export default function ApplicationsPage() {
       )}
 
       {/* Stats Cards / Filters */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-4 sm:mb-6">
         {[
           { id: 'all', label: 'Total Applications', count: statusCounts.all, color: 'text-gray-900', border: 'border-primary', ring: 'ring-primary/20' },
           { id: 'pending', label: 'Pending', count: statusCounts.pending, color: 'text-yellow-600', border: 'border-yellow-500', ring: 'ring-yellow-100' },
           { id: 'shortlisted', label: 'Shortlisted', count: statusCounts.shortlisted, color: 'text-green-600', border: 'border-green-500', ring: 'ring-green-100' },
+          { id: 'assessment_completed', label: 'Assessment Done', count: statusCounts.assessment_completed, color: 'text-purple-600', border: 'border-purple-500', ring: 'ring-purple-100' },
           { id: 'accepted', label: 'Accepted', count: statusCounts.accepted, color: 'text-blue-600', border: 'border-blue-500', ring: 'ring-blue-100' },
           { id: 'rejected', label: 'Rejected', count: statusCounts.rejected, color: 'text-red-600', border: 'border-red-500', ring: 'ring-red-100' },
         ].map((stat) => (
@@ -158,7 +201,7 @@ export default function ApplicationsPage() {
             <p className="text-gray-600 mb-4">
               {filterStatus === 'all'
                 ? "You haven't applied to any internships yet."
-                : `No applications with status "${filterStatus}".`}
+                : `No applications with status "${statusLabels[filterStatus] || filterStatus}".`}
             </p>
             <Link
               href="/student/internships"
@@ -173,6 +216,7 @@ export default function ApplicationsPage() {
               key={app.id}
               application={app}
               formatDate={formatDate}
+              isHighlighted={app.id === highlightedId}
             />
           ))
         )}

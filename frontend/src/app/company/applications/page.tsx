@@ -122,6 +122,8 @@ export default function Applications() {
         return 'bg-yellow-100 text-yellow-700'
       case 'shortlisted':
         return 'bg-green-100 text-green-700'
+      case 'assessment_completed':
+        return 'bg-purple-100 text-purple-700'
       case 'accepted':
         return 'bg-blue-100 text-blue-700'
       case 'rejected':
@@ -286,6 +288,7 @@ export default function Applications() {
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
               <option value="shortlisted">Shortlisted</option>
+              <option value="assessment_completed">Assessment Done</option>
               <option value="accepted">Accepted</option>
               <option value="rejected">Rejected</option>
             </select>
@@ -412,6 +415,20 @@ export default function Applications() {
                       </>
                     )}
                     {app.status === 'shortlisted' && (
+                      <button
+                        onClick={() => handleUpdateStatus(app.id, 'assessment_completed')}
+                        disabled={actionLoading === app.id}
+                        className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50 shadow-sm"
+                      >
+                        {actionLoading === app.id ? (
+                          <Loader2 size={14} className="animate-spin" />
+                        ) : (
+                          <CheckCircle size={14} />
+                        )}
+                        Mark Assessment Done
+                      </button>
+                    )}
+                    {app.status === 'assessment_completed' && (
                       <button
                         onClick={() => handleUpdateStatus(app.id, 'accepted')}
                         disabled={actionLoading === app.id}

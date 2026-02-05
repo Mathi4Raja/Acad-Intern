@@ -13,9 +13,16 @@ async function seedStudentAnalytics() {
         console.log('✅ Connected to MongoDB');
 
         // 1. Get the main test student
-        const student = await User.findOne({ email: 'student1@example.com' }); // Specific seeded user
+        // 1. Get the main test student (Fallback to first student found if specific one missing)
+        let student = await User.findOne({ email: 'student1@example.com' });
+
         if (!student) {
-            console.error('❌ Student user not found. Please run main seed script first.');
+            console.log('⚠️ Specific test user not found, falling back to first available student...');
+            student = await User.findOne({ role: 'student' });
+        }
+
+        if (!student) {
+            console.error('❌ No student user found in database. Please register a student first.');
             process.exit(1);
         }
         console.log(`👤 Seeding analytics for: ${student.email}`);
@@ -29,16 +36,23 @@ async function seedStudentAnalytics() {
 
         const viewsToCreate = [];
         const endDate = new Date();
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-        // Generate random daily views pattern
-        for (let d = 0; d < 30; d++) {
-            const date = new Date(thirtyDaysAgo);
+        // Generate random daily views pattern for last 60 days
+        for (let d = 0; d < 60; d++) {
+            const date = new Date(sixtyDaysAgo);
             date.setDate(date.getDate() + d);
 
-            // Random number of views per day (0-15)
-            const dailyViews = Math.floor(Math.random() * 15);
+            // Random number of views per day
+            // Days 0-29 (Old data): Low views (0-3) to ensure meaningful growth later
+            // Days 30-59 (New data): High views (20-50) to force >100% trend
+            let dailyViews;
+            if (d < 30) {
+                dailyViews = Math.floor(Math.random() * 3); // previous month (low)
+            } else {
+                dailyViews = Math.floor(Math.random() * 30) + 20; // current month (HUGE spike)
+            }
 
             for (let v = 0; v < dailyViews; v++) {
                 // Pick random viewer
@@ -90,9 +104,9 @@ async function seedStudentAnalytics() {
             {
                 skills: studentSkills,
                 bio: "Passionate developer with strong skills in web technologies.",
-                resumeUrl: "https://example.com/resume.pdf",
+                // Removed fake resumeUrl - it fails validation
                 github: "https://github.com/student",
-                linkedin: "https://linkedin.com/in/student"
+                linkedIn: "https://linkedin.com/in/student"
             }
 
         );

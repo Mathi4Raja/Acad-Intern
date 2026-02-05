@@ -50,9 +50,10 @@ export interface Internship {
     createdAt: string
     matchScore?: number
     location?: string
+    hasApplied?: boolean
 }
 
-export type ApplicationStatus = 'pending' | 'shortlisted' | 'accepted' | 'rejected';
+export type ApplicationStatus = 'pending' | 'shortlisted' | 'assessment_completed' | 'accepted' | 'rejected';
 
 export interface Application {
     id: string

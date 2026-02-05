@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, AlertCircle, CheckCircle, XCircle, Eye, Clock, User, Briefcase, MessageSquare, Loader2 } from 'lucide-react'
+import { Search, Filter, AlertCircle, CheckCircle, XCircle, Eye, Clock, User, Briefcase, MessageSquare, Loader2, X } from 'lucide-react'
 import api from '@/lib/api'
+import ChatInterface from '@/components/messages/ChatInterface'
 
 interface Report {
   id: string
@@ -19,6 +20,7 @@ interface Report {
   priority: 'high' | 'medium' | 'low'
   resolution?: string
   reviewedAt?: string
+  applicationId?: string
 }
 
 export default function ManageReports() {
@@ -31,6 +33,8 @@ export default function ManageReports() {
   const [filterPriority, setFilterPriority] = useState('all')
   const [showFilters, setShowFilters] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
+  const [activeChatId, setActiveChatId] = useState<string | null>(null)
+  const [activeChatName, setActiveChatName] = useState<string>('')
 
   const [stats, setStats] = useState({
     total: 0,
@@ -416,6 +420,18 @@ export default function ManageReports() {
                 {/* Action Buttons - Right Side */}
                 {(report.status !== 'resolved' && report.status !== 'dismissed') && (
                   <div className="flex flex-col gap-1.5 ml-2">
+                    {report.applicationId && (
+                      <button
+                        onClick={() => {
+                          setActiveChatId(report.applicationId || null)
+                          setActiveChatName(report.reportedBy || 'Reported Chat')
+                        }}
+                        className="p-2 text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                        title="View Chat History"
+                      >
+                        <MessageSquare size={16} />
+                      </button>
+                    )}
                     <button
                       onClick={() => setSelectedReport(report)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -459,6 +475,43 @@ export default function ManageReports() {
           </div>
         )}
       </div>
+      {/* Chat History Modal */}
+      {activeChatId && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+                  <MessageSquare size={20} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Chat History Context</h2>
+                  <p className="text-xs text-gray-500">Read-only view for investigation</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveChatId(null)}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-full transition-all"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 min-h-0 bg-white">
+              <ChatInterface
+                applicationId={activeChatId}
+                currentUserId="admin" // Passed to satisfy prop, but readOnly mode avoids owner checks for sending
+                otherPartyName={activeChatName}
+                readOnly={true}
+              />
+            </div>
+
+            <div className="p-4 bg-gray-50 border-t border-gray-100 text-center">
+              <p className="text-xs text-gray-400 italic">Admin Review Mode • All actions recorded • Read Only</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div >
   )
 }

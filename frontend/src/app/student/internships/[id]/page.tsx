@@ -13,7 +13,8 @@ import {
     Share2,
     Building,
     CheckCircle,
-    Loader2
+    Loader2,
+    Check
 } from 'lucide-react'
 import api from '@/lib/api'
 
@@ -38,6 +39,7 @@ interface InternshipDetail {
     createdAt: string
     location?: string
     deadline?: string
+    hasApplied?: boolean
 }
 
 export default function InternshipDetailPage() {
@@ -57,7 +59,12 @@ export default function InternshipDetailPage() {
             setLoading(true)
             const response = await api.get(`/internships/${id}`)
             if (response.data.success) {
-                setInternship(response.data.data)
+                const data = response.data.data
+                setInternship(data)
+                // Initialize hasApplied from the API response
+                if (data.hasApplied) {
+                    setHasApplied(true)
+                }
             }
         } catch (err: any) {
             console.error('Failed to fetch internship:', err)
@@ -102,6 +109,18 @@ export default function InternshipDetailPage() {
         })
     }
 
+    const [copied, setCopied] = useState(false)
+
+    const handleShare = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        } catch (err) {
+            console.error('Failed to copy:', err)
+        }
+    }
+
     const getModeLabel = (mode: string) => {
         const labels: Record<string, string> = {
             remote: 'Remote',
@@ -134,100 +153,100 @@ export default function InternshipDetailPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 pb-10">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 pb-10">
             {/* Back Button */}
             <Link
                 href="/student/internships"
-                className="inline-flex items-center gap-2 text-gray-600 hover:text-primary mb-6 transition-colors"
+                className="inline-flex items-center gap-2 text-gray-600 hover:text-primary mb-4 transition-colors text-sm"
             >
-                <ArrowLeft size={20} />
+                <ArrowLeft size={18} />
                 Back to Internships
             </Link>
 
-            <div className="grid lg:grid-cols-3 gap-4 lg:gap-6">
+            <div className="grid lg:grid-cols-3 gap-4">
                 {/* Main Content */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-4">
                     {/* Header Card */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                        <div className="flex items-start justify-between gap-4 mb-6">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                        <div className="flex items-start justify-between gap-4 mb-4">
                             <div>
-                                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
+                                <h1 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
                                     {internship.title}
                                 </h1>
-                                <div className="flex items-center gap-2 text-gray-600 font-medium">
-                                    <Building size={18} />
+                                <div className="flex items-center gap-2 text-gray-600 font-medium text-xs sm:text-sm">
+                                    <Building size={14} />
                                     {internship.companyId.companyName}
                                     {internship.companyId.verified && (
-                                        <CheckCircle size={16} className="text-blue-500" />
+                                        <CheckCircle size={14} className="text-blue-500" />
                                     )}
                                 </div>
                             </div>
                             <div className="hidden sm:block">
-                                <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center text-3xl">
+                                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
                                     {internship.companyId.companyName.charAt(0)}
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-4 sm:gap-6 text-sm text-gray-600 border-t border-gray-100 pt-6">
+                        <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs sm:text-sm text-gray-600 border-t border-gray-100 pt-4">
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
-                                    <MapPin size={18} />
+                                <div className="p-1 bg-blue-50 text-blue-600 rounded-lg">
+                                    <MapPin size={14} />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500">Location</p>
-                                    <p className="font-medium text-gray-900">{getModeLabel(internship.mode)}</p>
+                                    <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Location</p>
+                                    <p className="font-medium text-gray-900 leading-tight">{getModeLabel(internship.mode)}</p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-green-50 text-green-600 rounded-lg">
-                                    <Clock size={18} />
+                                <div className="p-1 bg-green-50 text-green-600 rounded-lg">
+                                    <Clock size={14} />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500">Duration</p>
-                                    <p className="font-medium text-gray-900">{internship.durationWeeks} Weeks</p>
+                                    <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Duration</p>
+                                    <p className="font-medium text-gray-900 leading-tight">{internship.durationWeeks} Weeks</p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-purple-50 text-purple-600 rounded-lg">
-                                    <IndianRupee size={18} />
+                                <div className="p-1 bg-purple-50 text-purple-600 rounded-lg">
+                                    <IndianRupee size={14} />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500">Stipend</p>
-                                    <p className="font-medium text-gray-900">{formatStipend(internship.stipend)}</p>
+                                    <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Stipend</p>
+                                    <p className="font-medium text-gray-900 leading-tight">{formatStipend(internship.stipend)}</p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 bg-orange-50 text-orange-600 rounded-lg">
-                                    <Calendar size={18} />
+                                <div className="p-1 bg-orange-50 text-orange-600 rounded-lg">
+                                    <Calendar size={14} />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-gray-500">Posted on</p>
-                                    <p className="font-medium text-gray-900">{formatDate(internship.createdAt)}</p>
+                                    <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Posted on</p>
+                                    <p className="font-medium text-gray-900 leading-tight">{formatDate(internship.createdAt)}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Description */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">About the internship</h2>
-                        <div className="prose prose-sm sm:prose-base text-gray-600 max-w-none whitespace-pre-wrap">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                        <h2 className="text-base font-bold text-gray-900 mb-2">About the internship</h2>
+                        <div className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
                             {internship.description}
                         </div>
                     </div>
 
                     {/* Skills */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Skills required</h2>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                        <h2 className="text-base font-bold text-gray-900 mb-3">Skills required</h2>
                         <div className="flex flex-wrap gap-2">
                             {internship.skillsRequired.map((skill) => (
                                 <span
                                     key={skill}
-                                    className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium"
+                                    className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium border border-gray-200"
                                 >
                                     {skill}
                                 </span>
@@ -239,76 +258,90 @@ export default function InternshipDetailPage() {
                 {/* Sidebar */}
                 <div className="space-y-4">
                     {/* Action Card */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 sticky top-24">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Interested?</h3>
-                        <div className="space-y-3">
-                            <button
-                                onClick={handleApply}
-                                disabled={applying || hasApplied}
-                                className={`w-full py-3 text-white rounded-xl font-semibold shadow-lg transition-all text-sm sm:text-base flex items-center justify-center gap-2 ${hasApplied
-                                    ? 'bg-green-600 hover:bg-green-700 shadow-green-500/25'
-                                    : 'bg-primary hover:bg-primary/90 shadow-primary/25'
-                                    } disabled:opacity-70 disabled:cursor-not-allowed`}
-                            >
-                                {applying ? (
-                                    <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        Applying...
-                                    </>
-                                ) : hasApplied ? (
-                                    <>
-                                        <CheckCircle className="w-5 h-5" />
-                                        Applied
-                                    </>
-                                ) : (
-                                    'Apply Now'
-                                )}
-                            </button>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sticky top-24">
+                        <div className="mb-4">
+                            <h3 className="text-base font-bold text-gray-900">Interested?</h3>
+                            <p className="text-xs text-gray-500 mt-1">Don't miss out on this opportunity.</p>
                         </div>
 
-                        <div className="mt-6 pt-6 border-t border-gray-100">
-                            <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
-                                <span>Application Deadline</span>
+                        <button
+                            onClick={handleApply}
+                            disabled={applying || hasApplied}
+                            className={`w-full py-2.5 text-white rounded-xl font-semibold shadow-md transition-all text-sm flex items-center justify-center gap-2 active:scale-95 ${hasApplied
+                                ? 'bg-green-600 hover:bg-green-700 shadow-green-500/20'
+                                : 'bg-primary hover:bg-primary/90 shadow-primary/20'
+                                } disabled:opacity-70 disabled:cursor-not-allowed`}
+                        >
+                            {applying ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Applying...
+                                </>
+                            ) : hasApplied ? (
+                                <>
+                                    <CheckCircle className="w-4 h-4" />
+                                    Applied
+                                </>
+                            ) : (
+                                'Apply Now'
+                            )}
+                        </button>
+
+                        <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
+                            <div className="flex items-center justify-between text-xs text-gray-600">
+                                <span>Deadline</span>
                                 <span className="font-medium text-gray-900">
                                     {internship.deadline ? formatDate(internship.deadline) : 'ASAP'}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between text-sm text-gray-600">
-                                <span>Number of Openings</span>
+                            <div className="flex items-center justify-between text-xs text-gray-600">
+                                <span>Openings</span>
                                 <span className="font-medium text-gray-900">{internship.openings}</span>
                             </div>
                         </div>
 
-                        <button className="w-full mt-6 py-2 flex items-center justify-center gap-2 text-gray-500 hover:text-gray-700 text-sm font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <Share2 size={16} />
-                            Share this Internship
+                        <button
+                            onClick={handleShare}
+                            className="w-full mt-4 py-2 flex items-center justify-center gap-2 text-gray-500 hover:text-gray-900 text-xs font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-200 active:scale-95"
+                        >
+                            {copied ? (
+                                <>
+                                    <Check size={14} className="text-green-600" />
+                                    <span className="text-green-600">Link Copied!</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Share2 size={14} />
+                                    Share this Internship
+                                </>
+                            )}
                         </button>
                     </div>
 
                     {/* Company Info */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">About Company</h3>
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-xl">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                        <h3 className="text-sm font-bold text-gray-900 mb-3">About Company</h3>
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg font-bold text-gray-600">
                                 {internship.companyId.companyName.charAt(0)}
                             </div>
                             <div>
-                                <p className="font-bold text-gray-900">{internship.companyId.companyName}</p>
+                                <p className="font-bold text-gray-900 text-sm leading-tight">{internship.companyId.companyName}</p>
                                 {internship.companyId.website && (
                                     <a
                                         href={internship.companyId.website}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-xs text-primary hover:underline flex items-center gap-1"
+                                        className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5"
                                     >
-                                        <Globe size={12} />
+                                        <Globe size={10} />
                                         Visit Website
                                     </a>
                                 )}
                             </div>
                         </div>
                         {internship.companyId.description && (
-                            <p className="text-sm text-gray-600 line-clamp-4">
+                            <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed">
                                 {internship.companyId.description}
                             </p>
                         )}

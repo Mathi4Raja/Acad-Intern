@@ -14,6 +14,7 @@ const fileFilter = (
         'application/pdf',
         'image/jpeg',
         'image/png',
+        'image/webp',
         'application/msword', // .doc
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document' // .docx
     ];
@@ -29,7 +30,7 @@ const fileFilter = (
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
+        fileSize: 10 * 1024 * 1024 // 10MB limit
     },
     fileFilter: fileFilter
 });

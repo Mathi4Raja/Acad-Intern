@@ -209,3 +209,48 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
         next(error);
     }
 };
+
+// @desc    Get single application details
+// @route   GET /api/applications/:id
+// @access  Private (Student/Company)
+export const getApplication = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const application = await Application.findById(req.params.id)
+            .populate({
+                path: 'internshipId',
+                populate: {
+                    path: 'companyId',
+                    select: 'companyName userId website'
+                }
+            })
+            .populate('studentId', 'name email');
+
+        if (!application) {
+            res.status(404).json({
+                success: false,
+                message: 'Application not found'
+            });
+            return;
+        }
+
+        // Check if user is authorized to view this application
+        const isStudent = req.user?.role === 'student' && application.studentId._id.toString() === req.user._id.toString();
+        const internship = application.internshipId as any;
+        const isCompany = req.user?.role === 'company' && internship?.companyId?.userId?.toString() === req.user?._id?.toString();
+
+        if (!isStudent && !isCompany && req.user?.role !== 'admin') {
+            res.status(403).json({
+                success: false,
+                message: 'Not authorized to view this application'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            data: application
+        });
+    } catch (error) {
+        next(error);
+    }
+};

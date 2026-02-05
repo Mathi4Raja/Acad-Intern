@@ -77,4 +77,35 @@ const authorize = (...roles: string[]) => {
     };
 };
 
-export { auth as protect, authorize };
+// Optional authentication middleware - attempts to auth but doesn't block if fails
+const optionalAuth = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        let token: string | undefined;
+
+        if (req.cookies.token) {
+            token = req.cookies.token;
+        } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
+
+        if (!token) {
+            return next();
+        }
+
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+            const user = await User.findById(decoded.id).select('-password_hash');
+            if (user) {
+                req.user = user as IUser;
+            }
+            next();
+        } catch (error) {
+            // Token invalid or expired - just proceed as unauthenticated
+            next();
+        }
+    } catch (error) {
+        next();
+    }
+};
+
+export { auth as protect, authorize, optionalAuth };

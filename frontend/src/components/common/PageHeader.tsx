@@ -6,17 +6,18 @@ interface PageHeaderProps {
     children?: ReactNode
     action?: ReactNode
     className?: string
+    size?: 'default' | 'small'
 }
 
-const PageHeader = memo(({ title, subtitle, children, action, className = '' }: PageHeaderProps) => {
+const PageHeader = memo(({ title, subtitle, children, action, className = '', size = 'default' }: PageHeaderProps) => {
     return (
         <div className={`mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 ${className}`}>
             <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 tracking-tight">
+                <h1 className={`${size === 'small' ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'} font-bold text-gray-900 mb-2 tracking-tight`}>
                     {title}
                 </h1>
                 {subtitle && (
-                    <p className="text-sm sm:text-base text-gray-600 max-w-2xl">
+                    <p className={`${size === 'small' ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'} text-gray-600 max-w-2xl`}>
                         {subtitle}
                     </p>
                 )}

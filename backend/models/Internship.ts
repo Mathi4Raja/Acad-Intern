@@ -17,6 +17,14 @@ const internshipSchema = new Schema<IInternship>({
         required: [true, 'Description is required'],
         trim: true
     },
+    requirements: {
+        type: String,
+        default: ''
+    },
+    responsibilities: {
+        type: String,
+        default: ''
+    },
     skillsRequired: {
         type: [String],
         default: []

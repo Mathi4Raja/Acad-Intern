@@ -9,12 +9,14 @@ const profileSchema = z.object({
     department: z.string().optional(),
     semester: z.number().min(1).max(8).optional(),
     skills: z.array(z.string()).optional(),
-    resumeUrl: z.string().url().optional().or(z.literal('')),
+    resumeUrl: z.string().url().optional().or(z.literal('')).nullable().transform(val => val || undefined),
     bio: z.string().optional(),
     cgpa: z.number().min(0).max(10).optional(),
     hoursRequired: z.number().min(0).optional(),
     linkedIn: z.string().url().optional().or(z.literal('')),
-    github: z.string().url().optional().or(z.literal(''))
+    github: z.string().url().optional().or(z.literal('')),
+    profilePicture: z.string().url().optional().or(z.literal('')).nullable(),
+    bannerImage: z.string().url().optional().or(z.literal('')).nullable()
 });
 
 // @desc    Get current student profile
@@ -75,12 +77,14 @@ export const updateProfile = async (req: AuthRequest, res: Response, next: NextF
         if (validatedData.department) profile.department = validatedData.department;
         if (validatedData.semester) profile.semester = validatedData.semester;
         if (validatedData.skills) profile.skills = validatedData.skills;
-        if (validatedData.resumeUrl) profile.resumeUrl = validatedData.resumeUrl;
+        if (validatedData.resumeUrl !== undefined) profile.resumeUrl = validatedData.resumeUrl || undefined;
         if (validatedData.bio) profile.bio = validatedData.bio;
         if (validatedData.cgpa !== undefined) profile.cgpa = validatedData.cgpa;
         if (validatedData.hoursRequired !== undefined) profile.hoursRequired = validatedData.hoursRequired;
         if (validatedData.linkedIn) profile.linkedIn = validatedData.linkedIn;
         if (validatedData.github) profile.github = validatedData.github;
+        if (validatedData.profilePicture !== undefined) profile.profilePicture = validatedData.profilePicture || undefined;
+        if (validatedData.bannerImage !== undefined) profile.bannerImage = validatedData.bannerImage || undefined;
 
         profile.calculateCompleteness();
         await profile.save();
@@ -99,6 +103,48 @@ export const updateProfile = async (req: AuthRequest, res: Response, next: NextF
             });
             return;
         }
+        next(error);
+    }
+};
+// @desc    Get student profile by ID (for companies/admins)
+// @route   GET /api/students/profile/:id
+// @access  Private (Company/Admin)
+export const getStudentProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        // Find user first to ensure they are a student
+        const User = require('../models/User').default;
+        const studentUser = await User.findById(id);
+
+        if (!studentUser || studentUser.role !== 'student') {
+            res.status(404).json({
+                success: false,
+                message: 'Student not found'
+            });
+            return;
+        }
+
+        const profile = await StudentProfile.findOne({ userId: id });
+
+        if (!profile) {
+            res.status(404).json({
+                success: false,
+                message: 'Profile not found'
+            });
+            return;
+        }
+
+        // Add basic user info to the profile response
+        const profileData = profile.toObject();
+        (profileData as any).name = studentUser.name;
+        (profileData as any).email = studentUser.email;
+
+        res.status(200).json({
+            success: true,
+            data: profileData
+        });
+    } catch (error) {
         next(error);
     }
 };

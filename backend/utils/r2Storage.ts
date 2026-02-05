@@ -6,7 +6,7 @@ import path from 'path';
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID || '';
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || '';
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || '';
-const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'acadintern';
+const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'acadintern-uploads';
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || ''; // Your R2 public domain
 
 // Initialize S3 Client for R2
@@ -38,8 +38,8 @@ export interface UploadResult {
 export const getKeyFromUrl = (url: string): string | null => {
     if (!url) return null;
 
-    // If it's already a key (starts with acadintern/)
-    if (url.startsWith('acadintern/')) {
+    // If it's already a key (starts with known folders)
+    if (url.startsWith('acadintern/') || url.startsWith('students/')) {
         return url;
     }
 
@@ -66,13 +66,33 @@ export const uploadToR2 = async (
     originalFilename: string,
     mimetype: string,
     username?: string,
-    existingUrl?: string
+    existingUrl?: string,
+    fileType: 'resume' | 'profilePicture' | 'bannerImage' | 'message' = 'resume'
 ): Promise<UploadResult> => {
     // Generate filename based on username for consistency
     const ext = path.extname(originalFilename).toLowerCase();
-    const key = username
-        ? `acadintern/resumes/${username}_resume${ext}`
-        : `acadintern/resumes/${Date.now()}_resume${ext}`;
+
+    let folder = 'students/resumes';
+    let suffix = 'resume';
+
+    if (fileType === 'profilePicture') {
+        folder = 'students/profiles';
+        suffix = 'pfp';
+    } else if (fileType === 'bannerImage') {
+        folder = 'students/banners';
+        suffix = 'banner';
+    } else if (fileType === 'resume') {
+        // Migration path: New resumes go to students/resumes
+        folder = 'students/resumes';
+        suffix = 'resume';
+    } else if (fileType === 'message') {
+        folder = 'messages';
+        suffix = 'attachment';
+    }
+
+    // Sanitize username or use timestamp
+    const safeName = username || Date.now().toString();
+    const key = `${folder}/${safeName}_${suffix}${ext}`;
 
     // Delete existing file if replacing (different extension case)
     if (existingUrl) {

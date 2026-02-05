@@ -33,24 +33,30 @@ const RecentApplicationsWidget = memo(({ applications, formatDate }: RecentAppli
                 ) : (
                     <div className="divide-y divide-gray-50">
                         {applications.slice(0, 5).map((app) => (
-                            <div key={app.id} className="p-3 sm:p-4 hover:bg-gray-50/50 transition-colors flex items-center justify-between group">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <CompanyLogo name={app.company} size="sm" />
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-gray-900 group-hover:text-primary transition-colors line-clamp-1">
-                                            {app.internshipTitle}
-                                        </h3>
-                                        <p className="text-[10px] sm:text-xs text-gray-500 font-medium">{app.company}</p>
+                            <Link
+                                key={app.id}
+                                href={`/student/applications?highlight=${app.id}`}
+                                className="block p-3 sm:p-4 bg-white hover:bg-blue-50/40 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group border-l-4 border-l-transparent hover:border-l-primary"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 sm:gap-3">
+                                        <CompanyLogo name={app.company} size="sm" />
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-gray-900 group-hover:text-primary transition-colors line-clamp-1">
+                                                {app.internshipTitle}
+                                            </h3>
+                                            <p className="text-[10px] sm:text-xs text-gray-500 font-medium">{app.company}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-1">
+                                        <StatusBadge status={app.status} showIcon={false} />
+                                        <span className="text-[10px] text-gray-400 flex items-center gap-1 group-hover:text-gray-500 transition-colors">
+                                            <Clock size={10} />
+                                            {formatDate(app.appliedDate)}
+                                        </span>
                                     </div>
                                 </div>
-                                <div className="flex flex-col items-end gap-1">
-                                    <StatusBadge status={app.status} showIcon={false} />
-                                    <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                                        <Clock size={10} />
-                                        {formatDate(app.appliedDate)}
-                                    </span>
-                                </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 )}

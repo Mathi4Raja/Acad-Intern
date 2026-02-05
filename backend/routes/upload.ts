@@ -1,5 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import upload from '../utils/fileUpload';
+import SystemSetting from '../models/SystemSetting';
 import { uploadToR2, isR2Configured, getKeyFromUrl, getFileStream } from '../utils/r2Storage';
 import { protect } from '../middleware/auth';
 import { AuthRequest } from '../types';
@@ -57,6 +58,39 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
             return;
         }
 
+        // DYNAMIC SETTINGS CHECK
+        const settings = await SystemSetting.find({
+            key: { $in: ['maxFileSize', 'allowResumeUpload'] }
+        });
+
+        const maxFileSizeSetting = settings.find(s => s.key === 'maxFileSize');
+        const allowResumeSetting = settings.find(s => s.key === 'allowResumeUpload');
+
+        // Get metadata
+        const type = req.body.type as 'resume' | 'profilePicture' | 'bannerImage' || 'resume';
+
+        // 1. Check if Resume Upload is Allowed
+        if (type === 'resume') {
+            const isAllowed = allowResumeSetting ? (allowResumeSetting.value === true || allowResumeSetting.value === 'true') : true; // Default to true if not set
+            if (!isAllowed) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Resume uploads are currently disabled by the administrator.'
+                });
+            }
+        }
+
+        // 2. Check File Size
+        // Default to 10MB if not set
+        const maxSizeBytes = maxFileSizeSetting ? (Number(maxFileSizeSetting.value) * 1024 * 1024) : 10 * 1024 * 1024;
+
+        if (req.file.size > maxSizeBytes) {
+            return res.status(400).json({
+                success: false,
+                message: `File too large. Maximum size is ${maxFileSizeSetting?.value || 10}MB`
+            });
+        }
+
         if (!isR2Configured()) {
             res.status(500).json({
                 success: false,
@@ -65,11 +99,17 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
             return;
         }
 
-        // Get existing resume URL for replacement (delete old file)
+
+
+        // Get existing URL for replacement (delete old file)
         let existingUrl: string | undefined;
-        if (req.body.type === 'resume' && req.user) {
+        if (req.user) {
             const profile = await StudentProfile.findOne({ userId: req.user._id });
-            existingUrl = profile?.resumeUrl;
+            if (profile) {
+                if (type === 'resume') existingUrl = profile.resumeUrl;
+                else if (type === 'profilePicture') existingUrl = profile.profilePicture;
+                else if (type === 'bannerImage') existingUrl = profile.bannerImage;
+            }
         }
 
         // Sanitize username for filename (remove special chars, spaces)
@@ -84,7 +124,8 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
             req.file.originalname,
             req.file.mimetype,
             sanitizedName, // Use sanitized username for consistent naming
-            existingUrl // Pass existing URL to delete old file
+            existingUrl, // Pass existing URL to delete old file
+            type // Pass file type for folder selection
         );
 
         res.status(200).json({

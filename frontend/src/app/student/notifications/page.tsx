@@ -132,28 +132,47 @@ export default function NotificationsPage() {
   return (
     <div className="max-w-4xl mx-auto p-3 sm:p-4">
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Bell className="text-primary" size={28} />
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Notifications</h1>
-            {unreadCount > 0 && (
-              <span className="bg-red-500 text-white text-xs sm:text-sm font-bold px-2 sm:px-2.5 py-0.5 rounded-full">
-                {unreadCount}
-              </span>
-            )}
+      {/* Header */}
+      <div className="mb-6 flex flex-col items-center sm:flex-row justify-center gap-4">
+        <div className="bg-gradient-to-br from-white to-orange-50/50 rounded-2xl shadow-sm border border-orange-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="p-2 bg-orange-600 rounded-lg text-white shadow-lg shadow-orange-500/20 group-hover:scale-105 transition-transform duration-300">
+              <Bell size={20} className="fill-orange-400/20" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight">
+                  Notifications
+                </h1>
+                {unreadCount > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-red-200 shadow-sm align-middle">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-600 font-medium">
+                Stay updated with your internship applications
+              </p>
+            </div>
           </div>
+
+          {/* Decorative elements */}
+          <div className="absolute -right-6 -top-6 w-20 h-20 bg-orange-100/50 rounded-full blur-2xl group-hover:bg-orange-100/80 transition-colors" />
+          <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-red-100/50 rounded-full blur-2xl group-hover:bg-red-100/80 transition-colors" />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 w-full sm:w-auto">
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllAsRead}
-              className="flex items-center justify-center gap-2 text-primary hover:text-primary font-medium text-xs sm:text-sm py-2 sm:py-0"
+              className="flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors font-medium text-sm w-full sm:w-auto shadow-sm"
             >
-              <CheckCheck size={18} />
-              Mark all as read
+              <CheckCheck size={16} className="text-primary" />
+              Mark all read
             </button>
           )}
         </div>
-        <p className="text-sm sm:text-base text-gray-600">Stay updated with your internship applications</p>
       </div>
 
       {/* Filter Tabs */}
@@ -161,8 +180,8 @@ export default function NotificationsPage() {
         <button
           onClick={() => setFilterType('all')}
           className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${filterType === 'all'
-              ? 'bg-primary text-white'
-              : 'text-gray-600 hover:bg-gray-100'
+            ? 'bg-primary text-white'
+            : 'text-gray-600 hover:bg-gray-100'
             }`}
         >
           All ({notifications.length})
@@ -170,8 +189,8 @@ export default function NotificationsPage() {
         <button
           onClick={() => setFilterType('unread')}
           className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${filterType === 'unread'
-              ? 'bg-primary text-white'
-              : 'text-gray-600 hover:bg-gray-100'
+            ? 'bg-primary text-white'
+            : 'text-gray-600 hover:bg-gray-100'
             }`}
         >
           Unread ({unreadCount})
@@ -179,8 +198,8 @@ export default function NotificationsPage() {
         <button
           onClick={() => setFilterType('read')}
           className={`flex-1 px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${filterType === 'read'
-              ? 'bg-primary text-white'
-              : 'text-gray-600 hover:bg-gray-100'
+            ? 'bg-primary text-white'
+            : 'text-gray-600 hover:bg-gray-100'
             }`}
         >
           Read ({notifications.length - unreadCount})

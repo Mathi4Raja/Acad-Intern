@@ -8,15 +8,15 @@ import {
     matchInternships,
     getMyInternships
 } from '../controllers/internshipController';
-import { protect, authorize } from '../middleware/auth';
+import { protect, authorize, optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
-// Public routes
-router.get('/', getInternships);
+// Public routes (with optional auth for checking application status)
+router.get('/', optionalAuth, getInternships);
 router.get('/match', protect, authorize('student'), matchInternships);
 router.get('/company/my', protect, authorize('company'), getMyInternships); // New route
-router.get('/:id', getInternship);
+router.get('/:id', optionalAuth, getInternship);
 
 // Protected routes (Company only)
 router.post('/', protect, authorize('company'), createInternship);

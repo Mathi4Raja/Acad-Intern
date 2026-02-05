@@ -70,6 +70,32 @@ export const messageApi = {
 
     // Get unread message count
     getUnreadCount: () => api.get('/messages/unread-count'),
+
+    // Mute/Unmute conversation
+    muteConversation: (applicationId: string, mutedUntil: string | null) =>
+        api.post(`/messages/application/${applicationId}/mute`, { mutedUntil }),
+
+    getPreferences: (applicationId: string) =>
+        api.get(`/messages/application/${applicationId}/preferences`),
+};
+
+export const companyApi = {
+    getProfile: (id: string) => api.get(`/companies/${id}`),
+};
+
+export const studentApi = {
+    // Get student profile by ID
+    getProfile: (studentId: string) => api.get(`/students/profile/${studentId}`),
+};
+
+export const reportsApi = {
+    // Create a report
+    createReport: (data: { internshipId?: string; applicationId?: string; reason: string }) =>
+        api.post('/reports', data),
+};
+
+export const applicationsApi = {
+    get: (id: string) => api.get(`/applications/${id}`),
 };
 
 export const adminApi = {
@@ -80,3 +106,7 @@ export const adminApi = {
 export default api;
 
 
+
+export const settingsApi = {
+    getPublic: () => api.get('/settings/public')
+}

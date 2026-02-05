@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, Briefcase, FileText, CheckCircle, Clock } from 'lucide-react'
+import { TrendingUp, Briefcase, FileText, CheckCircle, Clock, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
@@ -83,7 +83,7 @@ export default function StudentDashboard() {
         setStats({
           profileCompletion: Math.round((completeness / total) * 100),
           applicationsSubmitted: applications.length,
-          shortlisted: applications.filter((app: any) => app.status === 'shortlisted' || app.status === 'accepted').length,
+          shortlisted: applications.filter((app: any) => ['shortlisted', 'assessment_completed', 'accepted'].includes(app.status)).length,
           activeInternships: activeCount
         });
 
@@ -115,10 +115,28 @@ export default function StudentDashboard() {
 
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-4">
-      <PageHeader
-        title={`Welcome back, ${user?.name || 'Student'}! 👋`}
-        subtitle="Here's what's happening with your internship search today."
-      />
+      {/* Header */}
+      <div className="mb-6 flex flex-col items-center sm:flex-row justify-between gap-4">
+        <div className="bg-gradient-to-br from-white to-blue-50/50 rounded-2xl shadow-sm border border-blue-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
+              <Link href="/student/dashboard"> <LayoutDashboard size={20} className="fill-blue-400/20" /> </Link>
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight">
+                Welcome back, {user?.name || 'Student'}! 👋
+              </h1>
+              <p className="text-xs text-gray-600 font-medium">
+                Here's what's happening with your internship search today.
+              </p>
+            </div>
+          </div>
+
+          {/* Decorative elements */}
+          <div className="absolute -right-6 -top-6 w-20 h-20 bg-blue-100/50 rounded-full blur-2xl group-hover:bg-blue-100/80 transition-colors" />
+          <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-indigo-100/50 rounded-full blur-2xl group-hover:bg-indigo-100/80 transition-colors" />
+        </div>
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">

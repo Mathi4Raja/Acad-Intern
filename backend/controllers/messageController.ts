@@ -1,7 +1,10 @@
 import { Response, NextFunction } from 'express';
+import { z } from 'zod';
 import Message from '../models/Message';
 import Application from '../models/Application';
 import Notification from '../models/Notification';
+import SystemSetting from '../models/SystemSetting';
+import ConversationPreference from '../models/ConversationPreference';
 import { AuthRequest } from '../types';
 import { uploadToR2 } from '../utils/r2Storage';
 import { activeUsers } from '../utils/socketHandler';
@@ -242,13 +245,18 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
 
         // Handle file attachments
         const attachments: any[] = [];
-        if (req.files && Array.isArray(req.files)) {
+        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+            // DYNAMIC SIZE CHECK
+            const SystemSetting = require('../models/SystemSetting').default;
+            const sizeSetting = await SystemSetting.findOne({ key: 'maxMessageSize' });
+            // Default to 15MB if not set
+            const maxSizeBytes = sizeSetting ? (Number(sizeSetting.value) * 1024 * 1024) : 15 * 1024 * 1024;
+
             for (const file of req.files) {
-                // Check file size (15MB max)
-                if (file.size > 15 * 1024 * 1024) {
+                if (file.size > maxSizeBytes) {
                     res.status(400).json({
                         success: false,
-                        message: `File ${file.originalname} exceeds 15MB limit`
+                        message: `File ${file.originalname} exceeds the limit of ${sizeSetting?.value || 15}MB`
                     });
                     return;
                 }
@@ -258,7 +266,9 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
                     file.buffer,
                     file.originalname,
                     file.mimetype,
-                    `${userId}_${Date.now()}`
+                    `${userId}_${Date.now()}`,
+                    undefined,
+                    'message'
                 );
 
                 attachments.push({
@@ -315,18 +325,28 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
             }
         }
 
-        // Create notification for receiver
-        await Notification.create({
+        // Check if receiver has muted this conversation
+        const preferences = await ConversationPreference.findOne({
             userId: receiverId,
-            type: 'general',
-            title: 'New Message',
-            message: `You have a new message from ${req.user?.name}`,
-            payload: {
-                applicationId,
-                messageId: message._id
-            },
-            read: false
+            applicationId: applicationId
         });
+
+        const isMuted = preferences && preferences.mutedUntil && preferences.mutedUntil > new Date();
+
+        if (!isMuted) {
+            // Create notification for receiver
+            await Notification.create({
+                userId: receiverId,
+                type: 'general',
+                title: 'New Message',
+                message: `You have a new message from ${req.user?.name}`,
+                payload: {
+                    applicationId,
+                    messageId: message._id
+                },
+                read: false
+            });
+        }
 
         res.status(201).json({
             success: true,
@@ -416,6 +436,57 @@ export const getUnreadCount = async (req: AuthRequest, res: Response, next: Next
         res.status(200).json({
             success: true,
             data: { unreadCount }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+// @desc    Update conversation preferences (mute/unmute)
+// @route   POST /api/messages/application/:applicationId/mute
+// @access  Private
+export const muteConversation = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { applicationId } = req.params;
+        const { mutedUntil } = z.object({
+            mutedUntil: z.string().datetime().nullable()
+        }).parse(req.body);
+
+        const userId = req.user?._id;
+
+        const preferences = await ConversationPreference.findOneAndUpdate(
+            { userId, applicationId },
+            {
+                mutedUntil: mutedUntil ? new Date(mutedUntil) : null
+            },
+            { upsert: true, new: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            data: preferences
+        });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            res.status(400).json({ success: false, message: 'Validation error', errors: error.errors });
+            return;
+        }
+        next(error);
+    }
+};
+
+// @desc    Get conversation preferences
+// @route   GET /api/messages/application/:applicationId/preferences
+// @access  Private
+export const getPreferences = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { applicationId } = req.params;
+        const userId = req.user?._id;
+
+        const preferences = await ConversationPreference.findOne({ userId, applicationId });
+
+        res.status(200).json({
+            success: true,
+            data: preferences || { mutedUntil: null }
         });
     } catch (error) {
         next(error);

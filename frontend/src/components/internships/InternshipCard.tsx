@@ -26,7 +26,7 @@ const InternshipCard = memo(({
     getModeLabel
 }: InternshipCardProps) => {
     const [applying, setApplying] = useState(false)
-    const [hasApplied, setHasApplied] = useState(false)
+    const [hasApplied, setHasApplied] = useState(internship.hasApplied || false)
 
     const handleApply = async (e: React.MouseEvent) => {
         e.preventDefault() // Prevent navigation to details
@@ -72,7 +72,7 @@ const InternshipCard = memo(({
                                     {internship.companyId?.companyName || 'Company'}
                                 </p>
                                 {/* Match Badge */}
-                                {internship.matchScore && internship.matchScore >= 70 && (
+                                {(internship.matchScore || 0) >= 70 && (
                                     <div className="inline-flex items-center gap-0.5 bg-green-50 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-green-100 w-fit">
                                         <TrendingUp size={10} />
                                         {internship.matchScore}%

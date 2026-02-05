@@ -5,7 +5,8 @@ import { AuthRequest } from '../types';
 
 // Schema
 const reportSchema = z.object({
-    internshipId: z.string(),
+    internshipId: z.string().optional(),
+    applicationId: z.string().optional(),
     reason: z.string().min(5, 'Reason must be at least 5 characters')
 });
 
@@ -14,10 +15,11 @@ const reportSchema = z.object({
 // @access  Private
 export const createReport = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { internshipId, reason } = reportSchema.parse(req.body);
+        const { internshipId, applicationId, reason } = reportSchema.parse(req.body);
 
         const report = await Report.create({
             internshipId,
+            applicationId,
             reporterId: req.user?._id,
             reason
         });

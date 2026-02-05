@@ -1,19 +1,25 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Send, Paperclip, X, Check, CheckCheck, Loader2, FileText, Download, Image as ImageIcon, Trash2, ArrowDown, AlertCircle } from 'lucide-react';
+import { Send, Paperclip, X, Check, CheckCheck, Loader2, FileText, Download, Image as ImageIcon, Trash2, ArrowDown, AlertCircle, MoreVertical, BellOff, Flag, User, ExternalLink, ShieldAlert, Clock as ClockIcon, Building } from 'lucide-react';
 import { Message, MessageStatus } from '@/types';
 import { useSocket } from '@/lib/SocketContext';
-import { messageApi } from '@/lib/api';
+import { messageApi, reportsApi, studentApi, applicationsApi, settingsApi } from '@/lib/api';
+import { useAuth } from '@/lib/AuthContext';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface ChatInterfaceProps {
     applicationId: string;
     currentUserId: string;
     otherPartyName: string;
     onBack?: () => void;
+    readOnly?: boolean;
 }
 
-export default function ChatInterface({ applicationId, currentUserId, otherPartyName, onBack }: ChatInterfaceProps) {
+export default function ChatInterface({ applicationId, currentUserId, otherPartyName, onBack, readOnly = false }: ChatInterfaceProps) {
+    const { user } = useAuth();
+    const router = useRouter();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [attachments, setAttachments] = useState<File[]>([]);
@@ -32,6 +38,72 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
     const maxScrollTriggeredRef = useRef<boolean>(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [downloadingFiles, setDownloadingFiles] = useState<Record<string, 'loading' | 'success' | 'error'>>({});
+    const [maxSizeMB, setMaxSizeMB] = useState(15);
+
+    // Menu and Modal States
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showMuteModal, setShowMuteModal] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [mutedUntil, setMutedUntil] = useState<string | null>(null);
+    const [reportReason, setReportReason] = useState('');
+    const [reporting, setReporting] = useState(false);
+    const [muting, setMuting] = useState(false);
+    const [applicationData, setApplicationData] = useState<any>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Outside click for menu
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Fetch preferences
+    useEffect(() => {
+        const fetchPrefs = async () => {
+            try {
+                const res = await messageApi.getPreferences(applicationId);
+                if (res.data.success) {
+                    setMutedUntil(res.data.data.mutedUntil);
+                }
+            } catch (err) {
+                console.error('Failed to fetch preferences:', err);
+            }
+        };
+        fetchPrefs();
+
+        // Fetch application details to get companyId
+        const fetchAppDetails = async () => {
+            try {
+                const res = await applicationsApi.get(applicationId);
+                if (res.data.success) {
+                    setApplicationData(res.data.data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch application details:', err);
+            }
+        };
+        fetchAppDetails();
+    }, [applicationId]);
+
+    // Fetch public settings for file size limit
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await settingsApi.getPublic();
+                if (res.data.success && res.data.data.maxMessageSize) {
+                    setMaxSizeMB(res.data.data.maxMessageSize);
+                }
+            } catch (err) {
+                console.error('Failed to fetch settings:', err);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handleMessageTap = (e: React.MouseEvent, messageId: string, isOwnMessage: boolean, isDeleted: boolean) => {
         // We want to handle this layout-wide click to close menu, but we also check for double tap here
@@ -238,10 +310,10 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
     // Handle file selection
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        const validFiles = files.filter(file => file.size <= 15 * 1024 * 1024);
+        const validFiles = files.filter(file => file.size <= maxSizeMB * 1024 * 1024);
 
         if (validFiles.length !== files.length) {
-            alert('Some files were too large (max 15MB)');
+            alert(`Some files were too large (max ${maxSizeMB}MB)`);
         }
 
         setAttachments((prev) => [...prev, ...validFiles]);
@@ -387,6 +459,57 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
         return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     };
 
+    const handleMute = async (duration: number | null) => {
+        setMuting(true);
+        try {
+            let until: string | null = null;
+            if (duration !== null) {
+                const date = new Date();
+                date.setHours(date.getHours() + duration);
+                until = date.toISOString();
+            }
+
+            const res = await messageApi.muteConversation(applicationId, until);
+            if (res.data.success) {
+                setMutedUntil(until);
+                setShowMuteModal(false);
+            }
+        } catch (err) {
+            console.error('Mute failed:', err);
+            alert('Failed to update notification settings');
+        } finally {
+            setMuting(false);
+        }
+    };
+
+    const handleReport = async () => {
+        if (!reportReason.trim()) return;
+        setReporting(true);
+        try {
+            const res = await reportsApi.createReport({
+                applicationId,
+                reason: reportReason
+            });
+            if (res.data.success) {
+                alert('Report submitted successfully');
+                setShowReportModal(false);
+                setReportReason('');
+            }
+        } catch (err) {
+            console.error('Report failed:', err);
+            alert('Failed to submit report');
+        } finally {
+            setReporting(false);
+        }
+    };
+
+    const viewProfile = () => {
+        if (!otherPartyId) return;
+        if (user?.role === 'company') {
+            router.push(`/company/applications?studentId=${otherPartyId}`);
+        }
+    };
+
     // Helper to format date for separators
     const formatDateSeparator = (dateString: string) => {
         const date = new Date(dateString);
@@ -447,14 +570,95 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                     </div>
                 </div>
 
-                {/* Options Menu (placeholder for future features) */}
-                <button className="p-1.5 md:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="1" />
-                        <circle cx="12" cy="5" r="1" />
-                        <circle cx="12" cy="19" r="1" />
-                    </svg>
-                </button>
+                {/* Options Menu */}
+                {!readOnly && (
+                    <div className="relative" ref={menuRef}>
+                        <button
+                            onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            className={`p-1.5 md:p-2 rounded-full transition-all duration-200 ${isMenuOpen ? 'bg-gray-100 text-primary' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
+                        >
+                            <MoreVertical className="w-5 h-5" />
+                        </button>
+
+                        {isMenuOpen && (
+                            <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                                <div className="px-3 py-2 border-b border-gray-50 mb-1">
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Conversation Options</p>
+                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        setIsMenuOpen(false);
+                                        if (user?.role === 'student') {
+                                            router.push(`/student/applications?applicationId=${applicationId}`);
+                                        } else {
+                                            router.push(`/company/applications?applicationId=${applicationId}`);
+                                        }
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition-colors text-left"
+                                >
+                                    <ExternalLink className="w-4 h-4" />
+                                    <span>View Application</span>
+                                </button>
+
+                                {user?.role === 'company' && (
+                                    <button
+                                        onClick={() => {
+                                            setIsMenuOpen(false);
+                                            viewProfile();
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition-colors text-left"
+                                    >
+                                        <User className="w-4 h-4" />
+                                        <span>View Student Profile</span>
+                                    </button>
+                                )}
+
+                                {user?.role === 'student' && applicationData?.internshipId?.companyId?._id && (
+                                    <button
+                                        onClick={() => {
+                                            setIsMenuOpen(false);
+                                            router.push(`/student/companies/${applicationData.internshipId.companyId._id}`);
+                                        }}
+                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition-colors text-left"
+                                    >
+                                        <Building className="w-4 h-4" />
+                                        <span>View Company</span>
+                                    </button>
+                                )}
+
+                                <div className="h-px bg-gray-50 my-1 mx-2"></div>
+
+                                <button
+                                    onClick={() => {
+                                        setIsMenuOpen(false);
+                                        setShowMuteModal(true);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition-colors text-left"
+                                >
+                                    <BellOff className="w-4 h-4" />
+                                    <div className="flex-1">
+                                        <span>Mute Notifications</span>
+                                        {mutedUntil && new Date(mutedUntil) > new Date() && (
+                                            <div className="text-[10px] text-green-600 font-medium">Muted until {new Date(mutedUntil).toLocaleDateString()}</div>
+                                        )}
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setIsMenuOpen(false);
+                                        setShowReportModal(true);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                                >
+                                    <Flag className="w-4 h-4" />
+                                    <span>Report Discussion</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Messages Area */}
@@ -671,91 +875,187 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
             }
 
             {/* Input Area */}
-            <div className="p-2 md:p-4 border-t border-gray-200 bg-white safe-area-bottom">
-                <div className="flex items-center gap-2 md:gap-3 max-w-full">
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        multiple
-                        accept="image/*,.pdf,.doc,.docx,.txt"
-                        className="hidden"
-                        onChange={handleFileSelect}
-                    />
+            {!readOnly && (
+                <div className="p-2 md:p-4 border-t border-gray-200 bg-white safe-area-bottom">
+                    <div className="flex items-center gap-2 md:gap-3 max-w-full">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            accept="image/*,.pdf,.doc,.docx,.txt"
+                            className="hidden"
+                            onChange={handleFileSelect}
+                        />
 
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full text-gray-500 hover:text-primary hover:bg-primary/5 active:bg-primary/10 transition-all duration-200 active:scale-95"
-                        disabled={sending}
-                        title="Attach files"
-                    >
-                        <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
-                    </button>
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full text-gray-500 hover:text-primary hover:bg-primary/5 active:bg-primary/10 transition-all duration-200 active:scale-95"
+                            disabled={sending}
+                            title="Attach files"
+                        >
+                            <Paperclip className="w-4 h-4 md:w-5 md:h-5" />
+                        </button>
 
-                    <div className="flex-1 relative min-w-0">
-                        <textarea
-                            ref={textareaRef}
-                            value={newMessage}
-                            onChange={(e) => {
-                                setNewMessage(e.target.value);
-                                handleTyping();
-                                const prevHeight = e.target.style.height;
-                                const MAX_HEIGHT = 120;
-                                const newHeightVal = Math.min(e.target.scrollHeight, MAX_HEIGHT);
-                                const newHeight = newHeightVal + 'px';
-                                e.target.style.height = newHeight;
+                        <div className="flex-1 relative min-w-0">
+                            <textarea
+                                ref={textareaRef}
+                                value={newMessage}
+                                onChange={(e) => {
+                                    setNewMessage(e.target.value);
+                                    handleTyping();
+                                    const prevHeight = e.target.style.height;
+                                    const MAX_HEIGHT = 120;
+                                    const newHeightVal = Math.min(e.target.scrollHeight, MAX_HEIGHT);
+                                    const newHeight = newHeightVal + 'px';
+                                    e.target.style.height = newHeight;
 
-                                // Reset max scroll trigger if we shrink below max
-                                if (newHeightVal < MAX_HEIGHT) {
-                                    maxScrollTriggeredRef.current = false;
-                                }
-
-                                // Scroll if height changed OR if we just hit the overflow for the first time
-                                const shouldScroll = prevHeight !== newHeight ||
-                                    (newHeightVal === MAX_HEIGHT && e.target.scrollHeight > MAX_HEIGHT && !maxScrollTriggeredRef.current);
-
-                                if (shouldScroll) {
-                                    if (prevHeight === newHeight) {
-                                        maxScrollTriggeredRef.current = true;
+                                    // Reset max scroll trigger if we shrink below max
+                                    if (newHeightVal < MAX_HEIGHT) {
+                                        maxScrollTriggeredRef.current = false;
                                     }
 
-                                    setTimeout(() => {
-                                        if (scrollContainerRef.current) {
-                                            scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-                                        }
-                                    }, 10);
-                                }
-                            }}
-                            onKeyDown={handleKeyDown}
-                            placeholder="Type your message..."
-                            className="w-full px-3 py-2 md:px-4 md:py-3 bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all outline-none max-h-[120px] min-h-[40px] md:min-h-[48px] text-sm md:text-base"
-                            rows={1}
-                            disabled={sending}
-                        />
-                    </div>
+                                    // Scroll if height changed OR if we just hit the overflow for the first time
+                                    const shouldScroll = prevHeight !== newHeight ||
+                                        (newHeightVal === MAX_HEIGHT && e.target.scrollHeight > MAX_HEIGHT && !maxScrollTriggeredRef.current);
 
-                    <button
-                        onClick={handleSendMessage}
-                        disabled={sending || (!newMessage.trim() && attachments.length === 0)}
-                        className={`group relative flex-shrink-0 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full transition-all duration-300 transform ${sending || (!newMessage.trim() && attachments.length === 0)
-                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed scale-90'
-                            : 'bg-primary text-white hover:bg-primary-dark hover:scale-110 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-primary/40'
-                            }`}
-                    >
-                        <div className={`absolute inset-0 rounded-full transition-all duration-300 ${!(sending || (!newMessage.trim() && attachments.length === 0))
-                            ? 'group-hover:bg-white/20 group-active:bg-white/30'
-                            : ''
-                            }`} />
-                        {sending ? (
-                            <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin relative z-10" />
-                        ) : (
-                            <Send className={`w-3 h-3 md:w-4 md:h-4 relative z-10 transition-transform duration-200 ${!(sending || (!newMessage.trim() && attachments.length === 0))
-                                ? 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5'
+                                    if (shouldScroll) {
+                                        if (prevHeight === newHeight) {
+                                            maxScrollTriggeredRef.current = true;
+                                        }
+
+                                        setTimeout(() => {
+                                            if (scrollContainerRef.current) {
+                                                scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+                                            }
+                                        }, 10);
+                                    }
+                                }}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Type your message..."
+                                className="w-full px-3 py-2 md:px-4 md:py-3 bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all outline-none max-h-[120px] min-h-[40px] md:min-h-[48px] text-sm md:text-base"
+                                rows={1}
+                                disabled={sending}
+                            />
+                        </div>
+
+                        <button
+                            onClick={handleSendMessage}
+                            disabled={sending || (!newMessage.trim() && attachments.length === 0)}
+                            className={`group relative flex-shrink-0 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full transition-all duration-300 transform ${sending || (!newMessage.trim() && attachments.length === 0)
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed scale-90'
+                                : 'bg-primary text-white hover:bg-primary-dark hover:scale-110 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-primary/40'
+                                }`}
+                        >
+                            <div className={`absolute inset-0 rounded-full transition-all duration-300 ${!(sending || (!newMessage.trim() && attachments.length === 0))
+                                ? 'group-hover:bg-white/20 group-active:bg-white/30'
                                 : ''
                                 }`} />
-                        )}
-                    </button>
+                            {sending ? (
+                                <Loader2 className="w-3 h-3 md:w-4 md:h-4 animate-spin relative z-10" />
+                            ) : (
+                                <Send className={`w-3 h-3 md:w-4 md:h-4 relative z-10 transition-transform duration-200 ${!(sending || (!newMessage.trim() && attachments.length === 0))
+                                    ? 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5'
+                                    : ''
+                                    }`} />
+                            )}
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
+            {/* Mute Modal */}
+            {showMuteModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6">
+                            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                                <BellOff className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Mute Notifications</h3>
+                            <p className="text-sm text-gray-500 mb-6">Select how long you'd like to silence notifications for this conversation.</p>
+
+                            <div className="space-y-2">
+                                {[
+                                    { label: '8 Hours', value: 8 },
+                                    { label: '2 Days', value: 48 },
+                                    { label: 'Custom (1 week)', value: 168 },
+                                ].map((opt) => (
+                                    <button
+                                        key={opt.value}
+                                        onClick={() => handleMute(opt.value)}
+                                        disabled={muting}
+                                        className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 bg-gray-50 hover:bg-blue-50 hover:text-primary rounded-xl transition-all active:scale-95 flex items-center justify-between group"
+                                    >
+                                        {opt.label}
+                                        <ClockIcon className="w-4 h-4 text-gray-300 group-hover:text-primary" />
+                                    </button>
+                                ))}
+                                {mutedUntil && (
+                                    <button
+                                        onClick={() => handleMute(null)}
+                                        disabled={muting}
+                                        className="w-full px-4 py-3 text-left text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all active:scale-95"
+                                    >
+                                        Unmute Notifications
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="mt-6 flex justify-end">
+                                <button
+                                    onClick={() => setShowMuteModal(false)}
+                                    className="px-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Report Modal */}
+            {showReportModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6">
+                            <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mb-4">
+                                <ShieldAlert className="w-6 h-6" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Report Discussion</h3>
+                            <p className="text-sm text-gray-500 mb-6">If this communication violates our terms or seems suspicious, please let us know. Admins will review the chat history.</p>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Reason for report</label>
+                                    <textarea
+                                        value={reportReason}
+                                        onChange={(e) => setReportReason(e.target.value)}
+                                        placeholder="Explain what's wrong with this conversation..."
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none min-h-[120px] text-sm resize-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="mt-8 flex gap-3">
+                                <button
+                                    onClick={() => setShowReportModal(false)}
+                                    className="flex-1 px-4 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleReport}
+                                    disabled={reporting || !reportReason.trim()}
+                                    className="flex-2 px-6 py-2.5 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                >
+                                    {reporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Flag className="w-4 h-4" />}
+                                    Submit Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

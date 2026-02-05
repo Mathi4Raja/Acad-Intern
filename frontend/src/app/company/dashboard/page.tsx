@@ -67,7 +67,7 @@ export default function CompanyDashboard() {
             const res = await api.get(`/applications/internship/${intern._id}`);
             const apps = res.data.data;
             totalAppCount += apps.length;
-            shortlistedCount += apps.filter((a: any) => a.status === 'shortlisted').length;
+            shortlistedCount += apps.filter((a: any) => a.status === 'shortlisted' || a.status === 'assessment_completed').length;
             hiredCount += apps.filter((a: any) => a.status === 'accepted' || a.status === 'hired').length;
             // Add title for context
             return apps.map((a: any) => ({ ...a, internshipTitle: intern.title }));
@@ -117,6 +117,7 @@ export default function CompanyDashboard() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'shortlisted': return 'bg-green-100 text-green-700'
+      case 'assessment_completed': return 'bg-purple-100 text-purple-700'
       case 'pending': return 'bg-yellow-100 text-yellow-700'
       case 'rejected': return 'bg-red-100 text-red-700'
       case 'accepted':

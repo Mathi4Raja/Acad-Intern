@@ -5,7 +5,7 @@ import { Document, Types } from 'mongoose';
 export type UserRole = 'student' | 'company' | 'admin';
 
 // Application status enum
-export type ApplicationStatus = 'pending' | 'reviewed' | 'shortlisted' | 'interview_scheduled' | 'rejected' | 'accepted';
+export type ApplicationStatus = 'pending' | 'reviewed' | 'shortlisted' | 'interview_scheduled' | 'assessment_completed' | 'rejected' | 'accepted';
 
 // Report status enum
 export type ReportStatus = 'open' | 'under_review' | 'resolved' | 'dismissed';
@@ -39,6 +39,8 @@ export interface IStudentProfile extends Document {
     semester?: number;
     resumeUrl?: string;
     skills: string[];
+    profilePicture?: string;
+    bannerImage?: string;
     hoursRequired?: number;
     completenessScore?: number;
     phone?: string;
@@ -81,6 +83,8 @@ export interface IInternship extends Document {
     companyId: Types.ObjectId;
     title: string;
     description: string;
+    requirements?: string;
+    responsibilities?: string;
     skillsRequired: string[];
     durationWeeks: number;
     stipend?: number;
@@ -108,6 +112,7 @@ export interface IApplication extends Document {
 // Report interface
 export interface IReport extends Document {
     internshipId?: Types.ObjectId;
+    applicationId?: Types.ObjectId; // Linked chat context
     reporterId: Types.ObjectId;
     reportedUserId?: Types.ObjectId;
     reason: string;
@@ -116,6 +121,15 @@ export interface IReport extends Document {
     reviewedAt?: Date;
     reviewedBy?: Types.ObjectId;
     adminNotes?: string;
+}
+
+// Conversation preference interface (e.g. muting)
+export interface IConversationPreference extends Document {
+    userId: Types.ObjectId;
+    applicationId: Types.ObjectId;
+    mutedUntil?: Date;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 // Notification interface

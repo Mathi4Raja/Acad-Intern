@@ -22,6 +22,11 @@ const StatusBadge = memo(({ status, className = '', showIcon = true }: StatusBad
             style: 'bg-green-50 text-green-700 border-green-200',
             label: 'Shortlisted'
         },
+        assessment_completed: {
+            icon: CheckCircle,
+            style: 'bg-purple-50 text-purple-700 border-purple-200',
+            label: 'Assessment Done'
+        },
         accepted: {
             icon: CheckCircle, // Or a Trophy icon specifically for accepted?
             style: 'bg-blue-50 text-blue-700 border-blue-200',
