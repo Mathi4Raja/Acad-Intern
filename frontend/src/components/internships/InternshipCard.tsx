@@ -5,6 +5,7 @@ import { Internship } from '@/types'
 import { useState } from 'react'
 import api from '@/lib/api'
 import { Loader2, CheckCircle } from 'lucide-react'
+import { useAlert } from '@/components/ui/AlertProvider'
 
 interface InternshipCardProps {
     internship: Internship
@@ -25,6 +26,7 @@ const InternshipCard = memo(({
     formatDate,
     getModeLabel
 }: InternshipCardProps) => {
+    const { showAlert } = useAlert()
     const [applying, setApplying] = useState(false)
     const [hasApplied, setHasApplied] = useState(internship.hasApplied || false)
 
@@ -42,7 +44,7 @@ const InternshipCard = memo(({
         } catch (error: any) {
             console.error('Application failed:', error)
             const msg = error.response?.data?.message || 'Failed to submit application'
-            alert(msg)
+            showAlert(msg, 'error')
         } finally {
             setApplying(false)
         }
@@ -135,7 +137,10 @@ const InternshipCard = memo(({
                 {/* Footer / Actions */}
                 <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <span className="text-xs text-gray-400 font-medium">
-                        Posted {formatDate(internship.createdAt)}
+                        {internship.updatedAt && new Date(internship.updatedAt).getTime() - new Date(internship.createdAt).getTime() > 60000
+                            ? `Edited ${formatDate(internship.updatedAt)}`
+                            : `Posted ${formatDate(internship.createdAt)}`
+                        }
                     </span>
 
                     <div className="flex gap-2 w-full sm:w-auto">

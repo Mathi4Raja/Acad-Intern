@@ -9,9 +9,28 @@ import api from '@/lib/api'
 const formatTimeAgo = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return `${diffDays} days ago`;
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return 'Just now';
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} ${diffInMinutes === 1 ? 'min' : 'mins'} ago`;
+  }
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+  }
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays === 1) return 'Yesterday';
+  if (diffInDays < 30) return `${diffInDays} days ago`; // Changed logic slightly to keep "days ago" for up to a month as cleaner
+
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 export default function InternshipsPage() {
@@ -47,7 +66,9 @@ export default function InternshipsPage() {
           description: item.description,
           skills: item.skillsRequired || [],
           openings: item.openings,
-          postedAt: formatTimeAgo(item.createdAt)
+          postedAt: item.updatedAt && (new Date(item.updatedAt).getTime() - new Date(item.createdAt).getTime() > 60000)
+            ? `Edited ${formatTimeAgo(item.updatedAt)}`
+            : formatTimeAgo(item.createdAt)
         }));
 
         setAllInternships(mapped);
@@ -370,13 +391,13 @@ export default function InternshipsPage() {
                   <span className="text-xs text-gray-400">{internship.postedAt}</span>
                   <div className="flex gap-2">
                     <Link
-                      href={`/login?redirect=/internships/${internship.id}`}
+                      href={`/internships/${internship.id}`}
                       className="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:border-primary hover:text-primary transition-colors font-medium"
                     >
                       Details
                     </Link>
                     <Link
-                      href="/signup"
+                      href={`/login?redirect=/internships/${internship.id}`}
                       className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
                     >
                       Apply

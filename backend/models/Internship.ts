@@ -49,10 +49,6 @@ const internshipSchema = new Schema<IInternship>({
         default: 1,
         min: 1
     },
-    isActive: { // Keeping for backward compatibility, but 'status' should be primary
-        type: Boolean,
-        default: true
-    },
     status: {
         type: String,
         enum: ['active', 'inactive', 'completed', 'in_progress', 'rejected'],

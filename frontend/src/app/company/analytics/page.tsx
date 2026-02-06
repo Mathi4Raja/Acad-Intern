@@ -1,8 +1,7 @@
 'use client'
 
-import { Users, Briefcase, Eye, TrendingUp, Target, Clock, CheckCircle, XCircle } from 'lucide-react'
+import { Users, Briefcase, Eye, TrendingUp, Target, Clock, CheckCircle, XCircle, BarChart3 } from 'lucide-react'
 import { StatCard, BarChart, LineChart } from '@/components/analytics'
-import { PageHeader } from '@/components/common'
 
 export default function CompanyAnalyticsPage() {
     // Mock analytics data
@@ -47,14 +46,32 @@ export default function CompanyAnalyticsPage() {
     ]
 
     return (
-        <div className="max-w-7xl mx-auto p-3 sm:p-4">
-            <PageHeader
-                title="Analytics"
-                subtitle="Track your hiring performance and optimize your internship postings."
-            />
+        <div className="max-w-7xl mx-auto p-2 sm:p-3">
+            {/* Header */}
+            <div className="mb-6 flex flex-col items-center sm:flex-row justify-between gap-4">
+                <div className="bg-gradient-to-br from-white to-purple-50/50 rounded-2xl shadow-sm border border-purple-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
+                    <div className="relative z-10 flex items-center gap-3">
+                        <div className="p-2 bg-purple-600 rounded-lg text-white shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform duration-300">
+                            <BarChart3 size={20} className="fill-purple-400/20" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight">
+                                Analytics
+                            </h1>
+                            <p className="text-xs text-gray-600 font-medium">
+                                Track your hiring performance and optimize your internship postings.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Decorative elements */}
+                    <div className="absolute -right-6 -top-6 w-20 h-20 bg-purple-100/50 rounded-full blur-2xl group-hover:bg-purple-100/80 transition-colors" />
+                    <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-pink-100/50 rounded-full blur-2xl group-hover:bg-pink-100/80 transition-colors" />
+                </div>
+            </div>
 
             {/* Stats Row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                 <StatCard
                     title="Total Views"
                     value="1,250"
@@ -94,7 +111,7 @@ export default function CompanyAnalyticsPage() {
             </div>
 
             {/* Charts Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                 <LineChart
                     title="Applications Over Time"
                     data={applicationTrend}
@@ -107,7 +124,7 @@ export default function CompanyAnalyticsPage() {
                 />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
                 {/* Internship Performance */}
                 <BarChart
                     title="Applications by Internship"
@@ -115,8 +132,8 @@ export default function CompanyAnalyticsPage() {
                 />
 
                 {/* Conversion Funnel */}
-                <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Hiring Funnel</h3>
+                <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                    <h3 className="text-xs font-semibold text-gray-900 mb-3">Hiring Funnel</h3>
                     <div className="space-y-3">
                         {conversionFunnel.map((item, index) => (
                             <div key={index} className="relative">
@@ -141,8 +158,8 @@ export default function CompanyAnalyticsPage() {
                 </div>
 
                 {/* Top Skills */}
-                <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4">Top Skills in Applications</h3>
+                <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                    <h3 className="text-xs font-semibold text-gray-900 mb-3">Top Skills in Applications</h3>
                     <div className="space-y-3">
                         {topSkillsApplied.map((item, index) => (
                             <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
@@ -160,30 +177,30 @@ export default function CompanyAnalyticsPage() {
             </div>
 
             {/* Quick Insights */}
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
-                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+                <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-sm">
                     <TrendingUp className="text-green-600" size={20} />
                     Quick Insights
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="bg-white rounded-lg p-3 shadow-sm">
                         <div className="flex items-center gap-2 mb-2">
                             <CheckCircle className="text-green-500" size={18} />
-                            <h4 className="font-semibold text-gray-900">High Demand</h4>
+                            <h4 className="font-semibold text-gray-900 text-xs text-sm">High Demand</h4>
                         </div>
                         <p className="text-sm text-gray-600">Frontend Developer posts get 40% more applications than average</p>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="bg-white rounded-lg p-3 shadow-sm">
                         <div className="flex items-center gap-2 mb-2">
                             <Target className="text-blue-500" size={18} />
-                            <h4 className="font-semibold text-gray-900">Best Posting Day</h4>
+                            <h4 className="font-semibold text-gray-900 text-xs text-sm">Best Posting Day</h4>
                         </div>
                         <p className="text-sm text-gray-600">Monday posts receive 25% more views in the first week</p>
                     </div>
-                    <div className="bg-white rounded-lg p-4 shadow-sm">
+                    <div className="bg-white rounded-lg p-3 shadow-sm">
                         <div className="flex items-center gap-2 mb-2">
                             <Clock className="text-orange-500" size={18} />
-                            <h4 className="font-semibold text-gray-900">Response Time</h4>
+                            <h4 className="font-semibold text-gray-900 text-xs text-sm">Response Time</h4>
                         </div>
                         <p className="text-sm text-gray-600">Responding within 48 hours increases acceptance rate by 60%</p>
                     </div>

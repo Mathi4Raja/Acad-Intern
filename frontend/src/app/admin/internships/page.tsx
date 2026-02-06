@@ -22,12 +22,12 @@ interface Internship {
   duration: number
   stipend: number
   positions: number
-  isActive: boolean
+  status: 'active' | 'inactive' | 'completed' | 'in_progress' | 'rejected'
   applicants: number
   createdAt: string
   deadline: string
   skills: string[]
-  status: 'active' | 'inactive'
+
 }
 
 function ManageInternshipsContent() {
@@ -132,9 +132,9 @@ function ManageInternshipsContent() {
             await api.delete(`/admin/internships/${id}`)
             toast.success('Internship deleted')
           } else {
-            const isActive = action === 'activate'
-            await api.put(`/admin/internships/${id}`, { isActive })
-            toast.success(`Internship ${isActive ? 'activated' : 'deactivated'}`)
+            const status = action === 'activate' ? 'active' : 'inactive'
+            await api.put(`/admin/internships/${id}`, { status })
+            toast.success(`Internship ${status === 'active' ? 'activated' : 'deactivated'}`)
           }
           fetchData()
           setSelectedInternships(prev => prev.filter(iid => iid !== id))
@@ -159,8 +159,8 @@ function ManageInternshipsContent() {
           if (action === 'deleted') {
             await Promise.all(selectedInternships.map(id => api.delete(`/admin/internships/${id}`)))
           } else {
-            const isActive = action === 'activated'
-            await Promise.all(selectedInternships.map(id => api.put(`/admin/internships/${id}`, { isActive })))
+            const status = action === 'activated' ? 'active' : 'inactive'
+            await Promise.all(selectedInternships.map(id => api.put(`/admin/internships/${id}`, { status })))
           }
           toast.success(`Internships ${action} successfully`)
           setSelectedInternships([])
@@ -173,8 +173,8 @@ function ManageInternshipsContent() {
     })
   }
 
-  const getStatusColor = (isActive: boolean) => {
-    return isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+  const getStatusColor = (status: string) => {
+    return status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
   }
 
   const formatDate = (dateString?: string) => {
@@ -312,8 +312,8 @@ function ManageInternshipsContent() {
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
                     <h3 className="text-base font-bold text-gray-900 truncate">{internship.title}</h3>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${getStatusColor(internship.isActive)}`}>
-                      {internship.isActive ? 'Active' : 'Inactive'}
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${getStatusColor(internship.status)}`}>
+                      {internship.status === 'active' ? 'Active' : 'Inactive'}
                     </span>
                   </div>
                   <p className="text-xs text-gray-600 mb-2 flex items-center gap-1">
@@ -337,8 +337,8 @@ function ManageInternshipsContent() {
 
                 <div className="flex flex-col gap-2 border-l border-gray-100 pl-3 ml-1">
                   {/* Actions */}
-                  <button onClick={() => alert('View Details Demo')} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View Details"><Eye size={18} /></button>
-                  {!internship.isActive ? (
+                  <button onClick={() => toast('View Details Demo - Coming Soon', { icon: '👀' })} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View Details"><Eye size={18} /></button>
+                  {internship.status !== 'active' ? (
                     <button onClick={() => handleAction(internship._id, 'activate')} className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Activate"><CheckCircle size={18} /></button>
                   ) : (
                     <button onClick={() => handleAction(internship._id, 'deactivate')} className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Deactivate"><XCircle size={18} /></button>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
     ArrowLeft,
@@ -9,15 +9,12 @@ import {
     Clock,
     IndianRupee,
     Calendar,
-    Globe,
-    Share2,
     Building,
     CheckCircle,
     Loader2,
-    Check
+    Lock
 } from 'lucide-react'
 import api from '@/lib/api'
-import { useAlert } from '@/components/ui/AlertProvider'
 
 interface InternshipDetail {
     _id: string
@@ -25,10 +22,7 @@ interface InternshipDetail {
     description: string
     companyId: {
         _id: string
-        userId: string
         companyName: string
-        website?: string
-        description?: string
         verified: boolean
     }
     skillsRequired: string[]
@@ -36,16 +30,13 @@ interface InternshipDetail {
     stipend: number
     mode: 'remote' | 'onsite' | 'hybrid'
     openings: number
-    isActive: boolean
     createdAt: string
-    location?: string
     deadline?: string
-    hasApplied?: boolean
 }
 
-export default function InternshipDetailPage() {
+export default function PublicInternshipDetailPage() {
     const { id } = useParams()
-    const { showAlert } = useAlert()
+    const router = useRouter()
     const [internship, setInternship] = useState<InternshipDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -61,12 +52,7 @@ export default function InternshipDetailPage() {
             setLoading(true)
             const response = await api.get(`/internships/${id}`)
             if (response.data.success) {
-                const data = response.data.data
-                setInternship(data)
-                // Initialize hasApplied from the API response
-                if (data.hasApplied) {
-                    setHasApplied(true)
-                }
+                setInternship(response.data.data)
             }
         } catch (err: any) {
             console.error('Failed to fetch internship:', err)
@@ -76,51 +62,16 @@ export default function InternshipDetailPage() {
         }
     }
 
-    const [applying, setApplying] = useState(false)
-    const [hasApplied, setHasApplied] = useState(false)
-
-    const handleApply = async () => {
-        try {
-            setApplying(true)
-            const response = await api.post(`/applications/internships/${id}/apply`, { notes: '' })
-            if (response.data.success) {
-                setHasApplied(true)
-                showAlert('Application submitted successfully!', 'success')
-            }
-        } catch (error: any) {
-            console.error('Application failed:', error)
-            const msg = error.response?.data?.message || 'Failed to submit application'
-            showAlert(msg, 'error')
-        } finally {
-            setApplying(false)
-        }
-    }
-
-    const formatStipend = (stipend: number) => {
-        if (stipend >= 1000) {
-            return `₹${(stipend / 1000).toFixed(0)}K/month`
-        }
-        return `₹${stipend}/month`
+    const handleLoginToApply = () => {
+        router.push(`/login?redirect=/internships/${id}`)
     }
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        })
-    }
-
-    const [copied, setCopied] = useState(false)
-
-    const handleShare = async () => {
-        try {
-            await navigator.clipboard.writeText(window.location.href)
-            setCopied(true)
-            setTimeout(() => setCopied(false), 2000)
-        } catch (err) {
-            console.error('Failed to copy:', err)
-        }
+        const date = new Date(dateString)
+        const day = String(date.getDate()).padStart(2, '0')
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const year = date.getFullYear()
+        return `${day}/${month}/${year}`
     }
 
     const getModeLabel = (mode: string) => {
@@ -145,7 +96,7 @@ export default function InternshipDetailPage() {
             <div className="text-center py-16">
                 <p className="text-red-500 mb-4">{error || 'Internship not found'}</p>
                 <Link
-                    href="/student/internships"
+                    href="/internships"
                     className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 inline-block"
                 >
                     Back to Internships
@@ -155,10 +106,10 @@ export default function InternshipDetailPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 pb-10">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-24 pb-10">
             {/* Back Button */}
             <Link
-                href="/student/internships"
+                href="/internships"
                 className="inline-flex items-center gap-2 text-gray-600 hover:text-primary mb-4 transition-colors text-sm"
             >
                 <ArrowLeft size={18} />
@@ -217,7 +168,7 @@ export default function InternshipDetailPage() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Stipend</p>
-                                    <p className="font-medium text-gray-900 leading-tight">{formatStipend(internship.stipend)}</p>
+                                    <p className="font-medium text-gray-900 leading-tight blur-sm select-none">₹15,000/month</p>
                                 </div>
                             </div>
 
@@ -263,61 +214,27 @@ export default function InternshipDetailPage() {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sticky top-24">
                         <div className="mb-4">
                             <h3 className="text-base font-bold text-gray-900">Interested?</h3>
-                            <p className="text-xs text-gray-500 mt-1">Don't miss out on this opportunity.</p>
+                            <p className="text-xs text-gray-500 mt-1">Login to apply for this opportunity.</p>
                         </div>
 
                         <button
-                            onClick={handleApply}
-                            disabled={applying || hasApplied}
-                            className={`w-full py-2.5 text-white rounded-xl font-semibold shadow-md transition-all text-sm flex items-center justify-center gap-2 active:scale-95 ${hasApplied
-                                ? 'bg-green-600 hover:bg-green-700 shadow-green-500/20'
-                                : 'bg-primary hover:bg-primary/90 shadow-primary/20'
-                                } disabled:opacity-70 disabled:cursor-not-allowed`}
+                            onClick={handleLoginToApply}
+                            className="w-full py-2.5 bg-primary text-white rounded-xl font-semibold shadow-md hover:bg-primary/90 shadow-primary/20 transition-all text-sm flex items-center justify-center gap-2 active:scale-95"
                         >
-                            {applying ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Applying...
-                                </>
-                            ) : hasApplied ? (
-                                <>
-                                    <CheckCircle className="w-4 h-4" />
-                                    Applied
-                                </>
-                            ) : (
-                                'Apply Now'
-                            )}
+                            <Lock size={16} />
+                            Login to Apply
                         </button>
 
                         <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
                             <div className="flex items-center justify-between text-xs text-gray-600">
                                 <span>Deadline</span>
-                                <span className="font-medium text-gray-900">
-                                    {internship.deadline ? formatDate(internship.deadline) : 'ASAP'}
-                                </span>
+                                <span className="font-medium text-gray-900 blur-sm select-none">12/12/2026</span>
                             </div>
                             <div className="flex items-center justify-between text-xs text-gray-600">
                                 <span>Openings</span>
-                                <span className="font-medium text-gray-900">{internship.openings}</span>
+                                <span className="font-medium text-gray-900 blur-sm select-none">5 Openings</span>
                             </div>
                         </div>
-
-                        <button
-                            onClick={handleShare}
-                            className="w-full mt-4 py-2 flex items-center justify-center gap-2 text-gray-500 hover:text-gray-900 text-xs font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-200 active:scale-95"
-                        >
-                            {copied ? (
-                                <>
-                                    <Check size={14} className="text-green-600" />
-                                    <span className="text-green-600">Link Copied!</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Share2 size={14} />
-                                    Share this Internship
-                                </>
-                            )}
-                        </button>
                     </div>
 
                     {/* Company Info */}
@@ -329,24 +246,11 @@ export default function InternshipDetailPage() {
                             </div>
                             <div>
                                 <p className="font-bold text-gray-900 text-sm leading-tight">{internship.companyId.companyName}</p>
-                                {internship.companyId.website && (
-                                    <a
-                                        href={internship.companyId.website}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5"
-                                    >
-                                        <Globe size={10} />
-                                        Visit Website
-                                    </a>
-                                )}
                             </div>
                         </div>
-                        {internship.companyId.description && (
-                            <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed">
-                                {internship.companyId.description}
-                            </p>
-                        )}
+                        <p className="text-xs text-center text-gray-400 italic">
+                            Login to view contact details
+                        </p>
                     </div>
                 </div>
             </div>

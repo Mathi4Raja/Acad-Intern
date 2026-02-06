@@ -115,7 +115,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-8 relative">
       {/* Back Arrow - Top Left */}
       <Link
-        href="/"
+        href="/internships"
         className="absolute top-4 left-4 p-2 rounded-full bg-white/80 hover:bg-white shadow-sm hover:shadow-md text-gray-600 hover:text-primary transition-all z-20"
         aria-label="Back to home"
       >

@@ -1,11 +1,10 @@
 'use client'
-import { Building2, Users, Briefcase, TrendingUp, Plus, Search, Calendar, ChevronRight, CheckCircle } from 'lucide-react'
+import { Building2, Users, Briefcase, TrendingUp, Plus, Search, Calendar, ChevronRight, CheckCircle, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import api from '@/lib/api'
-import { PageHeader } from '@/components/common'
 import { StatCard } from '@/components/analytics/StatCard'
 
 // Utility function to format dates
@@ -39,19 +38,19 @@ export default function CompanyDashboard() {
         if (!profile || !('_id' in profile)) return; // Ensure we have company profile
 
         // 1. Fetch Company's Internships
-        const internshipsRes = await api.get(`/internships?companyId=${(profile as any)._id}`); // content is under data.data
+        const internshipsRes = await api.get('/internships/company/my'); // content is under data.data
         const internships = internshipsRes.data.data;
 
         setPostedInternships(internships.slice(0, 3).map((intern: any) => ({
           id: intern._id,
           title: intern.title,
           applicants: 0, // Placeholder
-          status: intern.isActive ? 'Active' : 'Closed',
+          status: intern.status === 'active' ? 'Active' : 'Closed',
           postedDate: intern.createdAt,
           type: intern.mode
         })));
 
-        setStats(prev => ({ ...prev, activeInternships: internships.filter((i: any) => i.isActive).length }));
+        setStats(prev => ({ ...prev, activeInternships: internships.filter((i: any) => i.status === 'active').length }));
 
         // 2. Fetch Applications for Internships (Client-side aggregation for MVP)
         // We limit to first 3 internships to avoid N+1 explosion
@@ -129,19 +128,35 @@ export default function CompanyDashboard() {
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-4">
       {/* Header */}
-      <PageHeader
-        title={`Welcome back, ${user?.name || 'Recruiter'}! 👋`}
-        subtitle="Overview of your hiring pipeline and active internships."
-        action={
-          <Link
-            href="/company/internships/new"
-            className="inline-flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
-          >
-            <Plus size={18} />
-            Post Internship
-          </Link>
-        }
-      />
+      <div className="mb-6 flex flex-col items-center sm:flex-row justify-between gap-4">
+        <div className="bg-gradient-to-br from-white to-indigo-50/50 rounded-2xl shadow-sm border border-indigo-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="p-2 bg-indigo-600 rounded-lg text-white shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
+              <Link href="/company/dashboard"> <LayoutDashboard size={20} className="fill-indigo-400/20" /> </Link>
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight">
+                Welcome back, {user?.name || 'Recruiter'}! 👋
+              </h1>
+              <p className="text-xs text-gray-600 font-medium">
+                Overview of your hiring pipeline and active internships.
+              </p>
+            </div>
+          </div>
+
+          {/* Decorative elements */}
+          <div className="absolute -right-6 -top-6 w-20 h-20 bg-indigo-100/50 rounded-full blur-2xl group-hover:bg-indigo-100/80 transition-colors" />
+          <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-purple-100/50 rounded-full blur-2xl group-hover:bg-purple-100/80 transition-colors" />
+        </div>
+
+        <Link
+          href="/company/post-internship"
+          className="inline-flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
+        >
+          <Plus size={18} />
+          Post Internship
+        </Link>
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
@@ -193,27 +208,27 @@ export default function CompanyDashboard() {
             {recentApplications.length > 0 ? (
               <div className="divide-y divide-gray-100">
                 {recentApplications.map((app) => (
-                  <div key={app.id} className="p-4 sm:p-5 hover:bg-gray-50 transition-colors">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold border border-gray-200">
+                  <div key={app.id} className="p-3 hover:bg-gray-50 transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold border border-gray-200 text-xs">
                           {app.applicantName.charAt(0)}
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900 line-clamp-1">{app.applicantName}</h3>
-                          <p className="text-sm text-gray-500 line-clamp-1">{app.role}</p>
+                          <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{app.applicantName}</h3>
+                          <p className="text-xs text-gray-500 line-clamp-1">{app.role}</p>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
-                        <div className="text-right min-w-[100px]">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide border ${getStatusColor(app.status)} bg-opacity-50 border-opacity-20`}>
+                      <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                        <div className="text-right min-w-[80px]">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium uppercase tracking-wide border ${getStatusColor(app.status)} bg-opacity-50 border-opacity-20`}>
                             {app.status}
                           </span>
-                          <p className="text-[10px] text-gray-400 mt-1">Applied {formatDate(app.appliedDate)}</p>
+                          <p className="text-[9px] text-gray-400 mt-0.5">Applied {formatDate(app.appliedDate)}</p>
                         </div>
-                        <button className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors">
-                          <ChevronRight className="text-gray-400" size={16} />
-                        </button>
+                        <Link href="/company/applications" className="p-1 hover:bg-gray-200 rounded-lg transition-colors">
+                          <ChevronRight className="text-gray-400" size={14} />
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -239,25 +254,25 @@ export default function CompanyDashboard() {
             {postedInternships.length > 0 ? (
               <div className="divide-y divide-gray-100">
                 {postedInternships.map((internship) => (
-                  <div key={internship.id} className="p-4 sm:p-5 hover:bg-gray-50 transition-colors group cursor-pointer">
-                    <div className="mb-2">
+                  <Link key={internship.id} href="/company/internships" className="block p-3 hover:bg-gray-50 transition-colors group">
+                    <div className="mb-1">
                       <div className="flex justify-between items-start">
-                        <h3 className="font-semibold text-gray-900 line-clamp-1 group-hover:text-primary transition-colors">{internship.title}</h3>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wide ${internship.status === 'Active' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-600 border border-gray-200'}`}>
+                        <h3 className="font-semibold text-gray-900 text-sm line-clamp-1 group-hover:text-primary transition-colors">{internship.title}</h3>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium uppercase tracking-wide ${internship.status === 'Active' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-600 border border-gray-200'}`}>
                           {internship.status}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 flex items-center gap-2">
-                        <Calendar size={12} />
+                      <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1.5">
+                        <Calendar size={10} />
                         Posted {formatDate(internship.postedDate)}
                       </p>
                     </div>
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="text-[10px] text-gray-500 bg-gray-50 px-2 py-1 rounded border border-gray-100 uppercase tracking-wide font-medium">
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-[9px] text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 uppercase tracking-wide font-medium">
                         {internship.type}
                       </span>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (

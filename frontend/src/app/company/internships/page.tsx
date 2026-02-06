@@ -2,15 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Search, Filter, MapPin, Clock, IndianRupee, Users, Eye, Edit, Trash2, ToggleLeft, ToggleRight, PlusCircle, Briefcase, CheckCircle } from 'lucide-react'
-import { PageHeader } from '@/components/common'
+import { Search, Filter, MapPin, Clock, IndianRupee, Users, Eye, Edit, Trash2, ToggleLeft, ToggleRight, PlusCircle, Briefcase, CheckCircle, Pencil } from 'lucide-react'
 import { StatCard } from '@/components/analytics/StatCard'
 import api from '@/lib/api'
 import { useAuth } from '@/lib/AuthContext'
+import { useAlert } from '@/components/ui/AlertProvider'
 import { useRouter } from 'next/navigation'
 
 export default function ManageInternships() {
   const { user, profile, isLoading: authLoading } = useAuth()
+  const { showAlert, showConfirm } = useAlert()
   const router = useRouter()
   const [internships, setInternships] = useState<any[]>([])
   const [filteredInternships, setFilteredInternships] = useState<any[]>([])
@@ -24,6 +25,29 @@ export default function ManageInternships() {
   })
   const [isLoading, setIsLoading] = useState(true)
 
+  // Helper to format relative time
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / (1000 * 60))
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffMins < 1) return 'just now'
+    if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`
+    return date.toLocaleDateString()
+  }
+
+  // Check if internship was edited (updatedAt differs from createdAt by more than 1 minute)
+  const wasEdited = (createdAt: string, updatedAt: string) => {
+    const created = new Date(createdAt).getTime()
+    const updated = new Date(updatedAt).getTime()
+    return (updated - created) > 60000 // More than 1 minute difference
+  }
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
@@ -35,7 +59,7 @@ export default function ManageInternships() {
       try {
         if (!profile || !('_id' in profile)) return;
 
-        const res = await api.get(`/internships?companyId=${(profile as any)._id}`);
+        const res = await api.get('/internships/company/my');
         const data = res.data.data;
 
         // Transform data for UI - fetching app counts would require N+1 or backend aggregation
@@ -62,7 +86,7 @@ export default function ManageInternships() {
             views: Math.floor(Math.random() * 200) + 10, // Mock views for now
             deadline: new Date(intern.deadline).toLocaleDateString(),
             postedDate: new Date(intern.createdAt).toLocaleDateString(),
-            status: intern.isActive ? 'active' : 'inactive'
+            status: intern.status || (intern.isActive ? 'active' : 'inactive')
           };
         }));
 
@@ -114,16 +138,41 @@ export default function ManageInternships() {
     }
   }
 
-  const handleToggleStatus = (id: string, currentStatus: string) => {
-    // Implement API call
-    alert('Status toggle logic to be implemented with API')
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    try {
+      const response = await api.put(`/internships/${id}`, { status: newStatus });
+      if (response.data.success) {
+        // Update local state
+        setInternships(prev => prev.map(internship =>
+          internship._id === id ? { ...internship, status: newStatus } : internship
+        ));
+      }
+    } catch (error: any) {
+      console.error('Failed to toggle status:', error);
+      showAlert(error.response?.data?.message || 'Failed to update status', 'error');
+    }
   }
 
-  const handleDelete = (id: string, title: string) => {
-    if (confirm(`Are you sure you want to delete "${title}"?`)) {
-      // Implement API call
-      alert('Delete logic to be implemented with API')
-    }
+  const handleDelete = async (id: string, title: string) => {
+    showConfirm({
+      title: 'Delete Internship',
+      message: `Are you sure you want to delete "${title}"? This action cannot be undone.`,
+      type: 'danger',
+      confirmText: 'Delete',
+      onConfirm: async () => {
+        try {
+          const response = await api.delete(`/internships/${id}`);
+          if (response.data.success) {
+            setInternships(prev => prev.filter(internship => internship._id !== id));
+            showAlert('Internship deleted successfully', 'success');
+          }
+        } catch (error: any) {
+          console.error('Failed to delete internship:', error);
+          showAlert(error.response?.data?.message || 'Failed to delete internship', 'error');
+        }
+      }
+    });
   }
 
   if (authLoading || (isLoading && user)) {
@@ -132,19 +181,36 @@ export default function ManageInternships() {
 
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-4">
-      <PageHeader
-        title="My Internships"
-        subtitle="Manage your internship postings and track applications."
-        action={
-          <Link
-            href="/company/post-internship"
-            className="inline-flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
-          >
-            <PlusCircle size={18} />
-            Post New Internship
-          </Link>
-        }
-      />
+      {/* Header */}
+      <div className="mb-6 flex flex-col items-center sm:flex-row justify-between gap-4">
+        <div className="bg-gradient-to-br from-white to-orange-50/50 rounded-2xl shadow-sm border border-orange-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="p-2 bg-orange-600 rounded-lg text-white shadow-lg shadow-orange-500/20 group-hover:scale-105 transition-transform duration-300">
+              <Briefcase size={20} className="fill-orange-400/20" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight">
+                My Internships
+              </h1>
+              <p className="text-xs text-gray-600 font-medium">
+                Manage your internship postings and track applications.
+              </p>
+            </div>
+          </div>
+
+          {/* Decorative elements */}
+          <div className="absolute -right-6 -top-6 w-20 h-20 bg-orange-100/50 rounded-full blur-2xl group-hover:bg-orange-100/80 transition-colors" />
+          <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-amber-100/50 rounded-full blur-2xl group-hover:bg-amber-100/80 transition-colors" />
+        </div>
+
+        <Link
+          href="/company/post-internship"
+          className="inline-flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
+        >
+          <PlusCircle size={18} />
+          Post New Internship
+        </Link>
+      </div>
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
@@ -266,6 +332,12 @@ export default function ManageInternships() {
                     <span className="font-medium text-gray-900">{internship.views}</span> views
                   </span>
                   <span className="hidden sm:inline">Posted: {internship.postedDate}</span>
+                  {wasEdited(internship.createdAt, internship.updatedAt) && (
+                    <span className="flex items-center gap-1 text-amber-600">
+                      <Pencil size={12} className="flex-shrink-0" />
+                      Edited {getTimeAgo(internship.updatedAt)}
+                    </span>
+                  )}
                   <span className="col-span-2 sm:col-span-1">Deadline: {internship.deadline}</span>
                 </div>
 
@@ -287,13 +359,13 @@ export default function ManageInternships() {
                     <span className="hidden sm:inline">{internship.status === 'active' ? 'Deactivate' : 'Activate'}</span>
                     <span className="sm:hidden">{internship.status === 'active' ? 'Off' : 'On'}</span>
                   </button>
-                  <button
-                    onClick={() => alert(`Edit ${internship.title} (Coming Soon)`)}
+                  <Link
+                    href={`/company/edit-internship/${internship._id}`}
                     className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium"
                   >
                     <Edit size={16} />
                     Edit
-                  </button>
+                  </Link>
                   <button
                     onClick={() => handleDelete(internship._id, internship.title)}
                     className="col-span-2 sm:col-span-2 lg:col-span-1 flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 border border-red-100 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-xs sm:text-sm font-medium"

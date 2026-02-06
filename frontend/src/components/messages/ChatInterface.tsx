@@ -6,6 +6,7 @@ import { Message, MessageStatus } from '@/types';
 import { useSocket } from '@/lib/SocketContext';
 import { messageApi, reportsApi, studentApi, applicationsApi, settingsApi } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import { useAlert } from '@/components/ui/AlertProvider';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -19,6 +20,7 @@ interface ChatInterfaceProps {
 
 export default function ChatInterface({ applicationId, currentUserId, otherPartyName, onBack, readOnly = false }: ChatInterfaceProps) {
     const { user } = useAuth();
+    const { showAlert } = useAlert();
     const router = useRouter();
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
@@ -313,7 +315,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
         const validFiles = files.filter(file => file.size <= maxSizeMB * 1024 * 1024);
 
         if (validFiles.length !== files.length) {
-            alert(`Some files were too large (max ${maxSizeMB}MB)`);
+            showAlert(`Some files were too large (max ${maxSizeMB}MB)`, 'warning');
         }
 
         setAttachments((prev) => [...prev, ...validFiles]);
@@ -373,7 +375,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
             maxScrollTriggeredRef.current = false;
         } catch (error) {
             console.error('Failed to send message:', error);
-            alert('Failed to send message');
+            showAlert('Failed to send message', 'error');
         } finally {
             setSending(false);
         }
@@ -476,7 +478,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
             }
         } catch (err) {
             console.error('Mute failed:', err);
-            alert('Failed to update notification settings');
+            showAlert('Failed to update notification settings', 'error');
         } finally {
             setMuting(false);
         }
@@ -491,13 +493,13 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                 reason: reportReason
             });
             if (res.data.success) {
-                alert('Report submitted successfully');
+                showAlert('Report submitted successfully', 'success');
                 setShowReportModal(false);
                 setReportReason('');
             }
         } catch (err) {
             console.error('Report failed:', err);
-            alert('Failed to submit report');
+            showAlert('Failed to submit report', 'error');
         } finally {
             setReporting(false);
         }

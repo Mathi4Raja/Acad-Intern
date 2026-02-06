@@ -1,0 +1,26 @@
+{
+  "Health": {
+    "Requests": 100,
+    "Errors": 0,
+    "Avg (ms)": "2.37",
+    "P95 (ms)": "3.26",
+    "Min (ms)": "1.30",
+    "Max (ms)": "38.22"
+  },
+  "Internships List": {
+    "Requests": 100,
+    "Errors": 0,
+    "Avg (ms)": "140.80",
+    "P95 (ms)": "348.81",
+    "Min (ms)": "102.39",
+    "Max (ms)": "436.61"
+  },
+  "Public Settings": {
+    "Requests": 100,
+    "Errors": 0,
+    "Avg (ms)": "78.16",
+    "P95 (ms)": "154.13",
+    "Min (ms)": "47.97",
+    "Max (ms)": "262.04"
+  }
+}

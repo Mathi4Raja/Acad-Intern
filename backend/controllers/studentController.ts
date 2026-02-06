@@ -61,14 +61,9 @@ export const getMe = async (req: AuthRequest, res: Response, next: NextFunction)
 // @access  Private (Student)
 export const updateProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        console.log('updateProfile called with body:', req.body);
-        console.log('req.user:', req.user);
-
         const validatedData = profileSchema.parse(req.body);
-        console.log('validatedData:', validatedData);
 
         let profile = await StudentProfile.findOne({ userId: req.user?._id });
-        console.log('existing profile:', profile);
 
         if (!profile) {
             profile = new StudentProfile({ userId: req.user?._id });

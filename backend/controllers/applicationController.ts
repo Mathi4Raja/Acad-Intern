@@ -12,7 +12,7 @@ const applicationSchema = z.object({
 });
 
 const statusUpdateSchema = z.object({
-    status: z.enum(['shortlisted', 'rejected', 'accepted'])
+    status: z.enum(['shortlisted', 'rejected', 'accepted', 'assessment_completed'])
 });
 
 // @desc    Apply to an internship
@@ -34,7 +34,7 @@ export const applyForInternship = async (req: AuthRequest, res: Response, next: 
             return;
         }
 
-        if (!internship.isActive) {
+        if (internship.status !== 'active') {
             res.status(400).json({
                 success: false,
                 message: 'This internship is no longer accepting applications'

@@ -20,7 +20,7 @@ const internshipSchema = z.object({
 });
 
 interface InternshipQuery {
-    isActive: boolean;
+    status?: string;
     $text?: { $search: string };
     mode?: string;
     stipend?: { $gte: number };
@@ -43,7 +43,7 @@ export const matchInternships = async (req: AuthRequest, res: Response, next: Ne
 
         const { search, mode, minStipend, duration, skills } = req.query;
 
-        const query: InternshipQuery = { isActive: true };
+        const query: InternshipQuery = { status: 'active' };
 
         if (search && typeof search === 'string') {
             query.$text = { $search: search };
@@ -113,7 +113,7 @@ export const getInternships = async (req: AuthRequest, res: Response, next: Next
     try {
         const { search, mode, minStipend, duration, skills, companyId } = req.query;
 
-        const query: any = { isActive: true };
+        const query: any = { status: 'active' };
 
         if (search && typeof search === 'string') {
             query.$text = { $search: search };

@@ -36,7 +36,7 @@ const populateInternships = async () => {
                 location: 'Remote',
                 mode: 'remote',
                 deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-                isActive: true
+                status: 'active'
             },
             {
                 title: 'Data Science Intern',
@@ -48,7 +48,7 @@ const populateInternships = async () => {
                 location: 'New York, NY',
                 mode: 'onsite',
                 deadline: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
-                isActive: true
+                status: 'active'
             },
             {
                 title: 'UI/UX Designer Intern',
@@ -60,7 +60,7 @@ const populateInternships = async () => {
                 location: 'San Francisco, CA',
                 mode: 'hybrid',
                 deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
-                isActive: true
+                status: 'active'
             }
         ];
 

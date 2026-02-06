@@ -134,10 +134,19 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
         }
 
         // Verify the Google ID token
-        const ticket = await googleClient.verifyIdToken({
-            idToken,
-            audience: process.env.GOOGLE_CLIENT_ID
-        });
+        let ticket;
+        try {
+            ticket = await googleClient.verifyIdToken({
+                idToken,
+                audience: process.env.GOOGLE_CLIENT_ID
+            });
+        } catch (error: any) {
+            res.status(401).json({
+                success: false,
+                message: 'Invalid or expired Google token'
+            });
+            return;
+        }
 
         const payload = ticket.getPayload();
         if (!payload) {
@@ -222,13 +231,6 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
             }
         });
     } catch (error: any) {
-        if (error.message?.includes('Token used too late') || error.message?.includes('Invalid token')) {
-            res.status(401).json({
-                success: false,
-                message: 'Invalid or expired Google token'
-            });
-            return;
-        }
         next(error);
     }
 };

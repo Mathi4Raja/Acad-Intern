@@ -343,4 +343,101 @@ describe('Internships API', () => {
             }
         });
     });
+
+    describe('Internship Validation Edge Cases', () => {
+        it('should reject internship with missing required fields', async () => {
+            const company = await createTestCompanyWithProfile('missingfields');
+
+            const res = await request(app)
+                .post('/api/internships')
+                .set('Cookie', company.cookie)
+                .send({
+                    title: 'Missing Fields'
+                    // Missing: description, skillsRequired, durationWeeks, etc.
+                });
+
+            expect(res.status).toBe(400);
+        });
+
+        it('should reject short description', async () => {
+            const company = await createTestCompanyWithProfile('shortdesc');
+
+            const res = await request(app)
+                .post('/api/internships')
+                .set('Cookie', company.cookie)
+                .send({
+                    title: 'Short Desc Test',
+                    description: 'Too short', // Less than 20 chars
+                    skillsRequired: ['JavaScript'],
+                    durationWeeks: 8,
+                    stipend: 10000,
+                    mode: 'remote',
+                    openings: 1
+                });
+
+            expect(res.status).toBe(400);
+        });
+
+        it('should reject invalid mode', async () => {
+            const company = await createTestCompanyWithProfile('invalidmode');
+
+            const res = await request(app)
+                .post('/api/internships')
+                .set('Cookie', company.cookie)
+                .send({
+                    title: 'Invalid Mode Test',
+                    description: DESC,
+                    skillsRequired: ['JavaScript'],
+                    durationWeeks: 8,
+                    stipend: 10000,
+                    mode: 'invalid-mode',
+                    openings: 1
+                });
+
+            expect(res.status).toBe(400);
+        });
+
+        it('should reject negative stipend', async () => {
+            const company = await createTestCompanyWithProfile('negstipend');
+
+            const res = await request(app)
+                .post('/api/internships')
+                .set('Cookie', company.cookie)
+                .send({
+                    title: 'Negative Stipend',
+                    description: DESC,
+                    skillsRequired: ['JavaScript'],
+                    durationWeeks: 8,
+                    stipend: -1000,
+                    mode: 'remote',
+                    openings: 1
+                });
+
+            expect(res.status).toBe(400);
+        });
+
+        it('should search internships by keyword', async () => {
+            const company = await createTestCompanyWithProfile('searchkw');
+
+            await request(app)
+                .post('/api/internships')
+                .set('Cookie', company.cookie)
+                .send({
+                    title: 'React Developer Intern',
+                    description: DESC,
+                    skillsRequired: ['React'],
+                    durationWeeks: 8,
+                    stipend: 10000,
+                    mode: 'remote',
+                    openings: 1
+                });
+
+            const res = await request(app)
+                .get('/api/internships')
+                .query({ search: 'React' });
+
+            expect(res.status).toBe(200);
+            expect(res.body.data.some((i: any) => i.title.includes('React'))).toBe(true);
+        });
+    });
 });

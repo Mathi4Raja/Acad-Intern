@@ -122,4 +122,41 @@ export async function createTestInternship(companyUserCookie: string, suffix: st
     return res.body.data?._id;
 }
 
+/**
+ * Create a test admin user
+ */
+export async function createTestAdmin(suffix: string = ''): Promise<TestUser> {
+    const email = `testadmin${suffix}@example.com`;
+    const password = 'Admin1234!';
+    const name = `Test Admin${suffix}`;
+
+    // Create admin directly in database (admins can't self-register)
+    // Note: password_hash will be auto-hashed by the User model's pre-save hook
+    const User = require('../models/User').default;
+
+    const user = await User.create({
+        email,
+        password_hash: password, // Model will hash this automatically
+        name,
+        role: 'admin',
+        status: 'active'
+    });
+
+    // Login to get cookie
+    const loginRes = await request(app)
+        .post('/api/auth/login')
+        .send({ email, password });
+
+    const cookie = loginRes.headers['set-cookie']?.[0] || '';
+
+    return {
+        id: user._id.toString(),
+        email,
+        password,
+        name,
+        role: 'admin',
+        cookie
+    };
+}
+
 export { request, app };

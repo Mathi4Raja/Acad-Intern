@@ -153,7 +153,6 @@ async function seedAdminData() {
                 // Determine status logic for charts
                 const statuses = ['active', 'completed', 'in_progress', 'rejected'];
                 const status = statuses[Math.floor(Math.random() * statuses.length)];
-                const isActive = status === 'active';
 
                 const internship = new Internship({
                     companyId: company._id,
@@ -166,7 +165,6 @@ async function seedAdminData() {
                     openings: 1 + Math.floor(Math.random() * 5),
                     location: company.location,
                     deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-                    isActive: isActive,
                     status: status,
                     createdAt: randomDate(company.createdAt || new Date(), new Date())
                 });

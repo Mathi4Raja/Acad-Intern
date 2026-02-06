@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Building, Mail, Phone, MapPin, Globe, Users, Edit, Save, X, Briefcase, Calendar, CheckCircle, Upload, AlertCircle, Shield, Loader2, Trash2, AlertTriangle } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuth } from '@/lib/AuthContext'
-import { PageHeader } from '@/components/common'
 
 interface CompanyProfile {
   _id: string;
@@ -225,45 +224,62 @@ export default function CompanyProfilePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-3 sm:p-4">
-      <PageHeader
-        title="Company Profile"
-        subtitle="Manage your company information and verification details."
-        action={
-          !isEditing ? (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm w-full sm:w-auto justify-center shadow-sm"
-            >
-              <Edit size={18} />
-              Edit Profile
-            </button>
-          ) : (
-            <div className="flex gap-2">
-              <button
-                onClick={handleCancel}
-                disabled={isSaving}
-                className="flex items-center gap-1.5 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors disabled:opacity-50"
-              >
-                <X size={16} />
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary/90 text-sm font-medium transition-colors disabled:opacity-50 shadow-sm"
-              >
-                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                Save
-              </button>
+    <div className="max-w-5xl mx-auto p-2 sm:p-3">
+      {/* Header */}
+      <div className="mb-6 flex flex-col items-center sm:flex-row justify-between gap-4">
+        <div className="bg-gradient-to-br from-white to-teal-50/50 rounded-2xl shadow-sm border border-teal-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="p-2 bg-teal-600 rounded-lg text-white shadow-lg shadow-teal-500/20 group-hover:scale-105 transition-transform duration-300">
+              <Building size={20} className="fill-teal-400/20" />
             </div>
-          )
-        }
-      />
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight">
+                Company Profile
+              </h1>
+              <p className="text-xs text-gray-600 font-medium">
+                Manage your company information and verification details.
+              </p>
+            </div>
+          </div>
+
+          {/* Decorative elements */}
+          <div className="absolute -right-6 -top-6 w-20 h-20 bg-teal-100/50 rounded-full blur-2xl group-hover:bg-teal-100/80 transition-colors" />
+          <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-cyan-100/50 rounded-full blur-2xl group-hover:bg-cyan-100/80 transition-colors" />
+        </div>
+
+        {!isEditing ? (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm w-full sm:w-auto justify-center shadow-sm"
+          >
+            <Edit size={18} />
+            Edit Profile
+          </button>
+        ) : (
+          <div className="flex gap-2">
+            <button
+              onClick={handleCancel}
+              disabled={isSaving}
+              className="flex items-center gap-1.5 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              <X size={16} />
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary/90 text-sm font-medium transition-colors disabled:opacity-50 shadow-sm"
+            >
+              {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              Save
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Verification Status */}
       {profile?.verified ? (
-        <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-5 flex items-start gap-2">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-2 sm:p-3 mb-3 sm:mb-4 flex items-start gap-2">
           <CheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={18} />
           <div>
             <h3 className="font-semibold text-green-900 text-xs sm:text-sm">Verified Company</h3>
@@ -274,7 +290,7 @@ export default function CompanyProfilePage() {
           </div>
         </div>
       ) : (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-5 flex items-start gap-2">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-2 sm:p-3 mb-3 sm:mb-4 flex items-start gap-2">
           <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={18} />
           <div className="flex-1">
             <h3 className="font-semibold text-amber-900 text-xs sm:text-sm">Unverified Company</h3>
@@ -286,7 +302,7 @@ export default function CompanyProfilePage() {
       )}
 
       {/* CIN Verification Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-5 mb-3 sm:mb-5">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
         <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
           <Shield size={18} />
           CIN Verification
@@ -392,7 +408,7 @@ export default function CompanyProfilePage() {
       </div>
 
       {/* Logo Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-5 mb-3 sm:mb-5">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
         <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Company Logo</h2>
         <div className="flex flex-row items-center gap-4">
           <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg flex-shrink-0">
@@ -411,13 +427,13 @@ export default function CompanyProfilePage() {
       </div>
 
       {/* Basic Information */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-5 mb-3 sm:mb-5">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
         <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
           <Building size={18} />
           Basic Information
         </h2>
 
-        <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Company Name</label>
             {isEditing ? (
@@ -561,7 +577,7 @@ export default function CompanyProfilePage() {
       </div>
 
       {/* Company Details */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-5 mb-3 sm:mb-5">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
         <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
           <Briefcase size={18} />
           Company Details
@@ -617,10 +633,10 @@ export default function CompanyProfilePage() {
       </div>
 
       {/* Social Links */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-5">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
         <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Social Media</h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">LinkedIn</label>
             {isEditing ? (
@@ -681,7 +697,7 @@ export default function CompanyProfilePage() {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-red-50 rounded-xl border border-red-200 p-3 sm:p-4 mt-6">
+      <div className="bg-red-50 rounded-xl border border-red-200 p-3 mt-4">
         <h2 className="text-base sm:text-lg font-bold text-red-700 mb-2 flex items-center gap-2">
           <AlertTriangle className="text-red-500" size={18} />
           Danger Zone

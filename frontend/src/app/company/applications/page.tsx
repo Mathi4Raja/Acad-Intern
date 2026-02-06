@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, User, Briefcase, Star, Mail, Calendar, CheckCircle, XCircle, Clock, Loader2, Users } from 'lucide-react'
+import { Search, Filter, User, Briefcase, Star, Mail, Calendar, CheckCircle, XCircle, Clock, Loader2, Users, FileText } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
-import { PageHeader } from '@/components/common'
 import { StatCard } from '@/components/analytics/StatCard'
+import { useAlert } from '@/components/ui/AlertProvider'
+import { StudentProfileModal } from '@/components/company/StudentProfileModal'
 
 interface Application {
   id: string
@@ -26,15 +28,26 @@ interface Internship {
 }
 
 export default function Applications() {
+  const { showAlert } = useAlert()
+  const searchParams = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [filterInternship, setFilterInternship] = useState('all')
+  const [filterInternship, setFilterInternship] = useState(searchParams.get('internship') || 'all')
   const [selectedApplications, setSelectedApplications] = useState<string[]>([])
   const [applications, setApplications] = useState<Application[]>([])
   const [internships, setInternships] = useState<Internship[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+
+  // Profile Modal State
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+
+  const handleViewProfile = (studentId: string) => {
+    setSelectedStudentId(studentId)
+    setIsProfileModalOpen(true)
+  }
 
   // Fetch internships and their applications
   useEffect(() => {
@@ -101,7 +114,7 @@ export default function Applications() {
       ))
     } catch (err: any) {
       console.error('Failed to update status:', err)
-      alert('Failed to update application status')
+      showAlert('Failed to update application status', 'error')
     } finally {
       setActionLoading(null)
     }
@@ -149,7 +162,7 @@ export default function Applications() {
 
   const handleBulkAction = async (action: string) => {
     if (selectedApplications.length === 0) {
-      alert('Please select at least one application')
+      showAlert('Please select at least one application', 'warning')
       return
     }
 
@@ -163,11 +176,11 @@ export default function Applications() {
         selectedApplications.includes(app.id) ? { ...app, status: action } : app
       ))
 
-      alert(`${selectedApplications.length} application(s) ${action}!`)
+      showAlert(`${selectedApplications.length} application(s) ${action}!`, 'success')
       setSelectedApplications([])
     } catch (err) {
       console.error('Bulk action failed:', err)
-      alert('Some applications failed to update')
+      showAlert('Some applications failed to update', 'error')
     }
   }
 
@@ -199,11 +212,29 @@ export default function Applications() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-3 sm:p-4">
-      <PageHeader
-        title="Applications"
-        subtitle="Review and manage student applications across all your internships."
-      />
+    <div className="max-w-7xl mx-auto p-2 sm:p-3">
+      {/* Header */}
+      <div className="mb-6 flex flex-col items-center sm:flex-row justify-between gap-4">
+        <div className="bg-gradient-to-br from-white to-green-50/50 rounded-2xl shadow-sm border border-green-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="p-2 bg-green-600 rounded-lg text-white shadow-lg shadow-green-500/20 group-hover:scale-105 transition-transform duration-300">
+              <FileText size={20} className="fill-green-400/20" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight">
+                Applications
+              </h1>
+              <p className="text-xs text-gray-600 font-medium">
+                Review and manage student applications across all your internships.
+              </p>
+            </div>
+          </div>
+
+          {/* Decorative elements */}
+          <div className="absolute -right-6 -top-6 w-20 h-20 bg-green-100/50 rounded-full blur-2xl group-hover:bg-green-100/80 transition-colors" />
+          <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-emerald-100/50 rounded-full blur-2xl group-hover:bg-emerald-100/80 transition-colors" />
+        </div>
+      </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -251,7 +282,7 @@ export default function Applications() {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
           <div className="relative sm:col-span-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -342,7 +373,7 @@ export default function Applications() {
       <div className="space-y-4">
         {filteredApplications.length > 0 ? (
           filteredApplications.map((app) => (
-            <div key={app.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 hover:shadow-md transition-shadow">
+            <div key={app.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-md transition-shadow">
               <div className="flex flex-col lg:flex-row gap-4">
                 {/* Checkbox */}
                 <div className="flex items-start pt-1">
@@ -358,11 +389,11 @@ export default function Applications() {
                 <div className="flex-1">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-3">
                     <div>
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-                        <User size={20} className="text-gray-600" />
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-0.5 flex items-center gap-2">
+                        <User size={18} className="text-gray-600" />
                         {app.studentName}
                       </h3>
-                      <p className="text-sm sm:text-base text-gray-600 mb-2 flex items-center gap-2">
+                      <p className="text-xs sm:text-sm text-gray-600 mb-1 flex items-center gap-2">
                         <Briefcase size={16} />
                         Applied for: {app.position}
                       </p>
@@ -395,7 +426,7 @@ export default function Applications() {
                         <button
                           onClick={() => handleUpdateStatus(app.id, 'shortlisted')}
                           disabled={actionLoading === app.id}
-                          className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50 shadow-sm"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
                         >
                           {actionLoading === app.id ? (
                             <Loader2 size={14} className="animate-spin" />
@@ -407,7 +438,7 @@ export default function Applications() {
                         <button
                           onClick={() => handleUpdateStatus(app.id, 'rejected')}
                           disabled={actionLoading === app.id}
-                          className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50 shadow-sm"
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
                         >
                           <XCircle size={14} />
                           Reject
@@ -443,8 +474,8 @@ export default function Applications() {
                       </button>
                     )}
                     <button
-                      onClick={() => alert('View Profile Details (Coming Soon)')}
-                      className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium"
+                      onClick={() => handleViewProfile(app.studentId)}
+                      className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 border border-blue-200 text-blue-700 bg-blue-50/50 rounded-lg hover:bg-blue-100 transition-colors text-xs sm:text-sm font-medium"
                     >
                       <User size={14} />
                       View Profile
@@ -468,6 +499,13 @@ export default function Applications() {
           </div>
         )}
       </div>
+
+      {/* Profile Modal */}
+      <StudentProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        studentId={selectedStudentId}
+      />
     </div>
   )
 }

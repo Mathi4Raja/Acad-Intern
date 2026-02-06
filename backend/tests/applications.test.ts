@@ -331,4 +331,58 @@ describe('Applications API', () => {
             expect(statusNotification).toBeDefined();
         });
     });
+
+    describe('Application Edge Cases', () => {
+        it('should reject application to non-existent internship', async () => {
+            const student = await createTestStudentWithProfile('nonexist');
+
+            const res = await request(app)
+                .post('/api/applications/internships/507f1f77bcf86cd799439011/apply')
+                .set('Cookie', student.cookie)
+                .send({});
+
+            expect(res.status).toBe(404);
+        });
+
+        it('should reject application to inactive internship', async () => {
+            const company = await createTestCompanyWithProfile('inactive');
+            const student = await createTestStudentWithProfile('toinactive');
+
+            // Create internship
+            const internshipRes = await request(app)
+                .post('/api/internships')
+                .set('Cookie', company.cookie)
+                .send({
+                    title: 'Inactive Internship',
+                    description: DESC,
+                    skillsRequired: ['JavaScript'],
+                    durationWeeks: 8,
+                    stipend: 10000,
+                    mode: 'remote',
+                    openings: 1
+                });
+
+            // Deactivate internship
+            await request(app)
+                .put(`/api/internships/${internshipRes.body.data._id}`)
+                .set('Cookie', company.cookie)
+                .send({ isActive: false });
+
+            // Try to apply
+            const res = await request(app)
+                .post(`/api/applications/internships/${internshipRes.body.data._id}/apply`)
+                .set('Cookie', student.cookie)
+                .send({});
+
+            expect(res.status).toBe(400);
+        });
+
+        it('should reject unauthenticated application', async () => {
+            const res = await request(app)
+                .post('/api/applications/internships/507f1f77bcf86cd799439011/apply')
+                .send({});
+
+            expect(res.status).toBe(401);
+        });
+    });
 });

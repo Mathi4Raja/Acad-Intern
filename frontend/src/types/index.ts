@@ -46,8 +46,9 @@ export interface Internship {
     stipend: number
     mode: 'remote' | 'onsite' | 'hybrid'
     openings: number
-    isActive: boolean
+    status: 'active' | 'inactive' | 'completed' | 'in_progress' | 'rejected'
     createdAt: string
+    updatedAt?: string
     matchScore?: number
     location?: string
     hasApplied?: boolean

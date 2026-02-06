@@ -20,7 +20,7 @@ const updateCompanySchema = z.object({
 });
 
 const updateInternshipStatusSchema = z.object({
-    isActive: z.boolean()
+    status: z.enum(['active', 'inactive', 'completed', 'in_progress', 'rejected'])
 });
 
 const updateReportStatusSchema = z.object({
@@ -41,7 +41,7 @@ interface CompanyQuery {
 }
 
 interface InternshipQuery {
-    isActive?: boolean;
+    status?: string;
     $or?: Array<{ [key: string]: { $regex: string; $options: string } }>;
 }
 
@@ -90,14 +90,14 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
             Company.countDocuments({ status: 'pending' }),
             Company.countDocuments({ status: 'suspended' }),
             Internship.countDocuments(),
-            Internship.countDocuments({ isActive: true }),
+            Internship.countDocuments({ status: 'active' }),
             Report.countDocuments({ status: 'open' }),
             Report.countDocuments(),
             Report.countDocuments({ status: 'under_review' }),
             Report.countDocuments({ status: 'resolved' }),
             Report.countDocuments({ priority: 'high' }),
             User.find().sort({ createdAt: -1 }).limit(5).select('name email role createdAt status'),
-            Internship.find().sort({ createdAt: -1 }).limit(5).populate('companyId', 'companyName').select('title companyId createdAt isActive'),
+            Internship.find().sort({ createdAt: -1 }).limit(5).populate('companyId', 'companyName').select('title companyId createdAt status'),
             Report.find({ status: { $in: ['open', 'under_review'] } }).sort({ createdAt: -1 }).limit(5).populate('internshipId', 'title').populate('applicationId').populate('reporterId', 'name')
         ]);
 
@@ -116,7 +116,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
                 })),
                 recentInternships: recentInternships.map((int: any) => ({
                     id: int._id, title: int.title, company: int.companyId?.companyName || 'Unknown',
-                    postedDate: int.createdAt, status: int.isActive ? 'active' : 'inactive'
+                    postedDate: int.createdAt, status: int.status
                 })),
                 pendingReports: pendingReportsList.map((report: any) => ({
                     id: report._id, internshipTitle: report.internshipId?.title || 'Unknown',
@@ -264,7 +264,7 @@ export const getAllCompanies = async (req: AuthRequest, res: Response, next: Nex
         const companiesWithStats = await Promise.all(companies.map(async (company) => {
             const companyObj = company.toObject() as any;
             const internships = await Internship.countDocuments({ companyId: company._id });
-            const activeInternships = await Internship.countDocuments({ companyId: company._id, isActive: true });
+            const activeInternships = await Internship.countDocuments({ companyId: company._id, status: 'active' });
             const applications = await Application.countDocuments({
                 internshipId: { $in: await Internship.find({ companyId: company._id }).distinct('_id') }
             });
@@ -316,8 +316,7 @@ export const getAllInternships = async (req: AuthRequest, res: Response, next: N
         const { status, search } = req.query;
         const query: InternshipQuery = {};
 
-        if (status === 'active') query.isActive = true;
-        else if (status === 'inactive' || status === 'pending' || status === 'rejected') query.isActive = false;
+        if (status && status !== 'all' && typeof status === 'string') query.status = status;
 
         if (search && typeof search === 'string') {
             query.$or = [{ title: { $regex: search, $options: 'i' } }];
@@ -328,7 +327,7 @@ export const getAllInternships = async (req: AuthRequest, res: Response, next: N
         const internshipsWithStats = await Promise.all(internships.map(async (internship) => {
             const intObj = internship.toObject() as any;
             const applicants = await Application.countDocuments({ internshipId: internship._id });
-            return { ...intObj, company: intObj.companyId?.companyName || 'Unknown', applicants, status: intObj.isActive ? 'active' : 'inactive' };
+            return { ...intObj, company: intObj.companyId?.companyName || 'Unknown', applicants, status: intObj.status };
         }));
 
         res.status(200).json({ success: true, count: internships.length, data: internshipsWithStats });
@@ -342,7 +341,7 @@ export const getAllInternships = async (req: AuthRequest, res: Response, next: N
 // @access  Private (Admin)
 export const updateInternshipStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { isActive } = updateInternshipStatusSchema.parse(req.body);
+        const { status } = updateInternshipStatusSchema.parse(req.body);
         const internship = await Internship.findById(req.params.id);
 
         if (!internship) {
@@ -350,10 +349,10 @@ export const updateInternshipStatus = async (req: AuthRequest, res: Response, ne
             return;
         }
 
-        internship.isActive = isActive;
+        internship.status = status;
         await internship.save();
 
-        res.status(200).json({ success: true, message: `Internship ${isActive ? 'approved' : 'rejected'}`, data: internship });
+        res.status(200).json({ success: true, message: `Internship ${status}`, data: internship });
     } catch (error) {
         if (error instanceof z.ZodError) {
             res.status(400).json({ success: false, message: 'Validation error', errors: error.errors });
@@ -675,7 +674,7 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
 
         // 6. Most In-Demand Skills
         const skillStats = await Internship.aggregate([
-            { $match: { isActive: true } },
+            { $match: { status: 'active' } },
             { $unwind: "$skillsRequired" },
             {
                 $group: {

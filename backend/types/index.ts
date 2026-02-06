@@ -91,7 +91,6 @@ export interface IInternship extends Document {
     mode: InternshipMode;
     openings: number;
     createdAt: Date;
-    isActive: boolean;
     status: 'active' | 'inactive' | 'completed' | 'in_progress' | 'rejected';
     location?: string;
     deadline?: Date;

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Search, Filter, AlertCircle, CheckCircle, XCircle, Eye, Clock, User, Briefcase, MessageSquare, Loader2, X } from 'lucide-react'
 import api from '@/lib/api'
 import ChatInterface from '@/components/messages/ChatInterface'
+import { useAlert } from '@/components/ui/AlertProvider'
 
 interface Report {
   id: string
@@ -24,6 +25,7 @@ interface Report {
 }
 
 export default function ManageReports() {
+  const { showAlert, showConfirm } = useAlert()
   const [reports, setReports] = useState<Report[]>([])
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [loading, setLoading] = useState(true)
@@ -98,19 +100,26 @@ export default function ManageReports() {
   }, [debouncedSearch, filterStatus, filterPriority])
 
   const handleAction = async (id: string, action: 'under_review' | 'resolved' | 'dismissed') => {
-    if (!confirm(`Are you sure you want to mark this report as ${action.replace('_', ' ')}?`)) return
+    showConfirm({
+      title: 'Update Report Status',
+      message: `Are you sure you want to mark this report as ${action.replace('_', ' ')}?`,
+      type: action === 'dismissed' ? 'danger' : 'warning',
+      confirmText: 'Confirm',
+      onConfirm: async () => {
+        try {
+          const updates: any = { status: action }
+          if (action === 'resolved') updates.resolution = 'Resolved by admin'
+          if (action === 'dismissed') updates.resolution = 'Dismissed by admin'
 
-    try {
-      const updates: any = { status: action }
-      if (action === 'resolved') updates.resolution = 'Resolved by admin' // Simple default
-      if (action === 'dismissed') updates.resolution = 'Dismissed by admin'
-
-      await api.put(`/admin/reports/${id}`, updates)
-      fetchData()
-    } catch (error) {
-      console.error(`Error updating report status to ${action}:`, error)
-      alert(`Failed to update report status`)
-    }
+          await api.put(`/admin/reports/${id}`, updates)
+          showAlert(`Report ${action.replace('_', ' ')} successfully`, 'success')
+          fetchData()
+        } catch (error) {
+          console.error(`Error updating report status to ${action}:`, error)
+          showAlert('Failed to update report status', 'error')
+        }
+      }
+    })
   }
 
   const getStatusColor = (status: string) => {

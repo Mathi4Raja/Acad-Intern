@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { IndianRupee, Calendar, MapPin, Clock, Users, Briefcase, FileText, Plus, X, Loader2 } from 'lucide-react'
+import { IndianRupee, Calendar, MapPin, Clock, Users, Briefcase, FileText, Plus, X, Loader2, PlusCircle } from 'lucide-react'
 import api from '@/lib/api'
+import { useAlert } from '@/components/ui/AlertProvider'
 
 export default function PostInternship() {
   const router = useRouter()
+  const { showAlert } = useAlert()
   const [loading, setLoading] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -87,25 +89,43 @@ export default function PostInternship() {
         ? '\n' + error.response.data.errors.map((e: any) => `• ${e.path}: ${e.message}`).join('\n')
         : ''
 
-      alert(errorMsg + validationErrors)
+      showAlert(errorMsg + validationErrors, 'error')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-3 sm:p-4">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Post New Internship</h1>
-        <p className="text-sm sm:text-base text-gray-600">Fill in the details to create a new internship opportunity</p>
+    <div className="max-w-5xl mx-auto p-2 sm:p-3">
+      {/* Header */}
+      <div className="mb-6 flex flex-col items-center sm:flex-row justify-between gap-4">
+        <div className="bg-gradient-to-br from-white to-blue-50/50 rounded-2xl shadow-sm border border-blue-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
+          <div className="relative z-10 flex items-center gap-3">
+            <div className="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
+              <PlusCircle size={20} className="fill-blue-400/20" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight">
+                Post New Internship
+              </h1>
+              <p className="text-xs text-gray-600 font-medium">
+                Fill in the details to create a new internship opportunity
+              </p>
+            </div>
+          </div>
+
+          {/* Decorative elements */}
+          <div className="absolute -right-6 -top-6 w-20 h-20 bg-blue-100/50 rounded-full blur-2xl group-hover:bg-blue-100/80 transition-colors" />
+          <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-indigo-100/50 rounded-full blur-2xl group-hover:bg-indigo-100/80 transition-colors" />
+        </div>
       </div>
 
       {!showPreview ? (
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8">
+        <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">
           {/* Basic Information */}
-          <div className="mb-6 sm:mb-8">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
-              <Briefcase size={20} />
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+              <Briefcase size={18} />
               Basic Information
             </h2>
 
@@ -120,7 +140,7 @@ export default function PostInternship() {
                   value={formData.title}
                   onChange={handleInputChange}
                   placeholder="e.g., Frontend Developer Intern"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   required
                 />
               </div>
@@ -131,14 +151,14 @@ export default function PostInternship() {
                     Duration (months) *
                   </label>
                   <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <Clock className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <input
                       type="number"
                       name="duration"
                       value={formData.duration}
                       onChange={handleInputChange}
                       placeholder="3"
-                      className="w-full pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       required
                     />
                   </div>
@@ -149,14 +169,14 @@ export default function PostInternship() {
                     Stipend (₹/month) *
                   </label>
                   <div className="relative">
-                    <IndianRupee className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <IndianRupee className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <input
                       type="number"
                       name="stipend"
                       value={formData.stipend}
                       onChange={handleInputChange}
                       placeholder="15000"
-                      className="w-full pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       required
                     />
                   </div>
@@ -167,14 +187,14 @@ export default function PostInternship() {
                     No. of Positions *
                   </label>
                   <div className="relative">
-                    <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <Users className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <input
                       type="number"
                       name="positions"
                       value={formData.positions}
                       onChange={handleInputChange}
                       placeholder="2"
-                      className="w-full pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       required
                     />
                   </div>
@@ -187,14 +207,14 @@ export default function PostInternship() {
                     Location *
                   </label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <MapPin className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                     <input
                       type="text"
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
                       placeholder="Bangalore, Karnataka"
-                      className="w-full pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       required
                     />
                   </div>
@@ -208,7 +228,7 @@ export default function PostInternship() {
                     name="mode"
                     value={formData.mode}
                     onChange={handleInputChange}
-                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     required
                   >
                     <option value="remote">Remote</option>
@@ -223,13 +243,13 @@ export default function PostInternship() {
                   Application Deadline *
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Calendar className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                   <input
                     type="date"
                     name="deadline"
                     value={formData.deadline}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     required
                   />
                 </div>
@@ -255,7 +275,7 @@ export default function PostInternship() {
                   onChange={handleInputChange}
                   placeholder="Describe the internship opportunity, company culture, and what makes this position exciting..."
                   rows={4}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   required
                 />
               </div>
@@ -270,7 +290,7 @@ export default function PostInternship() {
                   onChange={handleInputChange}
                   placeholder="List the key responsibilities and day-to-day tasks..."
                   rows={4}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   required
                 />
               </div>
@@ -285,7 +305,7 @@ export default function PostInternship() {
                   onChange={handleInputChange}
                   placeholder="List the required qualifications, skills, and experience..."
                   rows={4}
-                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   required
                 />
               </div>
@@ -312,7 +332,7 @@ export default function PostInternship() {
                     }
                   }}
                   placeholder="Type a skill and press Enter"
-                  className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="flex-1 px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
                 <button
                   type="button"
@@ -397,16 +417,16 @@ export default function PostInternship() {
           </div>
         </form>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 lg:p-8">
-          <div className="mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Preview</h2>
-            <p className="text-sm sm:text-base text-gray-600">Review your internship posting before publishing</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">
+          <div className="mb-4">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Preview</h2>
+            <p className="text-xs sm:text-sm text-gray-600">Review your internship posting before publishing</p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
-              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">{formData.title || 'Internship Title'}</h3>
-              <div className="flex flex-wrap gap-3 sm:gap-4 text-sm text-gray-600">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3">{formData.title || 'Internship Title'}</h3>
+              <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
                 <span className="flex items-center gap-1.5">
                   <MapPin size={16} />
                   {formData.location || 'Location'} • {formData.mode}
@@ -428,28 +448,28 @@ export default function PostInternship() {
 
             {formData.description && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Description</h4>
-                <p className="text-gray-600 text-sm sm:text-base whitespace-pre-line">{formData.description}</p>
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm">Description</h4>
+                <p className="text-gray-600 text-xs sm:text-sm whitespace-pre-line">{formData.description}</p>
               </div>
             )}
 
             {formData.responsibilities && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Responsibilities</h4>
-                <p className="text-gray-600 text-sm sm:text-base whitespace-pre-line">{formData.responsibilities}</p>
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm">Responsibilities</h4>
+                <p className="text-gray-600 text-xs sm:text-sm whitespace-pre-line">{formData.responsibilities}</p>
               </div>
             )}
 
             {formData.requirements && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Requirements</h4>
-                <p className="text-gray-600 text-sm sm:text-base whitespace-pre-line">{formData.requirements}</p>
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm">Requirements</h4>
+                <p className="text-gray-600 text-xs sm:text-sm whitespace-pre-line">{formData.requirements}</p>
               </div>
             )}
 
             {formData.skills.length > 0 && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Required Skills</h4>
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm">Required Skills</h4>
                 <div className="flex flex-wrap gap-2">
                   {formData.skills.map((skill) => (
                     <span key={skill} className="px-3 py-1.5 bg-primary/20 text-primary rounded-full text-xs sm:text-sm font-medium">
@@ -462,22 +482,22 @@ export default function PostInternship() {
 
             {formData.deadline && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Application Deadline</h4>
-                <p className="text-gray-600 text-sm sm:text-base">{formData.deadline}</p>
+                <h4 className="font-semibold text-gray-900 mb-1 text-sm">Application Deadline</h4>
+                <p className="text-gray-600 text-xs sm:text-sm">{formData.deadline}</p>
               </div>
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 sm:mt-8 pt-6 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 border-t border-gray-200">
             <button
               onClick={() => setShowPreview(false)}
-              className="w-full sm:w-auto px-6 py-2.5 sm:py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold text-sm sm:text-base"
+              className="w-full sm:w-auto px-5 py-2 sm:py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold text-xs sm:text-sm"
             >
               Back to Edit
             </button>
             <button
               onClick={handleSubmit}
-              className="w-full sm:flex-1 px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
+              className="w-full sm:flex-1 px-5 py-2 sm:py-2.5 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-semibold text-xs sm:text-sm flex items-center justify-center gap-2"
               disabled={loading}
             >
               {loading ? (

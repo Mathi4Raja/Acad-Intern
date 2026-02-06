@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, X, Loader2, FileText } from 'lucide-react';
+import { useAlert } from '@/components/ui/AlertProvider';
 
 interface MobileMessageInputProps {
     value: string;
@@ -26,6 +27,7 @@ export default function MobileMessageInput({
     disabled = false,
     placeholder = "Type your message..."
 }: MobileMessageInputProps) {
+    const { showAlert } = useAlert();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isFocused, setIsFocused] = useState(false);
@@ -49,11 +51,11 @@ export default function MobileMessageInput({
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         const validFiles = files.filter(file => file.size <= 15 * 1024 * 1024);
-        
+
         if (validFiles.length !== files.length) {
-            alert('Some files were too large (max 15MB)');
+            showAlert('Some files were too large (max 15MB)', 'warning');
         }
-        
+
         onFileSelect(validFiles);
         // Reset input
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -104,9 +106,8 @@ export default function MobileMessageInput({
 
             {/* Input Area */}
             <div className="p-4">
-                <div className={`flex items-center gap-3 transition-all duration-200 ${
-                    isFocused ? 'transform scale-[1.02]' : ''
-                }`}>
+                <div className={`flex items-center gap-3 transition-all duration-200 ${isFocused ? 'transform scale-[1.02]' : ''
+                    }`}>
                     <input
                         ref={fileInputRef}
                         type="file"
@@ -135,15 +136,14 @@ export default function MobileMessageInput({
                             onFocus={() => setIsFocused(true)}
                             onBlur={() => setIsFocused(false)}
                             placeholder={placeholder}
-                            className={`w-full px-4 py-3 bg-gray-50 border-2 rounded-2xl resize-none transition-all outline-none max-h-[120px] min-h-[48px] ${
-                                isFocused 
-                                    ? 'border-primary bg-white shadow-lg shadow-primary/10' 
+                            className={`w-full px-4 py-3 bg-gray-50 border-2 rounded-2xl resize-none transition-all outline-none max-h-[120px] min-h-[48px] ${isFocused
+                                    ? 'border-primary bg-white shadow-lg shadow-primary/10'
                                     : 'border-gray-200 hover:border-gray-300'
-                            }`}
+                                }`}
                             rows={1}
                             disabled={sending || disabled}
                         />
-                        
+
                         {/* Character count for long messages */}
                         {value.length > 500 && (
                             <div className="absolute -top-6 right-2 text-xs text-gray-400">
@@ -156,27 +156,24 @@ export default function MobileMessageInput({
                     <button
                         onClick={onSend}
                         disabled={sending || disabled || (!value.trim() && attachments.length === 0)}
-                        className={`group relative flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 transform ${
-                            sending || disabled || (!value.trim() && attachments.length === 0)
+                        className={`group relative flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 transform ${sending || disabled || (!value.trim() && attachments.length === 0)
                                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed scale-90'
                                 : 'bg-primary text-white hover:bg-primary-dark hover:scale-110 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-primary/40'
-                        }`}
+                            }`}
                     >
-                        <div className={`absolute inset-0 rounded-full transition-all duration-300 ${
-                            !(sending || disabled || (!value.trim() && attachments.length === 0))
+                        <div className={`absolute inset-0 rounded-full transition-all duration-300 ${!(sending || disabled || (!value.trim() && attachments.length === 0))
                                 ? 'group-hover:bg-white/20 group-active:bg-white/30'
                                 : ''
-                        }`} />
+                            }`} />
                         {sending ? (
                             <Loader2 className="w-4 h-4 animate-spin relative z-10" />
                         ) : (
-                            <Send className={`w-4 h-4 relative z-10 transition-transform duration-200 ${
-                                !(sending || disabled || (!value.trim() && attachments.length === 0))
+                            <Send className={`w-4 h-4 relative z-10 transition-transform duration-200 ${!(sending || disabled || (!value.trim() && attachments.length === 0))
                                     ? 'group-hover:translate-x-0.5 group-hover:-translate-y-0.5'
                                     : ''
-                            }`} />
+                                }`} />
                         )}
-                        
+
                         {/* Ripple effect */}
                         {!(sending || disabled || (!value.trim() && attachments.length === 0)) && (
                             <div className="absolute inset-0 rounded-full opacity-0 group-active:opacity-100 group-active:animate-ping bg-primary/30 transition-opacity duration-150" />
