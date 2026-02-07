@@ -15,6 +15,7 @@ import { activeUsers } from '../utils/socketHandler';
 export const getConversations = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         const userId = req.user?._id;
+        const StudentProfile = require('../models/StudentProfile').default;
 
         // Get all applications where user is either student or company owner
         let applications;
@@ -24,6 +25,7 @@ export const getConversations = async (req: AuthRequest, res: Response, next: Ne
                     path: 'internshipId',
                     populate: {
                         path: 'companyId',
+                        select: 'companyName logo userId',
                         populate: {
                             path: 'userId',
                             select: 'name email'
@@ -56,6 +58,7 @@ export const getConversations = async (req: AuthRequest, res: Response, next: Ne
                     path: 'internshipId',
                     populate: {
                         path: 'companyId',
+                        select: 'companyName logo userId',
                         populate: {
                             path: 'userId',
                             select: 'name email'
@@ -72,9 +75,20 @@ export const getConversations = async (req: AuthRequest, res: Response, next: Ne
             return;
         }
 
+        // Get student profile pictures for all students in one query
+        const studentIds = applications.map((app: any) => app.studentId?._id || app.studentId);
+        const studentProfiles = await StudentProfile.find({ userId: { $in: studentIds } })
+            .select('userId profilePicture');
+
+        // Create a map of userId -> profilePicture
+        const profilePictureMap = new Map();
+        studentProfiles.forEach((profile: any) => {
+            profilePictureMap.set(profile.userId.toString(), profile.profilePicture);
+        });
+
         // Get last message and unread count for each application
         const conversations = await Promise.all(
-            applications.map(async (app) => {
+            applications.map(async (app: any) => {
                 const lastMessage = await Message.findOne({ applicationId: app._id })
                     .sort({ createdAt: -1 });
 
@@ -84,10 +98,16 @@ export const getConversations = async (req: AuthRequest, res: Response, next: Ne
                     status: { $ne: 'seen' }
                 });
 
+                // Get the student's profile picture
+                const studentId = app.studentId?._id?.toString() || app.studentId?.toString();
+                const studentProfilePicture = profilePictureMap.get(studentId) || null;
+
                 return {
                     application: app,
                     lastMessage,
-                    unreadCount
+                    unreadCount,
+                    studentProfilePicture,
+                    companyLogo: app.internshipId?.companyId?.logo || null
                 };
             })
         );
@@ -107,6 +127,7 @@ export const getConversations = async (req: AuthRequest, res: Response, next: Ne
         next(error);
     }
 };
+
 
 // @desc    Get messages for a specific application
 // @route   GET /api/messages/application/:applicationId

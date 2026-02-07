@@ -10,6 +10,8 @@ const companySchema = z.object({
     website: z.string().url().optional().or(z.literal('')),
     description: z.string().optional(),
     cin: z.string().optional().or(z.literal('')),
+    logo: z.string().url().optional().or(z.literal('')).nullable(),
+    banner: z.string().url().optional().or(z.literal('')).nullable(),
     location: z.string().optional(),
     industry: z.string().optional(),
     companySize: z.string().optional(),
@@ -67,16 +69,29 @@ export const updateProfile = async (req: AuthRequest, res: Response, next: NextF
         }
 
         // Update basic fields
-        if (validatedData.companyName) profile.companyName = validatedData.companyName;
+        if (validatedData.companyName) {
+            // If company name changes on a verified company, reset verification
+            // CIN is tied to the registered company name from MCA
+            if (profile.verified && profile.companyName !== validatedData.companyName) {
+                profile.verified = false;
+            }
+            profile.companyName = validatedData.companyName;
+        }
         if (validatedData.website !== undefined) profile.website = validatedData.website || undefined;
         if (validatedData.description !== undefined) profile.description = validatedData.description;
 
         // Update CIN (only store it, verification is separate)
         if (validatedData.cin !== undefined) {
-            profile.cin = validatedData.cin.toUpperCase().trim() || undefined;
-            // If CIN is removed/changed, reset verified status
-            if (!validatedData.cin) {
-                profile.verified = false;
+            const newCin = validatedData.cin.toUpperCase().trim() || undefined;
+            const existingCin = profile.cin;
+
+            // Only update if the CIN is actually changing
+            if (newCin !== existingCin) {
+                profile.cin = newCin;
+                // If CIN is removed or changed, reset verified status
+                if (!newCin || (existingCin && newCin !== existingCin)) {
+                    profile.verified = false;
+                }
             }
         }
 
@@ -89,6 +104,10 @@ export const updateProfile = async (req: AuthRequest, res: Response, next: NextF
         if (validatedData.about !== undefined) profile.about = validatedData.about;
         if (validatedData.benefits !== undefined) profile.benefits = validatedData.benefits;
         if (validatedData.socialLinks) profile.socialLinks = validatedData.socialLinks;
+
+        // Update logo and banner
+        if (validatedData.logo !== undefined) profile.logo = validatedData.logo || undefined;
+        if (validatedData.banner !== undefined) profile.banner = validatedData.banner || undefined;
 
         await profile.save();
 

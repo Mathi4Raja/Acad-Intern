@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -49,6 +49,7 @@ export default function InternshipDetailPage() {
     const [internship, setInternship] = useState<InternshipDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const viewIncrementedRef = useRef(false)
 
     useEffect(() => {
         if (id) {
@@ -59,8 +60,11 @@ export default function InternshipDetailPage() {
     const fetchInternship = async () => {
         try {
             setLoading(true)
-            // Increment views
-            api.patch(`/internships/${id}/views`).catch(err => console.error('Failed to increment views:', err))
+            // Increment views only once (prevent double count from React Strict Mode)
+            if (!viewIncrementedRef.current) {
+                viewIncrementedRef.current = true
+                api.patch(`/internships/${id}/views`).catch(err => console.error('Failed to increment views:', err))
+            }
 
             const response = await api.get(`/internships/${id}`)
             if (response.data.success) {

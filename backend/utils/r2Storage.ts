@@ -67,7 +67,7 @@ export const uploadToR2 = async (
     mimetype: string,
     username?: string,
     existingUrl?: string,
-    fileType: 'resume' | 'profilePicture' | 'bannerImage' | 'message' = 'resume'
+    fileType: 'resume' | 'profilePicture' | 'bannerImage' | 'message' | 'companyLogo' | 'companyBanner' = 'resume'
 ): Promise<UploadResult> => {
     // Generate filename based on username for consistency
     const ext = path.extname(originalFilename).toLowerCase();
@@ -88,6 +88,12 @@ export const uploadToR2 = async (
     } else if (fileType === 'message') {
         folder = 'messages';
         suffix = 'attachment';
+    } else if (fileType === 'companyLogo') {
+        folder = 'companies/profiles';
+        suffix = 'logo';
+    } else if (fileType === 'companyBanner') {
+        folder = 'companies/banners';
+        suffix = 'banner';
     }
 
     // Sanitize username or use timestamp

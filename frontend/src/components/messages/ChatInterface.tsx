@@ -51,6 +51,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
     const [reporting, setReporting] = useState(false);
     const [muting, setMuting] = useState(false);
     const [applicationData, setApplicationData] = useState<any>(null);
+    const [otherPartyProfilePic, setOtherPartyProfilePic] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
     // Outside click for menu
@@ -84,6 +85,12 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                 const res = await applicationsApi.get(applicationId);
                 if (res.data.success) {
                     setApplicationData(res.data.data);
+                    // Set profile picture based on user role
+                    if (user?.role === 'student') {
+                        setOtherPartyProfilePic(res.data.companyLogo || null);
+                    } else {
+                        setOtherPartyProfilePic(res.data.studentProfilePicture || null);
+                    }
                 }
             } catch (err) {
                 console.error('Failed to fetch application details:', err);
@@ -554,7 +561,19 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
 
                 {/* User Info */}
                 <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary font-bold shadow-inner flex-shrink-0 text-sm md:text-base">
+                    {otherPartyProfilePic ? (
+                        <img
+                            src={otherPartyProfilePic}
+                            alt={otherPartyName}
+                            className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover shadow-inner flex-shrink-0"
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                target.nextElementSibling?.classList.remove('hidden');
+                            }}
+                        />
+                    ) : null}
+                    <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary font-bold shadow-inner flex-shrink-0 text-sm md:text-base ${otherPartyProfilePic ? 'hidden' : ''}`}>
                         {otherPartyName.charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">

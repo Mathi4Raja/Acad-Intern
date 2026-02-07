@@ -200,12 +200,32 @@ export default function ConversationList({
                                 <div className="flex gap-3">
                                     {/* Avatar */}
                                     <div className="relative flex-shrink-0">
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shadow-sm transition-transform group-active:scale-95
-                                            ${isSelected
+                                        {(() => {
+                                            // Determine which profile picture to show based on current user role
+                                            const profilePicture = currentUserRole === 'student'
+                                                ? (conv as any).companyLogo
+                                                : (conv as any).studentProfilePicture;
+
+                                            return profilePicture ? (
+                                                <img
+                                                    src={profilePicture}
+                                                    alt={otherParty}
+                                                    className={`w-12 h-12 rounded-full object-cover shadow-sm transition-transform group-active:scale-95 ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
+                                                        }`}
+                                                    onError={(e) => {
+                                                        // Fallback to initial on error
+                                                        const target = e.target as HTMLImageElement;
+                                                        target.style.display = 'none';
+                                                        target.nextElementSibling?.classList.remove('hidden');
+                                                    }}
+                                                />
+                                            ) : null;
+                                        })()}
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shadow-sm transition-transform group-active:scale-95 ${(currentUserRole === 'student' ? (conv as any).companyLogo : (conv as any).studentProfilePicture) ? 'hidden' : ''
+                                            } ${isSelected
                                                 ? 'bg-primary text-white'
                                                 : 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600'
-                                            }`}
-                                        >
+                                            }`}>
                                             {otherParty.charAt(0).toUpperCase()}
                                         </div>
                                         {/* Unread indicator (dot) */}

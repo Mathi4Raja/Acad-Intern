@@ -239,7 +239,7 @@ export const getApplication = async (req: AuthRequest, res: Response, next: Next
                 path: 'internshipId',
                 populate: {
                     path: 'companyId',
-                    select: 'companyName userId website'
+                    select: 'companyName userId website logo'
                 }
             })
             .populate('studentId', 'name email');
@@ -265,9 +265,16 @@ export const getApplication = async (req: AuthRequest, res: Response, next: Next
             return;
         }
 
+        // Fetch student profile picture
+        const StudentProfile = require('../models/StudentProfile').default;
+        const studentProfile = await StudentProfile.findOne({ userId: application.studentId._id })
+            .select('profilePicture');
+
         res.status(200).json({
             success: true,
-            data: application
+            data: application,
+            studentProfilePicture: studentProfile?.profilePicture || null,
+            companyLogo: internship?.companyId?.logo || null
         });
     } catch (error) {
         next(error);

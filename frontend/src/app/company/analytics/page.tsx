@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Users, Briefcase, CheckCircle, Clock, Target, TrendingUp, BarChart3, Loader2 } from 'lucide-react'
-import { StatCard, BarChart, LineChart } from '@/components/analytics'
+import { StatCard, BarChart, LineChart, DonutChart, LeaderboardChart, AreaChart, VerticalBarChart } from '@/components/analytics'
 import api from '@/lib/api'
 import { useAuth } from '@/lib/AuthContext'
 
@@ -18,8 +18,8 @@ export default function CompanyAnalyticsPage() {
     })
 
     const [internships, setInternships] = useState<any[]>([])
-
     const [internshipPerformance, setInternshipPerformance] = useState<{ label: string; value: number; color: string }[]>([])
+    const [remainingAppsCount, setRemainingAppsCount] = useState(0)
     const [conversionFunnel, setConversionFunnel] = useState<{ stage: string; count: number; percent: number }[]>([])
     const [topSkillsApplied, setTopSkillsApplied] = useState<{ skill: string; count: number }[]>([])
     const [applicationTrend, setApplicationTrend] = useState<{ label: string; value: number }[]>([])
@@ -76,16 +76,28 @@ export default function CompanyAnalyticsPage() {
                 })
 
                 // Internship performance chart
-                setInternshipPerformance(
-                    internshipAppCounts
-                        .sort((a, b) => b.count - a.count)
-                        .slice(0, 5)
-                        .map((item, idx) => ({
-                            label: item.title,
-                            value: item.count,
-                            color: colors[idx % colors.length]
-                        }))
-                )
+                const sortedInternshipApps = internshipAppCounts.sort((a, b) => b.count - a.count)
+                const top5 = sortedInternshipApps.slice(0, 5)
+                const remaining = sortedInternshipApps.slice(5)
+                const remainingTotal = remaining.reduce((sum, item) => sum + item.count, 0)
+
+                const chartData = top5.map((item, idx) => ({
+                    label: item.title,
+                    value: item.count,
+                    color: colors[idx % colors.length]
+                }))
+
+                // Add "Others" bar if there are remaining applications
+                if (remainingTotal > 0) {
+                    chartData.push({
+                        label: `Others (${remaining.length} more)`,
+                        value: remainingTotal,
+                        color: 'bg-gray-400'
+                    })
+                }
+
+                setInternshipPerformance(chartData)
+                setRemainingAppsCount(remainingTotal)
 
                 // Conversion funnel
                 setConversionFunnel([
@@ -111,9 +123,14 @@ export default function CompanyAnalyticsPage() {
                 })
 
                 const sortedMonths = Object.keys(monthCounts).sort((a, b) => {
-                    const dateA = new Date(a)
-                    const dateB = new Date(b)
-                    return dateA.getTime() - dateB.getTime()
+                    // Parse "Jan 26" format: extract month and year
+                    const parseMonthYear = (str: string) => {
+                        const [month, year] = str.split(' ')
+                        const monthIndex = new Date(`${month} 1, 2000`).getMonth()
+                        const fullYear = 2000 + parseInt(year)
+                        return new Date(fullYear, monthIndex, 1)
+                    }
+                    return parseMonthYear(a).getTime() - parseMonthYear(b).getTime()
                 })
 
                 setApplicationTrend(
@@ -207,24 +224,24 @@ export default function CompanyAnalyticsPage() {
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                 {applicationTrend.length > 0 && (
-                    <LineChart
-                        title="Applications Over Time"
+                    <VerticalBarChart
                         data={applicationTrend}
-                        height={180}
+                        title="Applications Overview"
+                        height={200}
+                        className="h-full"
                     />
                 )}
 
                 {/* Most Viewed Internships */}
                 {internships.length > 0 ? (
-                    <BarChart
+                    <LeaderboardChart
                         title="Most Viewed Internships"
                         data={internships
                             .sort((a: any, b: any) => (b.views || 0) - (a.views || 0))
                             .slice(0, 5)
-                            .map((intern: any, idx: number) => ({
-                                label: intern.title.length > 20 ? intern.title.slice(0, 20) + '...' : intern.title,
-                                value: intern.views || 0,
-                                color: ['bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'][idx % 5]
+                            .map((intern: any) => ({
+                                label: intern.title.length > 18 ? intern.title.slice(0, 18) + '...' : intern.title,
+                                value: intern.views || 0
                             }))}
                     />
                 ) : (

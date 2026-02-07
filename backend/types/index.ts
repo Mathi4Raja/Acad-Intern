@@ -62,6 +62,7 @@ export interface ICompany extends Document {
     verified: boolean;
     cin?: string;
     logo?: string;
+    banner?: string;
     location?: string;
     industry?: string;
     companySize?: string;

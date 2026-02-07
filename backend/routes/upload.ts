@@ -5,6 +5,7 @@ import { uploadToR2, isR2Configured, getKeyFromUrl, getFileStream } from '../uti
 import { protect } from '../middleware/auth';
 import { AuthRequest } from '../types';
 import StudentProfile from '../models/StudentProfile';
+import Company from '../models/Company';
 
 const router = Router();
 
@@ -67,7 +68,7 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
         const allowResumeSetting = settings.find(s => s.key === 'allowResumeUpload');
 
         // Get metadata
-        const type = req.body.type as 'resume' | 'profilePicture' | 'bannerImage' || 'resume';
+        const type = req.body.type as 'resume' | 'profilePicture' | 'bannerImage' | 'companyLogo' | 'companyBanner' || 'resume';
 
         // 1. Check if Resume Upload is Allowed
         if (type === 'resume') {
@@ -101,16 +102,25 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
             return;
         }
 
-
-
         // Get existing URL for replacement (delete old file)
         let existingUrl: string | undefined;
         if (req.user) {
-            const profile = await StudentProfile.findOne({ userId: req.user._id });
-            if (profile) {
-                if (type === 'resume') existingUrl = profile.resumeUrl;
-                else if (type === 'profilePicture') existingUrl = profile.profilePicture;
-                else if (type === 'bannerImage') existingUrl = profile.bannerImage;
+            // Handle student file types
+            if (type === 'resume' || type === 'profilePicture' || type === 'bannerImage') {
+                const profile = await StudentProfile.findOne({ userId: req.user._id });
+                if (profile) {
+                    if (type === 'resume') existingUrl = profile.resumeUrl;
+                    else if (type === 'profilePicture') existingUrl = profile.profilePicture;
+                    else if (type === 'bannerImage') existingUrl = profile.bannerImage;
+                }
+            }
+            // Handle company file types
+            else if (type === 'companyLogo' || type === 'companyBanner') {
+                const company = await Company.findOne({ userId: req.user._id });
+                if (company) {
+                    if (type === 'companyLogo') existingUrl = company.logo;
+                    else if (type === 'companyBanner') existingUrl = company.banner;
+                }
             }
         }
 

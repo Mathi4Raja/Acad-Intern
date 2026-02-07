@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -40,11 +40,16 @@ export default function PublicInternshipDetailPage() {
     const [internship, setInternship] = useState<InternshipDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const viewIncrementedRef = useRef(false)
 
     useEffect(() => {
         if (id) {
             fetchInternship()
-            incrementViews()
+            // Increment views only once (prevent double count from React Strict Mode)
+            if (!viewIncrementedRef.current) {
+                viewIncrementedRef.current = true
+                incrementViews()
+            }
         }
     }, [id])
 

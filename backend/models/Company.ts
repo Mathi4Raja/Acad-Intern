@@ -36,6 +36,10 @@ const companySchema = new Schema<ICompany>({
         type: String,
         default: null
     },
+    banner: {
+        type: String,
+        default: null
+    },
     location: {
         type: String,
         default: ''

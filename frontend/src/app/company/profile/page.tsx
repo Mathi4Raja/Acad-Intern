@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Building, Mail, Phone, MapPin, Globe, Users, Edit, Save, X, Briefcase, Calendar, CheckCircle, Upload, AlertCircle, Shield, Loader2, Trash2, AlertTriangle } from 'lucide-react'
+import { Building, Mail, Phone, MapPin, Globe, Users, Edit, Save, X, Briefcase, Calendar, CheckCircle, Upload, AlertCircle, Shield, Loader2, Trash2, AlertTriangle, Camera } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuth } from '@/lib/AuthContext'
 
@@ -13,6 +13,7 @@ interface CompanyProfile {
   verified: boolean;
   cin?: string;
   logo?: string;
+  banner?: string;
   location?: string;
   industry?: string;
   companySize?: string;
@@ -53,6 +54,12 @@ export default function CompanyProfilePage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // File state for deferred upload with local preview
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+
   const [profile, setProfile] = useState<CompanyProfile | null>(null)
   const [formData, setFormData] = useState({
     companyName: '',
@@ -78,6 +85,28 @@ export default function CompanyProfilePage() {
   useEffect(() => {
     fetchProfile()
   }, [])
+
+  // Handle local preview for logo
+  useEffect(() => {
+    if (logoFile) {
+      const url = URL.createObjectURL(logoFile)
+      setLogoPreview(url)
+      return () => URL.revokeObjectURL(url)
+    } else {
+      setLogoPreview(null)
+    }
+  }, [logoFile])
+
+  // Handle local preview for banner
+  useEffect(() => {
+    if (bannerFile) {
+      const url = URL.createObjectURL(bannerFile)
+      setBannerPreview(url)
+      return () => URL.revokeObjectURL(url)
+    } else {
+      setBannerPreview(null)
+    }
+  }, [bannerFile])
 
   const fetchProfile = async () => {
     try {
@@ -129,14 +158,96 @@ export default function CompanyProfilePage() {
     })
   }
 
+  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB')
+      return
+    }
+
+    setLogoFile(file)
+  }
+
+  const handleBannerSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB')
+      return
+    }
+
+    setBannerFile(file)
+  }
+
   const handleSave = async () => {
     try {
       setIsSaving(true)
-      const response = await api.post('/companies', formData)
+
+      let updatedLogoUrl = profile?.logo
+      let updatedBannerUrl = profile?.banner
+
+      // Upload logo if selected
+      if (logoFile) {
+        try {
+          const formDataUpload = new FormData()
+          formDataUpload.append('file', logoFile)
+          formDataUpload.append('type', 'companyLogo')
+          const uploadResponse = await api.post('/upload', formDataUpload, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+          if (uploadResponse.data.success) {
+            updatedLogoUrl = uploadResponse.data.data.url
+          }
+        } catch (err) {
+          console.error('Failed to upload logo:', err)
+          alert('Failed to upload logo')
+          return
+        }
+      }
+
+      // Upload banner if selected
+      if (bannerFile) {
+        try {
+          const formDataUpload = new FormData()
+          formDataUpload.append('file', bannerFile)
+          formDataUpload.append('type', 'companyBanner')
+          const uploadResponse = await api.post('/upload', formDataUpload, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+          if (uploadResponse.data.success) {
+            updatedBannerUrl = uploadResponse.data.data.url
+          }
+        } catch (err) {
+          console.error('Failed to upload banner:', err)
+          alert('Failed to upload banner')
+          return
+        }
+      }
+
+      const response = await api.post('/companies', {
+        ...formData,
+        logo: updatedLogoUrl,
+        banner: updatedBannerUrl
+      })
 
       if (response.data.success) {
         setProfile(response.data.data)
         setIsEditing(false)
+        setLogoFile(null)
+        setBannerFile(null)
       }
     } catch (error) {
       console.error('Error saving profile:', error)
@@ -225,56 +336,125 @@ export default function CompanyProfilePage() {
 
   return (
     <div className="max-w-5xl mx-auto p-2 sm:p-3">
-      {/* Header */}
-      <div className="mb-6 flex flex-col items-center sm:flex-row justify-between gap-4">
-        <div className="bg-gradient-to-br from-white to-teal-50/50 rounded-2xl shadow-sm border border-teal-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
-          <div className="relative z-10 flex items-center gap-3">
-            <div className="p-2 bg-teal-600 rounded-lg text-white shadow-lg shadow-teal-500/20 group-hover:scale-105 transition-transform duration-300">
-              <Building size={20} className="fill-teal-400/20" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight">
-                Company Profile
-              </h1>
-              <p className="text-xs text-gray-600 font-medium">
-                Manage your company information and verification details.
-              </p>
-            </div>
-          </div>
+      {/* Header with Banner & Logo */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4 relative group">
+        {/* Banner Area */}
+        <div className="h-32 sm:h-48 bg-gray-100 relative">
+          {bannerPreview || profile?.banner ? (
+            <img
+              src={bannerPreview || profile?.banner || ''}
+              alt="Banner"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-r from-primary/10 to-secondary/10" />
+          )}
 
-          {/* Decorative elements */}
-          <div className="absolute -right-6 -top-6 w-20 h-20 bg-teal-100/50 rounded-full blur-2xl group-hover:bg-teal-100/80 transition-colors" />
-          <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-cyan-100/50 rounded-full blur-2xl group-hover:bg-cyan-100/80 transition-colors" />
+          {/* Banner Upload Button */}
+          {isEditing && (
+            <div className="absolute top-4 right-4">
+              <input
+                type="file"
+                id="banner-upload"
+                className="hidden"
+                accept="image/*"
+                onChange={handleBannerSelect}
+              />
+              <label
+                htmlFor="banner-upload"
+                className="flex items-center justify-center p-2.5 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white cursor-pointer transition-all shadow-sm"
+              >
+                <Camera size={18} />
+              </label>
+            </div>
+          )}
         </div>
 
-        {!isEditing ? (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm w-full sm:w-auto justify-center shadow-sm"
-          >
-            <Edit size={18} />
-            Edit Profile
-          </button>
-        ) : (
-          <div className="flex gap-2">
-            <button
-              onClick={handleCancel}
-              disabled={isSaving}
-              className="flex items-center gap-1.5 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 text-sm font-medium transition-colors disabled:opacity-50"
-            >
-              <X size={16} />
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-lg hover:bg-primary/90 text-sm font-medium transition-colors disabled:opacity-50 shadow-sm"
-            >
-              {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-              Save
-            </button>
+        {/* Profile Info Row */}
+        <div className="px-4 sm:px-6 pb-6 relative">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end -mt-12 sm:-mt-16">
+
+            {/* Company Logo */}
+            <div className="relative group/logo shrink-0">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl border-4 border-white bg-white shadow-md overflow-hidden relative">
+                {logoPreview || profile?.logo ? (
+                  <img
+                    src={logoPreview || profile?.logo || ''}
+                    alt="Company Logo"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold">
+                    {formData.companyName.charAt(0) || 'C'}
+                  </div>
+                )}
+
+                {/* Logo Upload Overlay */}
+                {isEditing && (
+                  <label
+                    htmlFor="logo-upload"
+                    className="absolute inset-0 bg-black/30 hover:bg-black/50 flex items-center justify-center cursor-pointer opacity-0 group-hover/logo:opacity-100 transition-opacity"
+                  >
+                    <Camera size={24} className="text-white" />
+                  </label>
+                )}
+                <input
+                  type="file"
+                  id="logo-upload"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleLogoSelect}
+                />
+              </div>
+            </div>
+
+            {/* Company Name and Info */}
+            <div className="flex-1 pt-2 sm:pt-0">
+              <h1 className="text-xl sm:text-2xl font-black text-gray-900">{formData.companyName || 'Company Name'}</h1>
+              <div className="flex flex-wrap gap-2 text-sm text-gray-500 mt-1">
+                {formData.industry && <span className="flex items-center gap-1"><Briefcase size={14} /> {formData.industry}</span>}
+                {formData.location && <span className="flex items-center gap-1"><MapPin size={14} /> {formData.location}</span>}
+                {profile?.verified && <span className="flex items-center gap-1 text-green-600"><CheckCircle size={14} /> Verified</span>}
+              </div>
+            </div>
+
+            {/* Edit/Save Actions */}
+            <div className="flex gap-2 mt-4 sm:mt-0 w-full sm:w-auto">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={handleCancel}
+                    disabled={isSaving}
+                    className="flex-1 sm:flex-none px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold transition-all text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="flex-1 sm:flex-none px-6 py-2 bg-gray-900 text-white hover:bg-gray-800 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-gray-900/10 transition-all text-sm"
+                  >
+                    {isSaving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                    <span className="hidden sm:inline">Save Changes</span>
+                    <span className="sm:hidden">Save</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="w-full sm:w-auto px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-black/5 transition-all text-sm"
+                >
+                  <Edit size={16} />
+                  <span>Edit Profile</span>
+                </button>
+              )}
+            </div>
           </div>
-        )}
+          {/* Preview hint */}
+          {isEditing && (logoFile || bannerFile) && (
+            <p className="text-xs text-green-600 font-medium mt-3">Preview shown — click Save to upload</p>
+          )}
+        </div>
       </div>
 
       {/* Verification Status */}
@@ -301,130 +481,113 @@ export default function CompanyProfilePage() {
         </div>
       )}
 
-      {/* CIN Verification Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-          <Shield size={18} />
-          CIN Verification
-        </h2>
+      {/* CIN Verification Section - Only show for unverified companies */}
+      {!profile?.verified && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
+          <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <Shield size={18} />
+            CIN Verification
+          </h2>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Corporate Identification Number (CIN)
-            </label>
-            <input
-              type="text"
-              name="cin"
-              value={formData.cin}
-              onChange={handleInputChange}
-              placeholder="e.g., L74899DL1995PLC069802"
-              maxLength={21}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-mono uppercase"
-            />
-            <p className="text-xs text-gray-500 mt-1">21 characters, format: L74899DL1995PLC069802</p>
-          </div>
-
-          <div className="flex items-end">
-            <button
-              onClick={handleVerifyCin}
-              disabled={isVerifying || !formData.cin || formData.cin.length !== 21}
-              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              {isVerifying ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                <>
-                  <CheckCircle size={16} />
-                  Verify CIN
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {verificationError && (
-          <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-xs text-red-700 flex items-center gap-1">
-              <AlertCircle size={14} />
-              {verificationError}
-            </p>
-          </div>
-        )}
-
-        {/* MCA Details Modal/Section */}
-        {showMcaDetails && mcaDetails && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-green-900 text-sm flex items-center gap-2">
-                <CheckCircle size={16} />
-                Verification Successful
-              </h3>
-              <button
-                onClick={() => setShowMcaDetails(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X size={16} />
-              </button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              <div>
-                <span className="text-gray-600">Company Name:</span>
-                <p className="font-semibold text-gray-900">{mcaDetails.companyName}</p>
-              </div>
-              <div>
-                <span className="text-gray-600">CIN:</span>
-                <p className="font-mono text-gray-900">{mcaDetails.cin}</p>
-              </div>
-              {mcaDetails.registrationDate && (
-                <div>
-                  <span className="text-gray-600">Registration Date:</span>
-                  <p className="text-gray-900">{mcaDetails.registrationDate}</p>
-                </div>
-              )}
-              {mcaDetails.status && (
-                <div>
-                  <span className="text-gray-600">Status:</span>
-                  <p className="text-gray-900">{mcaDetails.status}</p>
-                </div>
-              )}
-              {mcaDetails.registeredOffice && (
-                <div className="sm:col-span-2">
-                  <span className="text-gray-600">Registered Office:</span>
-                  <p className="text-gray-900">{mcaDetails.registeredOffice}</p>
-                </div>
-              )}
-              <div className="sm:col-span-2">
-                <span className="text-gray-500 text-[10px]">
-                  Source: {mcaDetails.source === 'primary' ? 'MCA Corporate Verifications' : 'MCA Company API'}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Logo Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Company Logo</h2>
-        <div className="flex flex-row items-center gap-4">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center text-white text-2xl sm:text-3xl font-bold shadow-lg flex-shrink-0">
-            {formData.companyName.charAt(0) || 'C'}
-          </div>
-          {isEditing && (
+          <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
-              <button className="flex items-center gap-1.5 px-3 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary/10 text-xs sm:text-sm">
-                <Upload size={16} />
-                Upload Logo
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Corporate Identification Number (CIN)
+              </label>
+              <input
+                type="text"
+                name="cin"
+                value={formData.cin}
+                onChange={handleInputChange}
+                placeholder="e.g., L74899DL1995PLC069802"
+                maxLength={21}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-mono uppercase"
+              />
+              <p className="text-xs text-gray-500 mt-1">21 characters, format: L74899DL1995PLC069802</p>
+            </div>
+
+            <div className="flex items-end">
+              <button
+                onClick={handleVerifyCin}
+                disabled={isVerifying || !formData.cin || formData.cin.length !== 21}
+                className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {isVerifying ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={16} />
+                    Verify CIN
+                  </>
+                )}
               </button>
-              <p className="text-xs text-gray-500 mt-1">Square, 400x400px</p>
+            </div>
+          </div>
+
+          {verificationError && (
+            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-xs text-red-700 flex items-center gap-1">
+                <AlertCircle size={14} />
+                {verificationError}
+              </p>
+            </div>
+          )}
+
+          {/* MCA Details Modal/Section */}
+          {showMcaDetails && mcaDetails && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-green-900 text-sm flex items-center gap-2">
+                  <CheckCircle size={16} />
+                  Verification Successful
+                </h3>
+                <button
+                  onClick={() => setShowMcaDetails(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-gray-600">Company Name:</span>
+                  <p className="font-semibold text-gray-900">{mcaDetails.companyName}</p>
+                </div>
+                <div>
+                  <span className="text-gray-600">CIN:</span>
+                  <p className="font-mono text-gray-900">{mcaDetails.cin}</p>
+                </div>
+                {mcaDetails.registrationDate && (
+                  <div>
+                    <span className="text-gray-600">Registration Date:</span>
+                    <p className="text-gray-900">{mcaDetails.registrationDate}</p>
+                  </div>
+                )}
+                {mcaDetails.status && (
+                  <div>
+                    <span className="text-gray-600">Status:</span>
+                    <p className="text-gray-900">{mcaDetails.status}</p>
+                  </div>
+                )}
+                {mcaDetails.registeredOffice && (
+                  <div className="sm:col-span-2">
+                    <span className="text-gray-600">Registered Office:</span>
+                    <p className="text-gray-900">{mcaDetails.registeredOffice}</p>
+                  </div>
+                )}
+                <div className="sm:col-span-2">
+                  <span className="text-gray-500 text-[10px]">
+                    Source: {mcaDetails.source === 'primary' ? 'MCA Corporate Verifications' : 'MCA Company API'}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
         </div>
-      </div>
+      )}
 
       {/* Basic Information */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
