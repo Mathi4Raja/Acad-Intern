@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Users, Briefcase, CheckCircle, Clock, Target, TrendingUp, BarChart3, Loader2 } from 'lucide-react'
-import { StatCard, BarChart, LineChart, DonutChart, LeaderboardChart, AreaChart, VerticalBarChart } from '@/components/analytics'
+import { StatCard, BarChart, LineChart, LeaderboardChart, AreaChart, VerticalBarChart } from '@/components/analytics'
 import api from '@/lib/api'
 import { useAuth } from '@/lib/AuthContext'
 
