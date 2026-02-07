@@ -35,7 +35,7 @@ export default function CompanyAnalyticsPage() {
                 setInternships(internshipsData)
 
                 // Fetch applications for each internship
-                let allApps: any[] = []
+                const allApps: any[] = []
                 const skillCounts: Record<string, number> = {}
                 const internshipAppCounts: { title: string; count: number }[] = []
 
