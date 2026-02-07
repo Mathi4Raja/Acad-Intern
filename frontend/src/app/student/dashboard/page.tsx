@@ -19,6 +19,7 @@ export default function StudentDashboard() {
   const [stats, setStats] = useState({
     profileCompletion: 0,
     applicationsSubmitted: 0,
+    interviews: 0,
     shortlisted: 0,
     activeInternships: 0
   })
@@ -83,6 +84,7 @@ export default function StudentDashboard() {
         setStats({
           profileCompletion: Math.round((completeness / total) * 100),
           applicationsSubmitted: applications.length,
+          interviews: applications.filter((app: any) => app.status === 'interview_scheduled').length,
           shortlisted: applications.filter((app: any) => ['shortlisted', 'assessment_completed', 'accepted'].includes(app.status)).length,
           activeInternships: activeCount
         });
@@ -142,7 +144,7 @@ export default function StudentDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
         <StatCard
           title="Interviews"
-          value="0"
+          value={stats.interviews}
           icon={Clock}
           iconColor="text-orange-600"
           iconBg="bg-orange-50"

@@ -44,6 +44,7 @@ export default function PublicInternshipDetailPage() {
     useEffect(() => {
         if (id) {
             fetchInternship()
+            incrementViews()
         }
     }, [id])
 
@@ -59,6 +60,14 @@ export default function PublicInternshipDetailPage() {
             setError('Failed to load internship details')
         } finally {
             setLoading(false)
+        }
+    }
+
+    const incrementViews = async () => {
+        try {
+            await api.patch(`/internships/${id}/views`)
+        } catch (err) {
+            console.error('Failed to increment views:', err)
         }
     }
 

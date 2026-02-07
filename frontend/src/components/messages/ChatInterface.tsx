@@ -508,7 +508,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
     const viewProfile = () => {
         if (!otherPartyId) return;
         if (user?.role === 'company') {
-            router.push(`/company/applications?studentId=${otherPartyId}`);
+            router.push(`/company/student/${otherPartyId}`);
         }
     };
 
@@ -592,9 +592,9 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                                     onClick={() => {
                                         setIsMenuOpen(false);
                                         if (user?.role === 'student') {
-                                            router.push(`/student/applications?applicationId=${applicationId}`);
+                                            router.push(`/student/applications/${applicationId}`);
                                         } else {
-                                            router.push(`/company/applications?applicationId=${applicationId}`);
+                                            router.push(`/company/applications/${applicationId}`);
                                         }
                                     }}
                                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition-colors text-left"

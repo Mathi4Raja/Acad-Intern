@@ -4,6 +4,7 @@ import Application from '../models/Application';
 import Internship from '../models/Internship';
 import Company from '../models/Company';
 import Notification from '../models/Notification';
+import StudentProfile from '../models/StudentProfile';
 import { AuthRequest, IInternship } from '../types';
 
 // Validation schemas
@@ -147,10 +148,28 @@ export const getInternshipApplications = async (req: AuthRequest, res: Response,
             .populate('studentId', 'name email')
             .sort({ appliedAt: -1 });
 
+        // Fetch student profiles to get skills
+        const studentIds = applications.map(app => (app.studentId as any)?._id || app.studentId);
+        const profiles = await StudentProfile.find({ userId: { $in: studentIds } }).lean();
+        const profileMap = new Map(profiles.map(p => [p.userId.toString(), p]));
+
+        // Enhance applications with skills from profiles
+        const enhancedApplications = applications.map(app => {
+            const studentUserId = (app.studentId as any)?._id?.toString() || app.studentId?.toString();
+            const profile = profileMap.get(studentUserId);
+            return {
+                ...app.toObject(),
+                studentId: {
+                    ...(app.studentId as any)?.toObject?.() || { _id: app.studentId },
+                    skills: profile?.skills || []
+                }
+            };
+        });
+
         res.status(200).json({
             success: true,
-            count: applications.length,
-            data: applications
+            count: enhancedApplications.length,
+            data: enhancedApplications
         });
     } catch (error) {
         next(error);

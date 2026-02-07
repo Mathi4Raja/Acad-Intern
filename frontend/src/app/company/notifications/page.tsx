@@ -1,71 +1,68 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, Check, CheckCheck, Trash2, Filter, Users, Briefcase, MessageSquare, AlertCircle } from 'lucide-react'
+import { Bell, Check, CheckCheck, Trash2, Loader2, Users, Briefcase, MessageSquare, AlertCircle, Info } from 'lucide-react'
+import api from '@/lib/api'
+import { useAlert } from '@/components/ui/AlertProvider'
+
+interface Notification {
+    _id: string
+    type: 'application' | 'status_update' | 'admin' | 'general'
+    title: string
+    message: string
+    read: boolean
+    createdAt: string
+    payload?: any
+}
 
 export default function CompanyNotificationsPage() {
     const [filterType, setFilterType] = useState('all')
-
-    // Mock data - will be replaced with API
-    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const { showAlert } = useAlert()
 
     useEffect(() => {
-        setNotifications([
-            {
-                id: 1,
-                type: 'new_application',
-                title: 'New Application Received',
-                message: 'Alex Johnson has applied for the Software Engineering Intern position.',
-                timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30m ago
-                read: false,
-                icon: <Users className="text-blue-600" />,
-                color: 'text-blue-600'
-            },
-            {
-                id: 2,
-                type: 'message_received',
-                title: 'New Message',
-                message: 'Sarah Williams sent you a message regarding the UI/UX Design internship.',
-                timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2h ago
-                read: false,
-                icon: <MessageSquare className="text-green-600" />,
-                color: 'text-green-600'
-            },
-            {
-                id: 3,
-                type: 'internship_approved',
-                title: 'Internship Post Approved',
-                message: 'Your post for "Data Science Intern" has been approved and is now live.',
-                timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1d ago
-                read: true,
-                icon: <Briefcase className="text-purple-600" />,
-                color: 'text-purple-600'
-            },
-            {
-                id: 4,
-                type: 'urgent_review',
-                title: 'Action Required',
-                message: '3 applications for "Social Media Intern" are awaiting your review for over 5 days.',
-                timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2d ago
-                read: false,
-                icon: <AlertCircle className="text-orange-600" />,
-                color: 'text-orange-600'
-            }
-        ]);
-    }, []);
+        fetchNotifications()
+    }, [])
 
-    const handleMarkAsRead = (id: number) => {
-        setNotifications(notifications.map(notif =>
-            notif.id === id ? { ...notif, read: true } : notif
-        ))
+    const fetchNotifications = async () => {
+        try {
+            setIsLoading(true)
+            const res = await api.get('/notifications')
+            setNotifications(res.data.data.items || [])
+        } catch (error) {
+            console.error('Failed to fetch notifications:', error)
+        } finally {
+            setIsLoading(false)
+        }
     }
 
-    const handleMarkAllAsRead = () => {
-        setNotifications(notifications.map(notif => ({ ...notif, read: true })))
+    const handleMarkAsRead = async (id: string) => {
+        try {
+            await api.patch(`/notifications/${id}/read`)
+            setNotifications(notifications.map(notif =>
+                notif._id === id ? { ...notif, read: true } : notif
+            ))
+        } catch (error) {
+            console.error('Failed to mark as read:', error)
+            showAlert('Failed to mark as read', 'error')
+        }
     }
 
-    const handleDelete = (id: number) => {
-        setNotifications(notifications.filter(notif => notif.id !== id))
+    const handleMarkAllAsRead = async () => {
+        try {
+            await api.patch('/notifications/read-all')
+            setNotifications(notifications.map(notif => ({ ...notif, read: true })))
+            showAlert('All notifications marked as read', 'success')
+        } catch (error) {
+            console.error('Failed to mark all as read:', error)
+            showAlert('Failed to mark all as read', 'error')
+        }
+    }
+
+    const handleDelete = (id: string) => {
+        // For now, just remove from local state (no delete API exists yet)
+        setNotifications(notifications.filter(notif => notif._id !== id))
     }
 
     const getRelativeTime = (timestamp: string) => {
@@ -84,6 +81,15 @@ export default function CompanyNotificationsPage() {
         return `${day}/${month}/${year}`
     }
 
+    const getNotificationIcon = (type: string) => {
+        switch (type) {
+            case 'application': return <Users className="text-blue-600" size={18} />
+            case 'status_update': return <Briefcase className="text-purple-600" size={18} />
+            case 'admin': return <AlertCircle className="text-orange-600" size={18} />
+            default: return <Info className="text-gray-600" size={18} />
+        }
+    }
+
     const filteredNotifications = filterType === 'all'
         ? notifications
         : filterType === 'unread'
@@ -91,6 +97,14 @@ export default function CompanyNotificationsPage() {
             : notifications.filter(n => n.read)
 
     const unreadCount = notifications.filter(n => !n.read).length
+
+    if (isLoading) {
+        return (
+            <div className="max-w-4xl mx-auto p-4 flex items-center justify-center min-h-[60vh]">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        )
+    }
 
     return (
         <div className="max-w-4xl mx-auto p-3 sm:p-4">
@@ -165,13 +179,13 @@ export default function CompanyNotificationsPage() {
                 ) : (
                     filteredNotifications.map((notification) => (
                         <div
-                            key={notification.id}
+                            key={notification._id}
                             className={`bg-white rounded-xl shadow-sm border p-4 hover:shadow-md transition-all ${notification.read ? 'border-gray-100' : 'border-primary/30 bg-primary/5'
                                 }`}
                         >
                             <div className="flex items-start gap-4">
                                 <div className="p-2 bg-gray-50 rounded-lg flex-shrink-0">
-                                    {notification.icon}
+                                    {getNotificationIcon(notification.type)}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between gap-2 mb-1">
@@ -183,12 +197,12 @@ export default function CompanyNotificationsPage() {
                                     <p className="text-gray-600 text-xs sm:text-sm mb-3 leading-relaxed">{notification.message}</p>
                                     <div className="flex items-center justify-between gap-2">
                                         <span className="text-xs text-gray-500">
-                                            {getRelativeTime(notification.timestamp)}
+                                            {getRelativeTime(notification.createdAt)}
                                         </span>
                                         <div className="flex gap-2">
                                             {!notification.read && (
                                                 <button
-                                                    onClick={() => handleMarkAsRead(notification.id)}
+                                                    onClick={() => handleMarkAsRead(notification._id)}
                                                     className="text-primary hover:bg-primary/10 p-1.5 rounded-lg transition-colors"
                                                     title="Mark as read"
                                                 >
@@ -196,7 +210,7 @@ export default function CompanyNotificationsPage() {
                                                 </button>
                                             )}
                                             <button
-                                                onClick={() => handleDelete(notification.id)}
+                                                onClick={() => handleDelete(notification._id)}
                                                 className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
                                                 title="Delete"
                                             >

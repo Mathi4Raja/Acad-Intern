@@ -21,11 +21,12 @@ const internshipSchema = z.object({
 
 interface InternshipQuery {
     status?: string;
-    $text?: { $search: string };
+    $or?: any[];
     mode?: string;
     stipend?: { $gte: number };
     durationWeeks?: { $lte: number };
     skillsRequired?: { $in: string[] };
+    companyId?: string;
 }
 
 // @desc    Get internships sorted by skill match for student
@@ -45,8 +46,14 @@ export const matchInternships = async (req: AuthRequest, res: Response, next: Ne
 
         const query: InternshipQuery = { status: 'active' };
 
+        // Use regex for partial matching (e.g., "nihi" matches "nihilist")
         if (search && typeof search === 'string') {
-            query.$text = { $search: search };
+            const searchRegex = new RegExp(search, 'i');
+            query.$or = [
+                { title: searchRegex },
+                { description: searchRegex },
+                { skillsRequired: searchRegex }
+            ];
         }
 
         if (mode && typeof mode === 'string') {
@@ -75,8 +82,8 @@ export const matchInternships = async (req: AuthRequest, res: Response, next: Ne
                 return { ...internship, matchScore: 0 };
             }
 
-            const jobSkills = internship.skillsRequired.map(s => s.toLowerCase());
-            const intersection = jobSkills.filter(skill => studentSkills.includes(skill));
+            const jobSkills = internship.skillsRequired.map((s: string) => s.toLowerCase());
+            const intersection = jobSkills.filter((skill: string) => studentSkills.includes(skill));
             const matchScore = Math.round((intersection.length / jobSkills.length) * 100);
 
             return {
@@ -113,10 +120,16 @@ export const getInternships = async (req: AuthRequest, res: Response, next: Next
     try {
         const { search, mode, minStipend, duration, skills, companyId } = req.query;
 
-        const query: any = { status: 'active' };
+        const query: InternshipQuery = { status: 'active' };
 
+        // Use regex for partial matching (e.g., "nihi" matches "nihilist")
         if (search && typeof search === 'string') {
-            query.$text = { $search: search };
+            const searchRegex = new RegExp(search, 'i');
+            query.$or = [
+                { title: searchRegex },
+                { description: searchRegex },
+                { skillsRequired: searchRegex }
+            ];
         }
 
         if (mode && typeof mode === 'string') {
@@ -345,6 +358,34 @@ export const getMyInternships = async (req: AuthRequest, res: Response, next: Ne
             success: true,
             count: internships.length,
             data: internships
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Increment internship views
+// @route   PATCH /api/internships/:id/views
+// @access  Public
+export const incrementViews = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const internship = await Internship.findByIdAndUpdate(
+            req.params.id,
+            { $inc: { views: 1 } },
+            { new: true }
+        );
+
+        if (!internship) {
+            res.status(404).json({
+                success: false,
+                message: 'Internship not found'
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            data: { views: internship.views }
         });
     } catch (error) {
         next(error);

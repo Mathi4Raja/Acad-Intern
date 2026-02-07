@@ -94,6 +94,7 @@ export interface IInternship extends Document {
     status: 'active' | 'inactive' | 'completed' | 'in_progress' | 'rejected';
     location?: string;
     deadline?: Date;
+    views: number;
 }
 
 // Application interface

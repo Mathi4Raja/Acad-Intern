@@ -83,7 +83,6 @@ export default function ManageInternships() {
           return {
             ...intern,
             applicants: appCount,
-            views: Math.floor(Math.random() * 200) + 10, // Mock views for now
             deadline: new Date(intern.deadline).toLocaleDateString(),
             postedDate: new Date(intern.createdAt).toLocaleDateString(),
             status: intern.status || (intern.isActive ? 'active' : 'inactive')
@@ -97,7 +96,7 @@ export default function ManageInternships() {
           total: enhancedData.length,
           active: enhancedData.filter(i => i.status === 'active').length,
           applications: enhancedData.reduce((sum, i) => sum + i.applicants, 0),
-          views: enhancedData.reduce((sum, i) => sum + i.views, 0)
+          views: enhancedData.reduce((sum, i) => sum + (i.views || 0), 0)
         });
 
       } catch (error) {
@@ -329,7 +328,7 @@ export default function ManageInternships() {
                   </span>
                   <span className="flex items-center gap-1.5">
                     <Eye size={14} className="flex-shrink-0" />
-                    <span className="font-medium text-gray-900">{internship.views}</span> views
+                    <span className="font-medium text-gray-900">{internship.views || 0}</span> views
                   </span>
                   <span className="hidden sm:inline">Posted: {internship.postedDate}</span>
                   {wasEdited(internship.createdAt, internship.updatedAt) && (

@@ -1,107 +1,68 @@
 'use client'
 
-import { useState } from 'react'
-import { Bell, Check, CheckCheck, Trash2, Filter } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Bell, Check, CheckCheck, Trash2, Loader2 } from 'lucide-react'
+import api from '@/lib/api'
+import { useAlert } from '@/components/ui/AlertProvider'
+
+interface Notification {
+  _id: string
+  type: 'application' | 'status_update' | 'admin' | 'general'
+  title: string
+  message: string
+  read: boolean
+  createdAt: string
+  payload?: any
+}
 
 export default function NotificationsPage() {
   const [filterType, setFilterType] = useState('all')
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const { showAlert } = useAlert()
 
-  // Mock data - will be replaced with API
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'application_update',
-      title: 'Application Shortlisted',
-      message: 'Your application for Frontend Developer Intern at Meta has been shortlisted!',
-      timestamp: '2025-12-15T10:30:00',
-      read: false,
-      icon: '✅',
-      color: 'text-green-600'
-    },
-    {
-      id: 2,
-      type: 'interview',
-      title: 'Interview Scheduled',
-      message: 'Interview for Data Science Intern at Google scheduled for Dec 18, 2025 at 2:00 PM.',
-      timestamp: '2025-12-15T09:15:00',
-      read: false,
-      icon: '📅',
-      color: 'text-blue-600'
-    },
-    {
-      id: 3,
-      type: 'assessment',
-      title: 'Assessment Due',
-      message: 'Technical assessment for Machine Learning Intern at Tesla is due by Dec 20, 2025.',
-      timestamp: '2025-12-14T16:45:00',
-      read: true,
-      icon: '📝',
-      color: 'text-orange-600'
-    },
-    {
-      id: 4,
-      type: 'offer',
-      title: 'Offer Received!',
-      message: 'Congratulations! You have received an offer for DevOps Engineer Intern at Microsoft.',
-      timestamp: '2025-12-14T14:20:00',
-      read: false,
-      icon: '🎉',
-      color: 'text-purple-600'
-    },
-    {
-      id: 5,
-      type: 'application_update',
-      title: 'Application Received',
-      message: 'Your application for Backend Developer at Amazon has been received and is under review.',
-      timestamp: '2025-12-13T11:00:00',
-      read: true,
-      icon: '📨',
-      color: 'text-blue-600'
-    },
-    {
-      id: 6,
-      type: 'rejection',
-      title: 'Application Update',
-      message: 'Unfortunately, your application for Mobile App Developer at Apple was not selected.',
-      timestamp: '2025-12-13T09:30:00',
-      read: true,
-      icon: '📋',
-      color: 'text-gray-600'
-    },
-    {
-      id: 7,
-      type: 'profile',
-      title: 'Complete Your Profile',
-      message: 'Your profile is 85% complete. Add more details to increase your chances!',
-      timestamp: '2025-12-12T08:00:00',
-      read: true,
-      icon: '👤',
-      color: 'text-indigo-600'
-    },
-    {
-      id: 8,
-      type: 'new_internship',
-      title: 'New Matching Internship',
-      message: 'A new internship matching your skills (95% match) has been posted by Netflix.',
-      timestamp: '2025-12-11T15:30:00',
-      read: true,
-      icon: '🆕',
-      color: 'text-green-600'
+  useEffect(() => {
+    fetchNotifications()
+  }, [])
+
+  const fetchNotifications = async () => {
+    try {
+      setIsLoading(true)
+      const res = await api.get('/notifications')
+      setNotifications(res.data.data.items || [])
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error)
+    } finally {
+      setIsLoading(false)
     }
-  ])
-
-  const handleMarkAsRead = (id: number) => {
-    setNotifications(notifications.map(notif =>
-      notif.id === id ? { ...notif, read: true } : notif
-    ))
   }
 
-  const handleMarkAllAsRead = () => {
-    setNotifications(notifications.map(notif => ({ ...notif, read: true })))
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await api.patch(`/notifications/${id}/read`)
+      setNotifications(notifications.map(notif =>
+        notif._id === id ? { ...notif, read: true } : notif
+      ))
+    } catch (error) {
+      console.error('Failed to mark as read:', error)
+      showAlert('Failed to mark as read', 'error')
+    }
   }
 
-  const handleDelete = (id: number) => {
-    setNotifications(notifications.filter(notif => notif.id !== id))
+  const handleMarkAllAsRead = async () => {
+    try {
+      await api.patch('/notifications/read-all')
+      setNotifications(notifications.map(notif => ({ ...notif, read: true })))
+      showAlert('All notifications marked as read', 'success')
+    } catch (error) {
+      console.error('Failed to mark all as read:', error)
+      showAlert('Failed to mark all as read', 'error')
+    }
+  }
+
+  const handleDelete = (id: string) => {
+    // For now, just remove from local state
+    setNotifications(notifications.filter(notif => notif._id !== id))
   }
 
   const getRelativeTime = (timestamp: string) => {
@@ -114,11 +75,19 @@ export default function NotificationsPage() {
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
     if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
 
-    // Format date consistently (DD/MM/YYYY)
     const day = date.getDate().toString().padStart(2, '0')
     const month = (date.getMonth() + 1).toString().padStart(2, '0')
     const year = date.getFullYear()
     return `${day}/${month}/${year}`
+  }
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'application': return '📝'
+      case 'status_update': return '✅'
+      case 'admin': return '⚠️'
+      default: return '🔔'
+    }
   }
 
   const filteredNotifications = filterType === 'all'
@@ -129,9 +98,16 @@ export default function NotificationsPage() {
 
   const unreadCount = notifications.filter(n => !n.read).length
 
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto p-4 flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-3 sm:p-4">
-      {/* Header */}
       {/* Header */}
       <div className="mb-6 flex flex-col items-center sm:flex-row justify-center gap-4">
         <div className="bg-gradient-to-br from-white to-orange-50/50 rounded-2xl shadow-sm border border-orange-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">
@@ -221,12 +197,12 @@ export default function NotificationsPage() {
         ) : (
           filteredNotifications.map((notification) => (
             <div
-              key={notification.id}
+              key={notification._id}
               className={`bg-white rounded-xl shadow-sm border p-3 sm:p-4 hover:shadow-md transition-all ${notification.read ? 'border-gray-100' : 'border-primary/30 bg-primary/10/30'
                 }`}
             >
               <div className="flex items-start gap-3 sm:gap-4">
-                <div className="text-2xl sm:text-3xl flex-shrink-0">{notification.icon}</div>
+                <div className="text-2xl sm:text-3xl flex-shrink-0">{getNotificationIcon(notification.type)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h3 className="text-sm sm:text-base font-semibold text-gray-900">{notification.title}</h3>
@@ -237,12 +213,12 @@ export default function NotificationsPage() {
                   <p className="text-gray-600 text-xs sm:text-sm mb-2 leading-relaxed">{notification.message}</p>
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs text-gray-500">
-                      {getRelativeTime(notification.timestamp)}
+                      {getRelativeTime(notification.createdAt)}
                     </span>
                     <div className="flex gap-1 sm:gap-2">
                       {!notification.read && (
                         <button
-                          onClick={() => handleMarkAsRead(notification.id)}
+                          onClick={() => handleMarkAsRead(notification._id)}
                           className="text-primary hover:text-primary p-1 hover:bg-primary/10 rounded transition-colors"
                           title="Mark as read"
                         >
@@ -250,7 +226,7 @@ export default function NotificationsPage() {
                         </button>
                       )}
                       <button
-                        onClick={() => handleDelete(notification.id)}
+                        onClick={() => handleDelete(notification._id)}
                         className="text-gray-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition-colors"
                         title="Delete"
                       >

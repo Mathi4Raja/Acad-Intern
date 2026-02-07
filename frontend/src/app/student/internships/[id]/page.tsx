@@ -59,6 +59,9 @@ export default function InternshipDetailPage() {
     const fetchInternship = async () => {
         try {
             setLoading(true)
+            // Increment views
+            api.patch(`/internships/${id}/views`).catch(err => console.error('Failed to increment views:', err))
+
             const response = await api.get(`/internships/${id}`)
             if (response.data.success) {
                 const data = response.data.data

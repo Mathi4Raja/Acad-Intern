@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { Search, Filter, User, Briefcase, Star, Mail, Calendar, CheckCircle, XCircle, Clock, Loader2, Users, FileText } from 'lucide-react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { StatCard } from '@/components/analytics/StatCard'
 import { useAlert } from '@/components/ui/AlertProvider'
-import { StudentProfileModal } from '@/components/company/StudentProfileModal'
 
 interface Application {
   id: string
@@ -25,6 +24,7 @@ interface Application {
 interface Internship {
   id: string
   title: string
+  skillsRequired: string[]
 }
 
 export default function Applications() {
@@ -39,14 +39,10 @@ export default function Applications() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-
-  // Profile Modal State
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null)
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  const router = useRouter()
 
   const handleViewProfile = (studentId: string) => {
-    setSelectedStudentId(studentId)
-    setIsProfileModalOpen(true)
+    router.push(`/company/student/${studentId}`)
   }
 
   // Fetch internships and their applications
@@ -61,7 +57,8 @@ export default function Applications() {
 
         setInternships(myInternships.map((i: any) => ({
           id: i._id,
-          title: i.title
+          title: i.title,
+          skillsRequired: i.skillsRequired || []
         })))
 
         // Fetch applications for each internship
@@ -70,8 +67,18 @@ export default function Applications() {
           try {
             const appsRes = await api.get(`/applications/internship/${internship._id}`)
             const apps = appsRes.data.data || []
+            const internshipSkills = (internship.skillsRequired || []).map((s: string) => s.toLowerCase())
 
             apps.forEach((app: any) => {
+              // Calculate match score based on student skills vs internship requirements
+              const studentSkills = (app.studentId?.skills || []).map((s: string) => s.toLowerCase())
+              let matchScore = 0
+
+              if (internshipSkills.length > 0 && studentSkills.length > 0) {
+                const matchedSkills = internshipSkills.filter((skill: string) => studentSkills.includes(skill))
+                matchScore = Math.round((matchedSkills.length / internshipSkills.length) * 100)
+              }
+
               allApplications.push({
                 id: app._id,
                 studentId: app.studentId?._id || app.studentId,
@@ -81,9 +88,9 @@ export default function Applications() {
                 internshipId: internship._id,
                 appliedDate: app.appliedAt,
                 status: app.status,
-                matchScore: 85, // Default match score
-                skills: [],
-                cgpa: undefined
+                matchScore,
+                skills: app.studentId?.skills || [],
+                cgpa: app.studentId?.cgpa
               })
             })
           } catch (err) {
@@ -499,13 +506,6 @@ export default function Applications() {
           </div>
         )}
       </div>
-
-      {/* Profile Modal */}
-      <StudentProfileModal
-        isOpen={isProfileModalOpen}
-        onClose={() => setIsProfileModalOpen(false)}
-        studentId={selectedStudentId}
-      />
     </div>
   )
 }

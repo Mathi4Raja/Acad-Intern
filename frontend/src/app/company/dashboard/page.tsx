@@ -41,14 +41,8 @@ export default function CompanyDashboard() {
         const internshipsRes = await api.get('/internships/company/my'); // content is under data.data
         const internships = internshipsRes.data.data;
 
-        setPostedInternships(internships.slice(0, 3).map((intern: any) => ({
-          id: intern._id,
-          title: intern.title,
-          applicants: 0, // Placeholder
-          status: intern.status === 'active' ? 'Active' : 'Closed',
-          postedDate: intern.createdAt,
-          type: intern.mode
-        })));
+        // Create a map to store applicant counts per internship
+        const applicantCounts: Record<string, number> = {};
 
         setStats(prev => ({ ...prev, activeInternships: internships.filter((i: any) => i.status === 'active').length }));
 
@@ -68,8 +62,11 @@ export default function CompanyDashboard() {
             totalAppCount += apps.length;
             shortlistedCount += apps.filter((a: any) => a.status === 'shortlisted' || a.status === 'assessment_completed').length;
             hiredCount += apps.filter((a: any) => a.status === 'accepted' || a.status === 'hired').length;
-            // Add title for context
-            return apps.map((a: any) => ({ ...a, internshipTitle: intern.title }));
+            return apps.map((a: any) => ({
+              ...a,
+              internshipTitle: intern.title,
+              internshipSkills: intern.skillsRequired || []
+            }));
           } catch (e) {
             return [];
           }
@@ -78,17 +75,45 @@ export default function CompanyDashboard() {
         const results = await Promise.all(appPromises);
         allApps = results.flat();
 
+        // Count applicants per internship
+        allApps.forEach((app: any) => {
+          const internshipId = app.internshipId?._id || app.internshipId;
+          if (internshipId) {
+            applicantCounts[internshipId] = (applicantCounts[internshipId] || 0) + 1;
+          }
+        });
+
+        // Now update posted internships with real applicant counts
+        setPostedInternships(internships.slice(0, 3).map((intern: any) => ({
+          id: intern._id,
+          title: intern.title,
+          applicants: applicantCounts[intern._id] || 0,
+          status: intern.status === 'active' ? 'Active' : 'Closed',
+          postedDate: intern.createdAt,
+          type: intern.mode
+        })));
+
         // Sort by date desc
         allApps.sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime());
 
-        setRecentApplications(allApps.slice(0, 5).map((app: any) => ({
-          id: app._id,
-          applicantName: app.studentId?.name || 'Unknown',
-          role: app.internshipTitle,
-          status: app.status,
-          appliedDate: app.appliedAt,
-          match: 85 // Mock match
-        })));
+        setRecentApplications(allApps.slice(0, 5).map((app: any) => {
+          // Calculate real match score
+          const studentSkills = (app.studentId?.skills || []).map((s: string) => s.toLowerCase());
+          const internshipSkills = (app.internshipSkills || []).map((s: string) => s.toLowerCase());
+          let matchScore = 0;
+          if (internshipSkills.length > 0 && studentSkills.length > 0) {
+            const matched = internshipSkills.filter((s: string) => studentSkills.includes(s));
+            matchScore = Math.round((matched.length / internshipSkills.length) * 100);
+          }
+          return {
+            id: app._id,
+            applicantName: app.studentId?.name || 'Unknown',
+            role: app.internshipTitle,
+            status: app.status,
+            appliedDate: app.appliedAt,
+            match: matchScore
+          };
+        }));
 
         setStats(prev => ({
           ...prev,
@@ -226,7 +251,7 @@ export default function CompanyDashboard() {
                           </span>
                           <p className="text-[9px] text-gray-400 mt-0.5">Applied {formatDate(app.appliedDate)}</p>
                         </div>
-                        <Link href="/company/applications" className="p-1 hover:bg-gray-200 rounded-lg transition-colors">
+                        <Link href={`/company/applications/${app.id}`} className="p-1 hover:bg-gray-200 rounded-lg transition-colors">
                           <ChevronRight className="text-gray-400" size={14} />
                         </Link>
                       </div>
@@ -254,7 +279,7 @@ export default function CompanyDashboard() {
             {postedInternships.length > 0 ? (
               <div className="divide-y divide-gray-100">
                 {postedInternships.map((internship) => (
-                  <Link key={internship.id} href="/company/internships" className="block p-3 hover:bg-gray-50 transition-colors group">
+                  <Link key={internship.id} href={`/company/edit-internship/${internship.id}`} className="block p-3 hover:bg-gray-50 transition-colors group">
                     <div className="mb-1">
                       <div className="flex justify-between items-start">
                         <h3 className="font-semibold text-gray-900 text-sm line-clamp-1 group-hover:text-primary transition-colors">{internship.title}</h3>

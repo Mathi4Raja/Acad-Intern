@@ -61,6 +61,10 @@ const internshipSchema = new Schema<IInternship>({
     deadline: {
         type: Date,
         default: null
+    },
+    views: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true

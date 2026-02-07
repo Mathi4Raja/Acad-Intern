@@ -6,7 +6,8 @@ import {
     updateInternship,
     deleteInternship,
     matchInternships,
-    getMyInternships
+    getMyInternships,
+    incrementViews
 } from '../controllers/internshipController';
 import { protect, authorize, optionalAuth } from '../middleware/auth';
 
@@ -17,6 +18,7 @@ router.get('/', optionalAuth, getInternships);
 router.get('/match', protect, authorize('student'), matchInternships);
 router.get('/company/my', protect, authorize('company'), getMyInternships); // New route
 router.get('/:id', optionalAuth, getInternship);
+router.patch('/:id/views', optionalAuth, incrementViews);
 
 // Protected routes (Company only)
 router.post('/', protect, authorize('company'), createInternship);

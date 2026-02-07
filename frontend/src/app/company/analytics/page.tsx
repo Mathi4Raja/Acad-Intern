@@ -1,49 +1,147 @@
 'use client'
 
-import { Users, Briefcase, Eye, TrendingUp, Target, Clock, CheckCircle, XCircle, BarChart3 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Users, Briefcase, CheckCircle, Clock, Target, TrendingUp, BarChart3, Loader2 } from 'lucide-react'
 import { StatCard, BarChart, LineChart } from '@/components/analytics'
+import api from '@/lib/api'
+import { useAuth } from '@/lib/AuthContext'
 
 export default function CompanyAnalyticsPage() {
-    // Mock analytics data
-    const applicationTrend = [
-        { label: 'Jan', value: 45 },
-        { label: 'Feb', value: 62 },
-        { label: 'Mar', value: 58 },
-        { label: 'Apr', value: 85 },
-        { label: 'May', value: 92 },
-        { label: 'Jun', value: 78 }
-    ]
+    const { user, profile, isLoading: authLoading } = useAuth()
+    const [isLoading, setIsLoading] = useState(true)
 
-    const viewsTrend = [
-        { label: 'Week 1', value: 234 },
-        { label: 'Week 2', value: 312 },
-        { label: 'Week 3', value: 289 },
-        { label: 'Week 4', value: 356 }
-    ]
+    const [stats, setStats] = useState({
+        totalApplications: 0,
+        totalViews: 0,
+        hired: 0,
+        activeInternships: 0
+    })
 
-    const internshipPerformance = [
-        { label: 'Frontend Developer', value: 45, color: 'bg-blue-500' },
-        { label: 'Backend Developer', value: 38, color: 'bg-green-500' },
-        { label: 'Data Science', value: 32, color: 'bg-purple-500' },
-        { label: 'UI/UX Designer', value: 28, color: 'bg-pink-500' },
-        { label: 'Mobile Dev', value: 22, color: 'bg-orange-500' }
-    ]
+    const [internships, setInternships] = useState<any[]>([])
 
-    const conversionFunnel = [
-        { stage: 'Views', count: 1250, percent: 100 },
-        { stage: 'Applications', count: 128, percent: 10.2 },
-        { stage: 'Shortlisted', count: 32, percent: 25 },
-        { stage: 'Interviewed', count: 18, percent: 56.3 },
-        { stage: 'Hired', count: 8, percent: 44.4 }
-    ]
+    const [internshipPerformance, setInternshipPerformance] = useState<{ label: string; value: number; color: string }[]>([])
+    const [conversionFunnel, setConversionFunnel] = useState<{ stage: string; count: number; percent: number }[]>([])
+    const [topSkillsApplied, setTopSkillsApplied] = useState<{ skill: string; count: number }[]>([])
+    const [applicationTrend, setApplicationTrend] = useState<{ label: string; value: number }[]>([])
 
-    const topSkillsApplied = [
-        { skill: 'React', count: 45 },
-        { skill: 'Python', count: 38 },
-        { skill: 'Node.js', count: 32 },
-        { skill: 'TypeScript', count: 28 },
-        { skill: 'MongoDB', count: 22 }
-    ]
+    useEffect(() => {
+        const fetchAnalytics = async () => {
+            try {
+                if (!profile || !('_id' in profile)) return
+
+                // Fetch internships
+                const internshipsRes = await api.get('/internships/company/my')
+                const internshipsData = internshipsRes.data.data
+                setInternships(internshipsData)
+
+                // Fetch applications for each internship
+                let allApps: any[] = []
+                const skillCounts: Record<string, number> = {}
+                const internshipAppCounts: { title: string; count: number }[] = []
+
+                const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500', 'bg-cyan-500']
+
+                for (const intern of internshipsData.slice(0, 10)) {
+                    try {
+                        const res = await api.get(`/applications/internship/${intern._id}`)
+                        const apps = res.data.data
+                        allApps.push(...apps)
+
+                        internshipAppCounts.push({
+                            title: intern.title.length > 20 ? intern.title.slice(0, 20) + '...' : intern.title,
+                            count: apps.length
+                        })
+
+                        // Count skills
+                        apps.forEach((app: any) => {
+                            const skills = app.studentId?.skills || []
+                            skills.forEach((skill: string) => {
+                                skillCounts[skill] = (skillCounts[skill] || 0) + 1
+                            })
+                        })
+                    } catch (e) { }
+                }
+
+                // Calculate stats
+                const shortlisted = allApps.filter(a => a.status === 'shortlisted' || a.status === 'assessment_completed').length
+                const hired = allApps.filter(a => a.status === 'accepted' || a.status === 'hired').length
+                const pending = allApps.filter(a => a.status === 'pending').length
+                const rejected = allApps.filter(a => a.status === 'rejected').length
+
+                setStats({
+                    totalApplications: allApps.length,
+                    totalViews: internshipsData.reduce((sum: number, i: any) => sum + (i.views || 0), 0),
+                    hired,
+                    activeInternships: internshipsData.filter((i: any) => i.status === 'active').length
+                })
+
+                // Internship performance chart
+                setInternshipPerformance(
+                    internshipAppCounts
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 5)
+                        .map((item, idx) => ({
+                            label: item.title,
+                            value: item.count,
+                            color: colors[idx % colors.length]
+                        }))
+                )
+
+                // Conversion funnel
+                setConversionFunnel([
+                    { stage: 'Total Applications', count: allApps.length, percent: 100 },
+                    { stage: 'Shortlisted', count: shortlisted, percent: allApps.length ? Math.round((shortlisted / allApps.length) * 100) : 0 },
+                    { stage: 'Hired', count: hired, percent: shortlisted ? Math.round((hired / shortlisted) * 100) : 0 }
+                ])
+
+                // Top skills
+                setTopSkillsApplied(
+                    Object.entries(skillCounts)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 5)
+                        .map(([skill, count]) => ({ skill, count }))
+                )
+
+                // Application trend (group by month)
+                const monthCounts: Record<string, number> = {}
+                allApps.forEach(app => {
+                    const date = new Date(app.appliedAt)
+                    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+                    monthCounts[monthKey] = (monthCounts[monthKey] || 0) + 1
+                })
+
+                const sortedMonths = Object.keys(monthCounts).sort((a, b) => {
+                    const dateA = new Date(a)
+                    const dateB = new Date(b)
+                    return dateA.getTime() - dateB.getTime()
+                })
+
+                setApplicationTrend(
+                    sortedMonths.slice(-6).map(month => ({
+                        label: month,
+                        value: monthCounts[month]
+                    }))
+                )
+
+            } catch (error) {
+                console.error('Error fetching analytics:', error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        if (!authLoading && user && profile) {
+            fetchAnalytics()
+        }
+    }, [profile, user, authLoading])
+
+    if (authLoading || (isLoading && user)) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        )
+    }
 
     return (
         <div className="max-w-7xl mx-auto p-2 sm:p-3">
@@ -73,106 +171,133 @@ export default function CompanyAnalyticsPage() {
             {/* Stats Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
                 <StatCard
-                    title="Total Views"
-                    value="1,250"
-                    change={{ value: 18, type: 'increase' }}
-                    icon={Eye}
+                    title="Active Internships"
+                    value={stats.activeInternships}
+                    icon={Briefcase}
                     iconColor="text-blue-600"
                     iconBg="bg-blue-100"
-                    description="Last 30 days"
+                    description="Currently hiring"
                 />
                 <StatCard
                     title="Applications"
-                    value="128"
-                    change={{ value: 24, type: 'increase' }}
+                    value={stats.totalApplications}
                     icon={Users}
                     iconColor="text-purple-600"
                     iconBg="bg-purple-100"
-                    description="Last 30 days"
+                    description="Total received"
+                />
+                <StatCard
+                    title="Total Views"
+                    value={stats.totalViews}
+                    icon={Target}
+                    iconColor="text-orange-600"
+                    iconBg="bg-orange-100"
+                    description="Across all internships"
                 />
                 <StatCard
                     title="Hired"
-                    value="8"
-                    change={{ value: 33, type: 'increase' }}
+                    value={stats.hired}
                     icon={CheckCircle}
                     iconColor="text-green-600"
                     iconBg="bg-green-100"
-                    description="Last 30 days"
-                />
-                <StatCard
-                    title="Avg. Time to Hire"
-                    value="12 days"
-                    change={{ value: 8, type: 'decrease' }}
-                    icon={Clock}
-                    iconColor="text-orange-600"
-                    iconBg="bg-orange-100"
-                    description="Getting faster!"
+                    description="Offers accepted"
                 />
             </div>
 
             {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-                <LineChart
-                    title="Applications Over Time"
-                    data={applicationTrend}
-                    height={180}
-                />
-                <LineChart
-                    title="Listing Views (Last 4 Weeks)"
-                    data={viewsTrend}
-                    height={180}
-                />
+                {applicationTrend.length > 0 && (
+                    <LineChart
+                        title="Applications Over Time"
+                        data={applicationTrend}
+                        height={180}
+                    />
+                )}
+
+                {/* Most Viewed Internships */}
+                {internships.length > 0 ? (
+                    <BarChart
+                        title="Most Viewed Internships"
+                        data={internships
+                            .sort((a: any, b: any) => (b.views || 0) - (a.views || 0))
+                            .slice(0, 5)
+                            .map((intern: any, idx: number) => ({
+                                label: intern.title.length > 20 ? intern.title.slice(0, 20) + '...' : intern.title,
+                                value: intern.views || 0,
+                                color: ['bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 'bg-lime-500', 'bg-green-500'][idx % 5]
+                            }))}
+                    />
+                ) : (
+                    <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm flex items-center justify-center">
+                        <p className="text-sm text-gray-500">No view data available</p>
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
                 {/* Internship Performance */}
-                <BarChart
-                    title="Applications by Internship"
-                    data={internshipPerformance}
-                />
+                {internshipPerformance.length > 0 ? (
+                    <BarChart
+                        title="Applications by Internship"
+                        data={internshipPerformance}
+                    />
+                ) : (
+                    <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                        <h3 className="text-xs font-semibold text-gray-900 mb-3">Applications by Internship</h3>
+                        <p className="text-sm text-gray-500 text-center py-8">No data yet</p>
+                    </div>
+                )}
 
                 {/* Conversion Funnel */}
                 <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
                     <h3 className="text-xs font-semibold text-gray-900 mb-3">Hiring Funnel</h3>
-                    <div className="space-y-3">
-                        {conversionFunnel.map((item, index) => (
-                            <div key={index} className="relative">
-                                <div className="flex items-center justify-between mb-1">
-                                    <span className="text-sm font-medium text-gray-700">{item.stage}</span>
-                                    <span className="text-sm text-gray-900 font-semibold">{item.count}</span>
+                    {conversionFunnel.length > 0 && conversionFunnel[0].count > 0 ? (
+                        <div className="space-y-3">
+                            {conversionFunnel.map((item, index) => (
+                                <div key={index} className="relative">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-sm font-medium text-gray-700">{item.stage}</span>
+                                        <span className="text-sm text-gray-900 font-semibold">{item.count}</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 rounded-full h-2">
+                                        <div
+                                            className="h-2 rounded-full bg-gradient-to-r from-primary to-purple-500 transition-all duration-500"
+                                            style={{ width: `${conversionFunnel[0].count > 0 ? (item.count / conversionFunnel[0].count) * 100 : 0}%` }}
+                                        />
+                                    </div>
+                                    {index > 0 && (
+                                        <span className="text-xs text-gray-500 mt-0.5 block">
+                                            {item.percent}% conversion
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="w-full bg-gray-100 rounded-full h-2">
-                                    <div
-                                        className="h-2 rounded-full bg-gradient-to-r from-primary to-purple-500 transition-all duration-500"
-                                        style={{ width: `${(item.count / conversionFunnel[0].count) * 100}%` }}
-                                    />
-                                </div>
-                                {index > 0 && (
-                                    <span className="text-xs text-gray-500 mt-0.5 block">
-                                        {item.percent}% conversion
-                                    </span>
-                                )}
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-8">No applications yet</p>
+                    )}
                 </div>
 
                 {/* Top Skills */}
                 <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
                     <h3 className="text-xs font-semibold text-gray-900 mb-3">Top Skills in Applications</h3>
-                    <div className="space-y-3">
-                        {topSkillsApplied.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                                <div className="flex items-center gap-3">
-                                    <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center">
-                                        {index + 1}
-                                    </span>
-                                    <span className="text-sm font-medium text-gray-900">{item.skill}</span>
+                    {topSkillsApplied.length > 0 ? (
+                        <div className="space-y-3">
+                            {topSkillsApplied.map((item, index) => (
+                                <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                                    <div className="flex items-center gap-3">
+                                        <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center">
+                                            {index + 1}
+                                        </span>
+                                        <span className="text-sm font-medium text-gray-900">{item.skill}</span>
+                                    </div>
+                                    <span className="text-sm text-gray-600">{item.count} applicants</span>
                                 </div>
-                                <span className="text-sm text-gray-600">{item.count} applicants</span>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-gray-500 text-center py-8">No skills data yet</p>
+                    )}
                 </div>
             </div>
 
@@ -186,21 +311,29 @@ export default function CompanyAnalyticsPage() {
                     <div className="bg-white rounded-lg p-3 shadow-sm">
                         <div className="flex items-center gap-2 mb-2">
                             <CheckCircle className="text-green-500" size={18} />
-                            <h4 className="font-semibold text-gray-900 text-xs text-sm">High Demand</h4>
+                            <h4 className="font-semibold text-gray-900 text-xs text-sm">Conversion Rate</h4>
                         </div>
-                        <p className="text-sm text-gray-600">Frontend Developer posts get 40% more applications than average</p>
+                        <p className="text-sm text-gray-600">
+                            {stats.totalApplications > 0
+                                ? `${Math.round((stats.hired / stats.totalApplications) * 100)}% of applications converted to hires`
+                                : 'Start receiving applications to see conversion rate'}
+                        </p>
                     </div>
                     <div className="bg-white rounded-lg p-3 shadow-sm">
                         <div className="flex items-center gap-2 mb-2">
                             <Target className="text-blue-500" size={18} />
-                            <h4 className="font-semibold text-gray-900 text-xs text-sm">Best Posting Day</h4>
+                            <h4 className="font-semibold text-gray-900 text-xs text-sm">Top Performing</h4>
                         </div>
-                        <p className="text-sm text-gray-600">Monday posts receive 25% more views in the first week</p>
+                        <p className="text-sm text-gray-600">
+                            {internshipPerformance.length > 0
+                                ? `"${internshipPerformance[0].label}" has the most applications`
+                                : 'Post internships to see performance data'}
+                        </p>
                     </div>
                     <div className="bg-white rounded-lg p-3 shadow-sm">
                         <div className="flex items-center gap-2 mb-2">
                             <Clock className="text-orange-500" size={18} />
-                            <h4 className="font-semibold text-gray-900 text-xs text-sm">Response Time</h4>
+                            <h4 className="font-semibold text-gray-900 text-xs text-sm">Tip</h4>
                         </div>
                         <p className="text-sm text-gray-600">Responding within 48 hours increases acceptance rate by 60%</p>
                     </div>
