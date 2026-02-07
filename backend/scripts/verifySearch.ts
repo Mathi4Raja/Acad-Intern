@@ -23,7 +23,7 @@ const verifySearch = async () => {
 
         try {
             const results = await Internship.find(
-                { $text: { $search: searchTerm }, isActive: true },
+                { $text: { $search: searchTerm }, status: 'active' },
                 { score: { $meta: 'textScore' } }
             ).sort({ score: { $meta: 'textScore' } });
 
@@ -48,7 +48,7 @@ const verifySearch = async () => {
 
             // Compare with "All" to show difference
             console.log(`\n--- Comparison ---`);
-            const allInternships = await Internship.find({ isActive: true }).limit(5);
+            const allInternships = await Internship.find({ status: 'active' }).limit(5);
             console.log(`Recent Internships (No Filter):`);
             allInternships.forEach(r => {
                 console.log(`- ${r.title}`);

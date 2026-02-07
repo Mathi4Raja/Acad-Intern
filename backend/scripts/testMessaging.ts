@@ -158,7 +158,7 @@ class MessagingTester {
             location: 'Remote',
             mode: 'remote',
             deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            isActive: true
+            status: 'active'
         });
 
         // Create application

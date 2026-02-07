@@ -241,10 +241,10 @@ describe('Admin API', () => {
             const res = await request(app)
                 .put(`/api/admin/internships/${createRes.body.data._id}`)
                 .set('Cookie', admin.cookie)
-                .send({ isActive: false });
+                .send({ status: 'inactive' });
 
             expect(res.status).toBe(200);
-            expect(res.body.data.isActive).toBe(false);
+            expect(res.body.data.status).toBe('inactive');
         });
     });
 

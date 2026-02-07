@@ -36,7 +36,7 @@ interface InternshipDetail {
     stipend: number
     mode: 'remote' | 'onsite' | 'hybrid'
     openings: number
-    isActive: boolean
+    status: 'active' | 'inactive' | 'completed' | 'in_progress' | 'rejected'
     createdAt: string
     location?: string
     deadline?: string

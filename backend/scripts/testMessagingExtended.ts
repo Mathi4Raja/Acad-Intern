@@ -83,7 +83,7 @@ class MessagingTesterExtended {
                 description: 'Test internship for messaging',
                 companyId: company._id,
                 durationWeeks: 12,
-                isActive: true
+                status: 'active'
             });
         }
 

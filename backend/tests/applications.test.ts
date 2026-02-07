@@ -366,7 +366,7 @@ describe('Applications API', () => {
             await request(app)
                 .put(`/api/internships/${internshipRes.body.data._id}`)
                 .set('Cookie', company.cookie)
-                .send({ isActive: false });
+                .send({ status: 'inactive' });
 
             // Try to apply
             const res = await request(app)

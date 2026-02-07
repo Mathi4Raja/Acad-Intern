@@ -25,7 +25,7 @@ describe('Internships API', () => {
             expect(res.status).toBe(201);
             expect(res.body.success).toBe(true);
             expect(res.body.data.title).toBe('Software Developer Intern');
-            expect(res.body.data.isActive).toBe(true);
+            expect(res.body.data.status).toBe('active');
         });
 
         it('should reject non-company role', async () => {
