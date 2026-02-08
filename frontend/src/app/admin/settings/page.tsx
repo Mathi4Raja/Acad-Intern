@@ -7,6 +7,7 @@ import { adminApi } from '@/lib/api'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { Loader2 } from 'lucide-react'
+import { useSettings } from '@/lib/SettingsContext'
 
 // Define types for settings
 interface SettingsData {
@@ -90,6 +91,7 @@ function AdminSettingsContent() {
   const searchParams = useSearchParams()
 
   const activeTab = searchParams.get('tab') || 'general';
+  const { refreshSettings } = useSettings();
 
   const [settings, setSettings] = useState<SettingsData>(defaultSettings)
   const [initialSettings, setInitialSettings] = useState<SettingsData>(defaultSettings)
@@ -134,6 +136,7 @@ function AdminSettingsContent() {
       await adminApi.updateSettings(settings);
       setSaveStatus('saved')
       setInitialSettings(settings) // Update baseline
+      await refreshSettings() // Sync global context
       toast.success('Settings saved successfully')
       setTimeout(() => setSaveStatus('idle'), 2000)
     } catch (error) {

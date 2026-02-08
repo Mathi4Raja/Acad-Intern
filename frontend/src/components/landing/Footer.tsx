@@ -1,4 +1,7 @@
+"use client";
 import Link from "next/link";
+import { useSettings } from "@/lib/SettingsContext";
+import { getSiteInitials } from "@/lib/formatters";
 
 const footerLinks = [
     { label: "Features", href: "/#features" },
@@ -16,6 +19,7 @@ const socials = [
 ];
 
 export function Footer() {
+    const { settings } = useSettings();
     return (
         <footer className="border-t border-border/50 bg-card/50">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -24,9 +28,9 @@ export function Footer() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 group">
                         <div className="w-8 h-8 md:w-9 md:h-9 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-xs md:text-sm transition-transform group-hover:scale-110">
-                            AI
+                            {getSiteInitials(settings?.siteName || "AcadIntern")}
                         </div>
-                        <span className="text-base md:text-lg font-semibold gradient-text">AcadIntern</span>
+                        <span className="text-base md:text-lg font-semibold gradient-text">{settings?.siteName || "AcadIntern"}</span>
                     </Link>
 
                     {/* Navigation Links */}
@@ -62,7 +66,7 @@ export function Footer() {
                 {/* Bottom Bar */}
                 <div className="py-3 md:py-4 border-t border-border/30 text-center">
                     <p className="text-xs md:text-sm text-muted-foreground" suppressHydrationWarning>
-                        © {new Date().getFullYear()} AcadIntern. All rights reserved.
+                        © {new Date().getFullYear()} {settings?.siteName || "AcadIntern"}. All rights reserved.
                     </p>
                 </div>
             </div>

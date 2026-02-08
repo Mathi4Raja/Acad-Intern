@@ -3,11 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useSettings } from "@/lib/SettingsContext";
+import { getSiteInitials } from "@/lib/formatters";
 
 export function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const { settings } = useSettings();
 
     useEffect(() => {
         setTimeout(() => setIsMounted(true), 0);
@@ -57,10 +60,10 @@ export function Navbar() {
                         {/* Logo */}
                         <Link href="/" className="flex items-center gap-2 group" onClick={closeMenu}>
                             <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-sm md:text-base transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg group-hover:shadow-primary/25">
-                                AI
+                                {getSiteInitials(settings?.siteName || "AcadIntern")}
                             </div>
                             <span className="text-lg md:text-xl font-semibold gradient-text hidden sm:block">
-                                AcadIntern
+                                {settings?.siteName || "AcadIntern"}
                             </span>
                         </Link>
 

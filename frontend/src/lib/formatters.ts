@@ -26,3 +26,12 @@ export const getModeLabel = (mode: string) => {
         default: return mode
     }
 }
+
+export const getSiteInitials = (name: string) => {
+    if (!name) return 'AI';
+    const capitals = name.match(/[A-Z]/g);
+    if (capitals && capitals.length >= 2) {
+        return capitals.slice(0, 2).join('');
+    }
+    return name.substring(0, 2).toUpperCase();
+};

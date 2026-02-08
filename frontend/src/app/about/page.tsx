@@ -3,9 +3,12 @@
 import Link from 'next/link'
 import { Target, Users, Shield, TrendingUp, Award, CheckCircle, Zap, Clock, BookOpen, Sparkles, ArrowRight, Mail, Phone, MapPin, Menu, X } from 'lucide-react'
 import { useState } from 'react'
+import { useSettings } from '@/lib/SettingsContext'
+
 
 export default function AboutPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { settings: publicSettings } = useSettings()
 
   const stats = [
     { label: 'Active Students', value: '10,000+', icon: Users },
@@ -81,7 +84,7 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="text-xl sm:text-2xl font-bold text-primary hover:scale-110 transition-transform">
-              AcadIntern
+              {publicSettings?.siteName || 'AcadIntern'}
             </Link>
             <div className="hidden md:flex items-center space-x-8">
               <Link href="/internships" className="text-gray-700 hover:text-primary transition-colors">
@@ -156,8 +159,7 @@ export default function AboutPage() {
             Connecting Students with <span className="text-primary">Real Opportunities</span>
           </h1>
           <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
-            AcadIntern is a student-first platform designed to bridge the gap between academic learning
-            and industry experience through meaningful internship opportunities.
+            {publicSettings?.siteDescription || `${publicSettings?.siteName || 'AcadIntern'} is a student-first platform designed to bridge the gap between academic learning and industry experience through meaningful internship opportunities.`}
           </p>
         </div>
       </section>
@@ -192,7 +194,7 @@ export default function AboutPage() {
                 that complement their academic journey and prepare them for successful careers.
               </p>
               <p className="text-base text-gray-600 mb-5">
-                AcadIntern was created to solve the common challenges students face: finding relevant
+                {publicSettings?.siteName || 'AcadIntern'} was created to solve the common challenges students face: finding relevant
                 opportunities, navigating complex application processes, and getting timely responses.
               </p>
               <div className="space-y-3">
@@ -223,7 +225,7 @@ export default function AboutPage() {
       <section className="py-10 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Why Choose AcadIntern?</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Why Choose {publicSettings?.siteName || 'AcadIntern'}?</h2>
             <p className="text-base text-gray-600 max-w-2xl mx-auto">
               Built with students in mind, packed with features to make your internship search effortless
             </p>
@@ -331,8 +333,8 @@ export default function AboutPage() {
                 <Mail className="w-6 h-6 text-primary" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-              <a href="mailto:support@acadintern.com" className="text-sm text-primary hover:text-primary/80 transition-colors">
-                support@acadintern.com
+              <a href={`mailto:${publicSettings?.contactEmail || 'support@acadintern.com'}`} className="text-sm text-primary hover:text-primary/80 transition-colors">
+                {publicSettings?.contactEmail || 'support@acadintern.com'}
               </a>
             </div>
 
@@ -386,10 +388,10 @@ export default function AboutPage() {
       <footer className="bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <Link href="/" className="text-xl font-bold text-white hover:text-primary/80 transition-colors">
-            AcadIntern
+            {publicSettings?.siteName || 'AcadIntern'}
           </Link>
           <p className="mt-3 text-sm text-gray-400">
-            © 2026 AcadIntern. All rights reserved.
+            © {new Date().getFullYear()} {publicSettings?.siteName || 'AcadIntern'}. All rights reserved.
           </p>
           <div className="mt-4 flex justify-center gap-5">
             <Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors">

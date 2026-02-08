@@ -5,6 +5,7 @@ import { Bell, Menu, X, LogOut, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificationDropdown } from "@/components/notifications";
 import type { Notification } from "@/components/notifications/NotificationItem";
+import { useSettings } from "@/lib/SettingsContext";
 
 export type NavbarVariant = "admin" | "student" | "company";
 
@@ -62,6 +63,7 @@ export function TopNavbar({
     onMarkAllNotificationsAsRead,
     onLogout,
 }: TopNavbarProps) {
+    const { settings } = useSettings();
     const config = variantConfig[variant];
     const displayLabel = portalLabel ?? config.label;
 
@@ -93,7 +95,7 @@ export function TopNavbar({
                             )}
                             <div className="flex items-baseline gap-1 min-w-0">
                                 <span className="text-sm sm:text-base font-black text-gray-900 truncate tracking-tight">
-                                    AcadIntern
+                                    {settings?.siteName || "AcadIntern"}
                                 </span>
                                 {variant === "admin" ? (
                                     <span className={cn("text-[10px] sm:text-xs font-black uppercase tracking-widest flex-shrink-0 opacity-80", config.labelColor)}>

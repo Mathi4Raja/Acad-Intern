@@ -7,6 +7,7 @@ import { Eye, EyeOff, Mail, Lock, User, Building2, GraduationCap, ArrowRight, Al
 type UserRole = 'student' | 'company' | null
 
 import { useAuth } from '@/lib/AuthContext'
+import { useSettings } from '@/lib/SettingsContext'
 
 declare global {
   interface Window {
@@ -24,6 +25,7 @@ declare global {
 
 export default function SignupPage() {
   const { signup, googleLogin } = useAuth()
+  const { settings } = useSettings()
   const [selectedRole, setSelectedRole] = useState<UserRole>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -156,10 +158,10 @@ export default function SignupPage() {
         {/* Header */}
         <div className="text-center mb-5">
           <Link href="/" className="text-2xl font-bold text-primary hover:text-primary transition-colors">
-            AcadIntern
+            {settings?.siteName || 'AcadIntern'}
           </Link>
           <h1 className="mt-3 text-xl font-bold text-gray-900">Create your account</h1>
-          <p className="mt-1 text-sm text-gray-500">Join AcadIntern and start your journey</p>
+          <p className="mt-1 text-sm text-gray-500">Join {settings?.siteName || 'AcadIntern'} and start your journey</p>
         </div>
 
         {/* Role Selection */}

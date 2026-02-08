@@ -15,7 +15,7 @@ export const getPublicSettings = async (req: Request, res: Response, next: NextF
             'maxFileSize',
             'maxMessageSize',
             'allowResumeUpload',
-            'supportEmail'
+            'contactEmail'
         ];
 
         const settings = await SystemSetting.find({ key: { $in: publicKeys } });

@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle, ArrowLeft } from 'lucide-react'
 
 import { useAuth } from '@/lib/AuthContext'
+import { useSettings } from '@/lib/SettingsContext'
 
 declare global {
   interface Window {
@@ -22,6 +23,7 @@ declare global {
 
 export default function LoginPage() {
   const { login, googleLogin } = useAuth()
+  const { settings } = useSettings()
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
@@ -130,7 +132,7 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center mb-5">
           <Link href="/" className="text-2xl font-bold text-primary hover:text-primary transition-colors">
-            AcadIntern
+            {settings?.siteName || 'AcadIntern'}
           </Link>
           <h1 className="mt-3 text-xl font-bold text-gray-900">Welcome back</h1>
           <p className="mt-1 text-sm text-gray-500">Login to your account</p>
