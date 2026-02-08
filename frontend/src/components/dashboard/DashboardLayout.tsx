@@ -87,13 +87,13 @@ export function DashboardLayout({
                     {/* Overlay for mobile */}
                     {sidebarOpen && (
                         <div
-                            className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden top-14 sm:top-16"
+                            className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden top-11 sm:top-12"
                             onClick={closeSidebar}
                         />
                     )}
 
                     {/* Main Content */}
-                    <main className={`lg:ml-56 pt-14 sm:pt-16 ${disableContentPadding ? '' : ''}`}>
+                    <main className={`lg:ml-56 pt-11 sm:pt-12 ${disableContentPadding ? '' : ''}`}>
                         {children}
                     </main>
                 </>
@@ -112,15 +112,15 @@ export function DashboardLayout({
                     {/* Overlay for mobile */}
                     {sidebarOpen && (
                         <div
-                            className="fixed inset-0 bg-black bg-opacity-50 z-[45] lg:hidden mt-14 sm:mt-16"
+                            className="fixed inset-0 bg-black bg-opacity-50 z-[45] lg:hidden mt-11 sm:mt-12"
                             onClick={closeSidebar}
                         />
                     )}
 
                     {/* Main Content */}
                     <main className={disableContentPadding
-                        ? "absolute inset-0 top-14 sm:top-16 lg:left-64 overflow-hidden flex flex-col bg-white"
-                        : "mt-14 sm:mt-16 lg:ml-64"
+                        ? "absolute inset-0 top-11 sm:top-12 lg:left-64 overflow-hidden flex flex-col bg-white"
+                        : "mt-11 sm:mt-12 lg:ml-64"
                     }>
                         {children}
                     </main>

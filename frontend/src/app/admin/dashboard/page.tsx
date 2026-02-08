@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, Users, Briefcase, Building, AlertCircle, CheckCircle, XCircle, Clock, ArrowUp, ArrowDown, Eye, ChevronRight, Home, Shield } from 'lucide-react'
+import { TrendingUp, Users, Briefcase, Building, AlertCircle, CheckCircle, XCircle, Clock, ArrowUp, ArrowDown, Eye, ChevronRight, Home, Shield, Activity } from 'lucide-react'
 import { useEffect, useState, Suspense } from 'react'
 import api from '@/lib/api'
 import Link from 'next/link'
@@ -133,26 +133,37 @@ function AdminDashboardContent() {
         <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-5">
             <div className="space-y-6">
                 {/* Ultra-Compact Premium Header Card */}
-                <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-3.5 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-1">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
-                    <div className="flex items-center gap-4 relative z-10">
-                        <div className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 shrink-0 group-hover:scale-105 transition-all duration-500">
-                            <Home size={22} />
+                <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-2.5 sm:p-3 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-2">
+                    {/* Background Glow Effect */}
+                    <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover/header:bg-primary/10 transition-colors duration-700" />
+                    <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl group-hover/header:bg-blue-500/10 transition-colors duration-700" />
+
+                    <div className="relative flex items-center gap-4">
+                        <div className="relative">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center transform group-hover/header:scale-110 group-hover/header:rotate-6 transition-all duration-500 shadow-lg shadow-gray-200">
+                                <Shield className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-green-500 border-2 border-white flex items-center justify-center animate-pulse">
+                                <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                            </div>
                         </div>
                         <div>
-                            <h1 className="text-[17px] font-black text-gray-900 leading-none tracking-tight uppercase">
-                                Command Center
+                            <h1 className="text-[15px] font-black text-gray-900 leading-none tracking-tight uppercase">
+                                Admin Dashboard
                             </h1>
-                            <div className="flex items-center gap-2 mt-1.5">
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-                                    Terminal Overview & System Health
+                            <div className="flex items-center gap-2 mt-1">
+                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                                    System activity and overview
                                 </p>
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="System Live" />
+                                <div className="h-1 w-1 rounded-full bg-gray-300" />
+                                <div className="flex items-center gap-1">
+                                    <Activity className="w-3 h-3 text-green-500" />
+                                    <span className="text-[9px] font-bold text-green-600 uppercase tracking-widest">System Active</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-
-                    <div className="flex items-center gap-3 relative z-10">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 relative z-10 w-full sm:w-auto">
                         <div className="flex flex-col items-end px-3 py-1.5 bg-gray-50/50 border border-gray-100 rounded-xl">
                             <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Last Sync</span>
                             <span className="text-[10px] font-black text-gray-700 uppercase">
@@ -166,7 +177,7 @@ function AdminDashboardContent() {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4 mt-2">
                     <StatCard
                         title="Total Users"
                         value={stats.totalUsers.toLocaleString()}
@@ -231,7 +242,7 @@ function AdminDashboardContent() {
                                             </div>
                                             <div className="flex-1 min-w-0 flex items-center justify-between">
                                                 <div className="space-y-0.5">
-                                                    <h3 className="text-sm font-black text-gray-900 truncate tracking-tight">{user.name}</h3>
+                                                    <h3 className="text-[15px] font-black text-gray-900 truncate tracking-tight">{user.name}</h3>
                                                     <p className="text-[11px] font-bold text-gray-400 truncate uppercase mt-0.5 tracking-tighter">{user.email}</p>
                                                 </div>
                                                 <div className="text-right shrink-0">
@@ -275,7 +286,7 @@ function AdminDashboardContent() {
                                             </div>
                                             <div className="flex-1 min-w-0 flex items-center justify-between">
                                                 <div className="space-y-0.5">
-                                                    <h3 className="text-sm font-black text-gray-900 truncate tracking-tight mb-0.5" title={internship.title}>{internship.title}</h3>
+                                                    <h3 className="text-[15px] font-black text-gray-900 truncate tracking-tight mb-0.5" title={internship.title}>{internship.title}</h3>
                                                     <div className="flex items-center gap-1.5">
                                                         <Building size={10} className="text-gray-400" />
                                                         <p className="text-[11px] font-bold text-gray-500 truncate uppercase tracking-tighter">{internship.company}</p>
@@ -340,7 +351,7 @@ function AdminDashboardContent() {
                                                     <Clock size={10} className="text-gray-400" />
                                                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{formatDate(report.reportedDate)}</span>
                                                 </div>
-                                                <Link href="/admin/reports" className="text-[10px] font-black text-red-600 hover:bg-red-50 px-2.5 py-1 rounded-lg uppercase tracking-widest transition-all border border-transparent hover:border-red-100">
+                                                <Link href="/admin/reports" className="text-[11px] font-black text-red-600 hover:bg-red-50 px-2.5 py-1 rounded-lg uppercase tracking-widest transition-all border border-transparent hover:border-red-100">
                                                     RESOLVE
                                                 </Link>
                                             </div>
@@ -359,7 +370,7 @@ function AdminDashboardContent() {
                         </div>
 
                         {/* Quick Access Menu */}
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 min-h-[400px]">
                             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Quick Access</h3>
                             <div className="grid grid-cols-1 gap-2.5">
                                 <Link href="/admin/users" className="flex items-center gap-3 p-3 bg-blue-50/10 border border-blue-100/20 rounded-xl hover:bg-blue-50/30 transition-all group">

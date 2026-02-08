@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { Search, Filter, Mail, Phone, Calendar, Edit, Trash2, Ban, CheckCircle, XCircle, Eye, Download, Loader2, X, ChevronRight, Users as UsersIcon, Building, Briefcase } from 'lucide-react'
+import { Search, Filter, Mail, Phone, Calendar, Edit, Trash2, Ban, CheckCircle, XCircle, Eye, Download, Loader2, X, ChevronRight, Shield, Activity, Users as UsersIcon, Building, Briefcase, User as UserIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import api from '@/lib/api'
 import { StatCard } from '@/components/analytics/StatCard'
@@ -118,7 +118,7 @@ function ManageUsersContent() {
         suspended: s.suspendedUsers || 0
       })
 
-      // Fetch Users
+      // Fetch User as UserIcon,
       const params: any = {
         page: currentPage,
         limit: ITEMS_PER_PAGE
@@ -239,28 +239,40 @@ function ManageUsersContent() {
   }
 
   return (
-    <div className="p-3 sm:p-4 max-w-7xl mx-auto">
+    <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-4">
       {/* Ultra-Compact Premium Header Card */}
-      <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-3.5 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 shrink-0 group-hover:scale-105 transition-all duration-500">
-            <UsersIcon size={22} />
+      <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-2.5 sm:p-3 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-2">
+        {/* Background Glow Effect */}
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover/header:bg-primary/10 transition-colors duration-700" />
+        <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl group-hover/header:bg-blue-500/10 transition-colors duration-700" />
+
+        <div className="relative flex items-center gap-4">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center transform group-hover/header:scale-110 group-hover/header:rotate-6 transition-all duration-500 shadow-lg shadow-gray-200">
+              <UsersIcon className="w-6 h-6 text-white" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-green-500 border-2 border-white flex items-center justify-center animate-pulse">
+              <div className="w-1.5 h-1.5 rounded-full bg-white" />
+            </div>
           </div>
           <div>
-            <h1 className="text-[17px] font-black text-gray-900 leading-none tracking-tight uppercase">
-              User Registry
+            <h1 className="text-[15px] font-black text-gray-900 leading-none tracking-tight uppercase">
+              User Management
             </h1>
-            <div className="flex items-center gap-2 mt-1.5">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-                System Directory & Authentication Audit
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                Manage user accounts and permissions
               </p>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Security Grid Active" />
+              <div className="h-1 w-1 rounded-full bg-gray-300" />
+              <div className="flex items-center gap-1">
+                <Shield className="w-3 h-3 text-red-500" />
+                <span className="text-[9px] font-bold text-red-600 uppercase tracking-widest">Admin Access</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 relative z-10">
+        <div className="flex items-center gap-3 relative z-10 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
             <input
@@ -283,9 +295,7 @@ function ManageUsersContent() {
       </div>
 
       {/* Stats Grid */}
-      {/* Stats Grid */}
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-2">
         <StatCard
           title="Total Users"
           value={stats.total}
@@ -366,18 +376,36 @@ function ManageUsersContent() {
         </div>
       )}
 
+      {/* Select All UI */}
+      {users.length > 0 && (
+        <div className="mb-3 px-1">
+          <label className="group flex items-center gap-3 text-sm text-gray-700 cursor-pointer w-fit">
+            <div className="relative flex items-center justify-center">
+              <input
+                type="checkbox"
+                checked={selectedUsers.length === users.length && users.length > 0}
+                onChange={handleSelectAll}
+                className="peer absolute opacity-0 w-5 h-5 cursor-pointer"
+              />
+              <div className="w-5 h-5 border-2 border-gray-300 rounded-md transition-all group-hover:border-primary peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center">
+                <div className="w-2.5 h-1.5 border-l-2 border-b-2 border-white -rotate-45 opacity-0 peer-checked:opacity-100 mb-0.5"></div>
+              </div>
+            </div>
+            <span className="text-xs font-black text-gray-400 uppercase tracking-widest group-hover:text-primary transition-colors">Select All ({users.length})</span>
+          </label>
+        </div>
+      )}
+
 
 
       {/* Bulk Actions */}
       {selectedUsers.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 mb-3 flex flex-wrap gap-2 items-center justify-between animate-in slide-in-from-top-2">
-          <span className="text-sm font-medium text-gray-600">{selectedUsers.length} selected</span>
-          <div className="flex items-center gap-2 flex-wrap">
-            <button onClick={() => handleBulkAction('activated')} className="px-3 py-1.5 bg-green-600 text-white rounded text-xs font-semibold hover:bg-green-700 transition-colors">Activate</button>
-            <button onClick={() => handleBulkAction('suspended')} className="px-3 py-1.5 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700 transition-colors">Suspend</button>
-            <button onClick={() => handleBulkAction('deleted')} className="px-3 py-1.5 bg-gray-600 text-white rounded text-xs font-semibold hover:bg-gray-700 transition-colors">Delete</button>
-            <button onClick={() => setSelectedUsers([])} className="px-3 py-1.5 border border-gray-300 rounded text-xs font-semibold hover:bg-gray-50 transition-colors">Clear</button>
-          </div>
+        <div className="bg-white rounded-xl shadow-sm border border-primary/20 p-3 mb-4 flex flex-wrap gap-2 items-center animate-in slide-in-from-top-2">
+          <span className="text-sm font-bold text-primary mr-2 bg-primary/5 px-2 py-1 rounded-lg">{selectedUsers.length} selected</span>
+          <button onClick={() => handleBulkAction('activated')} className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition-colors shadow-sm">Activate All</button>
+          <button onClick={() => handleBulkAction('suspended')} className="px-4 py-1.5 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-colors shadow-sm">Suspend All</button>
+          <button onClick={() => handleBulkAction('deleted')} className="px-4 py-1.5 bg-gray-600 text-white rounded-lg text-xs font-bold hover:bg-gray-700 transition-colors shadow-sm">Delete All</button>
+          <button onClick={() => setSelectedUsers([])} className="px-4 py-1.5 border border-gray-300 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors">Clear</button>
         </div>
       )}
 
@@ -391,12 +419,26 @@ function ManageUsersContent() {
         ) : users.length > 0 ? (
           users.map((user) => (
             <div key={user._id} className={cn(
-              "group bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-xl hover:border-primary/20 transition-all duration-300 relative flex flex-col h-full",
+              "group bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-xl hover:border-primary/20 transition-all duration-300 relative flex flex-col h-full",
               selectedUsers.includes(user._id) && "ring-2 ring-primary/20 border-primary/30"
             )}>
-              <div className="flex gap-4 h-full">
-                {/* Column 1: Checkbox & Avatar */}
-                <div className="flex flex-col items-center gap-3 pt-0.5 shrink-0 w-10">
+              {/* Header: Icon + Info + Actions */}
+              <div className="flex items-center gap-3 mb-4">
+                {/* Avatar/Icon Area */}
+                <div className="w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-primary/5 group-hover:text-primary transition-all duration-300 shadow-sm overflow-hidden shrink-0">
+                  {user.role === 'company' ? <Building size={22} /> : <UsersIcon size={22} />}
+                </div>
+
+                {/* Identity Area */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-[17px] font-black text-gray-900 leading-tight group-hover:text-primary transition-colors truncate" title={user.name}>
+                    {user.name}
+                  </h3>
+                  <p className="text-[11px] font-bold text-gray-400 truncate mt-0.5">{user.email}</p>
+                </div>
+
+                {/* Control Cluster */}
+                <div className="flex flex-col items-end gap-2 shrink-0">
                   <div className="relative flex items-center justify-center">
                     <input
                       type="checkbox"
@@ -408,119 +450,106 @@ function ManageUsersContent() {
                       <div className="w-2.5 h-1.5 border-l-2 border-b-2 border-white -rotate-45 opacity-0 peer-checked:opacity-100 mb-0.5"></div>
                     </div>
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-primary/5 group-hover:text-primary transition-all duration-300 shadow-sm overflow-hidden">
-                    {user.role === 'company' ? <Building size={20} /> : <UsersIcon size={20} />}
+                  <div className={cn(
+                    "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border h-fit",
+                    getStatusColor(user.status).includes('green')
+                      ? "bg-green-50 text-green-700 border-green-100"
+                      : user.status === 'suspended'
+                        ? "bg-red-50 text-red-700 border-red-100"
+                        : "bg-yellow-50 text-yellow-700 border-yellow-100"
+                  )}>
+                    {user.status}
                   </div>
                 </div>
+              </div>
 
-                {/* Column 2: Main Content */}
-                <div className="flex-1 min-w-0 flex flex-col">
-                  {/* Header */}
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="min-w-0">
-                      <h3 className="text-[15px] font-black text-gray-900 leading-tight group-hover:text-primary transition-colors truncate" title={user.name}>
-                        {user.name}
-                      </h3>
-                      <p className="text-[11px] font-bold text-gray-400 truncate mt-0.5">{user.email}</p>
-                    </div>
-                    <div className={cn(
-                      "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shrink-0 border h-fit mt-0.5",
-                      getStatusColor(user.status).replace('bg-', 'bg-').replace('text-', 'text-').includes('green')
-                        ? "bg-green-50 text-green-700 border-green-100"
-                        : user.status === 'suspended'
-                          ? "bg-red-50 text-red-700 border-red-100"
-                          : "bg-yellow-50 text-yellow-700 border-yellow-100"
-                    )}>
-                      {user.status}
-                    </div>
-                  </div>
-
-                  {/* Role & Verification Badge */}
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border shadow-sm",
-                      user.role === 'student' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'
-                    )}>
-                      {user.role === 'student' ? <Briefcase size={10} /> : <Building size={10} />}
-                      {user.role}
+              {/* Body: Full Width Content */}
+              <div className="space-y-3 flex-1 flex flex-col">
+                {/* Role & Verification Badge */}
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border shadow-sm",
+                    user.role === 'student' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'
+                  )}>
+                    {user.role === 'student' ? <Briefcase size={10} /> : <Building size={10} />}
+                    {user.role}
+                  </span>
+                  {user.role === 'company' && user.verified && (
+                    <span className="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1 shadow-sm">
+                      <CheckCircle size={10} fill="currentColor" className="text-white" />
+                      Verified
                     </span>
-                    {user.role === 'company' && user.verified && (
-                      <span className="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1 shadow-sm">
-                        <CheckCircle size={10} fill="currentColor" className="text-white" />
-                        Verified
-                      </span>
-                    )}
-                  </div>
+                  )}
+                </div>
 
-                  {/* Info Grid - Rich Data */}
-                  <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Contact</p>
-                      <p className="text-[11px] font-bold text-gray-700 truncate">{user.phone || 'N/A'}</p>
-                    </div>
-                    <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
-                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Joined</p>
-                      <p className="text-[11px] font-bold text-gray-700 truncate">{formatDate(user.createdAt)}</p>
-                    </div>
-                    {user.role === 'student' ? (
-                      <>
-                        <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
-                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Dept</p>
-                          <p className="text-[11px] font-bold text-gray-700 truncate">{user.department || '-'}</p>
-                        </div>
-                        <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
-                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Apps</p>
-                          <p className="text-[11px] font-black text-primary truncate">{user.applications || 0}</p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors col-span-2">
-                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Posts Activity</p>
-                          <p className="text-[11px] font-black text-gray-700 flex items-center gap-2">
-                            <span className="text-primary font-black uppercase text-[10px] bg-primary/5 px-1.5 py-0.5 rounded-md border border-primary/10">
-                              {user.internshipsPosted || 0} Total Listings
-                            </span>
-                          </p>
-                        </div>
-                      </>
-                    )}
+                {/* Info Grid - Rich Data */}
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Contact</p>
+                    <p className="text-[11px] font-bold text-gray-700 truncate">{user.phone || 'N/A'}</p>
                   </div>
+                  <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Joined</p>
+                    <p className="text-[11px] font-bold text-gray-700 truncate">{formatDate(user.createdAt)}</p>
+                  </div>
+                  {user.role === 'student' ? (
+                    <>
+                      <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Dept</p>
+                        <p className="text-[11px] font-bold text-gray-700 truncate">{user.department || '-'}</p>
+                      </div>
+                      <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Apps</p>
+                        <p className="text-[11px] font-black text-primary truncate">{user.applications || 0}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors col-span-2">
+                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Posts Activity</p>
+                        <p className="text-[11px] font-black text-gray-700 flex items-center gap-2">
+                          <span className="text-primary font-black uppercase text-[10px] bg-primary/5 px-1.5 py-0.5 rounded-md border border-primary/10">
+                            {user.internshipsPosted || 0} Total Listings
+                          </span>
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
 
-                  {/* Actions Area */}
-                  <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
-                    <button
-                      onClick={() => setSelectedUser(user)}
-                      className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest flex items-center gap-1"
-                    >
-                      <Eye size={12} /> View Registry
-                    </button>
-                    <div className="flex items-center gap-1">
-                      {user.status === 'active' ? (
-                        <button
-                          onClick={() => handleAction(user._id, 'suspend')}
-                          className="p-1.5 text-orange-400 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-all"
-                          title="Suspend"
-                        >
-                          <Ban size={15} />
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleAction(user._id, 'activate')}
-                          className="p-1.5 text-emerald-400 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-all"
-                          title="Activate"
-                        >
-                          <CheckCircle size={15} />
-                        </button>
-                      )}
+                {/* Actions Area */}
+                <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
+                  <button
+                    onClick={() => setSelectedUser(user)}
+                    className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest flex items-center gap-1"
+                  >
+                    <Eye size={12} /> View Registry
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {user.status === 'active' ? (
                       <button
-                        onClick={() => handleAction(user._id, 'delete')}
-                        className="p-1.5 text-red-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
-                        title="Delete Permanently"
+                        onClick={() => handleAction(user._id, 'suspend')}
+                        className="p-1.5 text-orange-400 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-all"
+                        title="Suspend"
                       >
-                        <Trash2 size={15} />
+                        <Ban size={15} />
                       </button>
-                    </div>
+                    ) : (
+                      <button
+                        onClick={() => handleAction(user._id, 'activate')}
+                        className="p-1.5 text-emerald-400 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-all"
+                        title="Activate"
+                      >
+                        <CheckCircle size={15} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleAction(user._id, 'delete')}
+                      className="p-1.5 text-red-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
+                      title="Delete Permanently"
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -546,155 +575,188 @@ function ManageUsersContent() {
       </div>
 
       {/* Pagination Controls */}
-      {totalPages > 1 && !loading && (
-        <div className="mt-8 flex items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-xs font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-          >
-            <ChevronRight size={16} className="rotate-180" />
-            Previous
-          </button>
+      {
+        totalPages > 1 && !loading && (
+          <div className="mt-8 flex items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-xs font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              <ChevronRight size={16} className="rotate-180" />
+              Previous
+            </button>
 
-          <div className="hidden sm:flex items-center gap-2">
-            <span className="text-xs font-black text-gray-900 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
-              {currentPage} / {totalPages}
-            </span>
+            <div className="hidden sm:flex items-center gap-2">
+              <span className="text-xs font-black text-gray-900 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+                {currentPage} / {totalPages}
+              </span>
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-2 px-4 py-2 border border-blue-100 bg-blue-50 text-blue-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+            >
+              Next
+              <ChevronRight size={16} />
+            </button>
           </div>
-
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="flex items-center gap-2 px-4 py-2 border border-blue-100 bg-blue-50 text-blue-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
-          >
-            Next
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      )}
+        )
+      }
 
       {/* User Details Modal */}
-      {selectedUser && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col max-h-[90vh]">
-            <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-white shrink-0">
-              <div>
-                <h2 className="text-[17px] font-black text-gray-900 leading-none">User Registry Detail</h2>
-                <p className="text-[11px] font-bold text-gray-400 mt-1.5 uppercase tracking-widest">Profile & Activity Overview</p>
-              </div>
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="text-gray-400 hover:text-gray-900 p-2 rounded-xl hover:bg-gray-100 transition-all"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto space-y-8 scrollbar-hide">
-              {/* Profile Header Block */}
-              <div className="flex items-center gap-5">
-                <div className="w-20 h-20 rounded-2xl bg-gray-50 border-2 border-gray-100 flex items-center justify-center text-gray-300 font-black text-3xl shrink-0 group hover:border-primary/20 transition-colors">
-                  {selectedUser.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-xl font-black text-gray-900 mb-1 truncate">{selectedUser.name}</h3>
-                  <p className="text-xs font-bold text-gray-500 mb-3 truncate">{selectedUser.email}</p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={cn(
-                      "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm flex items-center gap-1.5",
-                      selectedUser.role === 'student' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'
-                    )}>
-                      {selectedUser.role}
-                      {selectedUser.role === 'company' && selectedUser.verified && <CheckCircle size={10} fill="currentColor" className="text-white" />}
-                    </span>
-                    <span className={cn(
-                      "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm",
-                      selectedUser.status === 'active' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
-                    )}>
-                      {selectedUser.status}
-                    </span>
+      {
+        selectedUser && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-2xl shadow-2xl w-fit max-w-[95vw] sm:max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col h-auto max-h-[95vh]">
+              {/* Premium Header Pattern */}
+              <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100 p-2 sm:px-3 sm:py-2.5 flex items-center justify-between overflow-hidden relative group/modal-header shrink-0">
+                <div className="absolute -right-16 -top-16 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover/modal-header:bg-primary/10 transition-colors duration-700" />
+                <div className="relative flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center transform group-hover/modal-header:scale-105 transition-all duration-500 shadow-md">
+                    <Shield className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-[13px] font-black text-gray-900 leading-normal tracking-tight uppercase px-1">User Registry Detail</h2>
+                    <p className="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest px-1">Profile & Activity Overview</p>
                   </div>
                 </div>
+                <button
+                  onClick={() => setSelectedUser(null)}
+                  className="relative z-10 text-gray-400 hover:text-gray-900 p-1.5 rounded-xl hover:bg-gray-100 transition-all active:scale-90"
+                >
+                  <X size={16} />
+                </button>
               </div>
 
-              {/* Data Grid Section */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
-                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Primary Contact</span>
-                  <p className="text-sm font-black text-gray-900">{selectedUser.phone || 'Registry Missing'}</p>
-                </div>
-                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
-                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Registry Entry</span>
-                  <p className="text-sm font-black text-gray-900">{formatDate(selectedUser.createdAt)}</p>
+              <div className="p-2.5 sm:p-3 overflow-y-visible space-y-2.5 scrollbar-hide bg-gray-50/20 flex-1">
+                {/* Profile Header Block */}
+                <div className="flex items-center gap-4 bg-white p-2.5 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                  <div className="w-12 h-12 rounded-[14px] bg-gray-50 border-2 border-gray-100 flex items-center justify-center text-gray-300 font-black text-xl shrink-0 group hover:border-primary/20 transition-all duration-300 hover:shadow-inner">
+                    <UserIcon size={24} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-[15px] font-black text-gray-900 mb-0.5 truncate tracking-tight">{selectedUser?.name}</h3>
+                    <p className="text-[11px] font-bold text-gray-400 mb-1.5 truncate flex items-center gap-1.5 leading-none">
+                      <Mail size={12} className="shrink-0" /> {selectedUser?.email}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm flex items-center gap-1.5",
+                        selectedUser?.role === 'student' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'
+                      )}>
+                        {selectedUser?.role}
+                        {selectedUser?.role === 'company' && selectedUser?.verified && <CheckCircle size={10} fill="currentColor" className="text-white" />}
+                      </span>
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm flex items-center gap-1.5",
+                        selectedUser?.status === 'active' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
+                      )}>
+                        <div className={cn("w-1.5 h-1.5 rounded-full", selectedUser?.status === 'active' ? 'bg-green-500' : 'bg-red-500')} />
+                        {selectedUser?.status}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
-                {selectedUser.role === 'student' ? (
-                  <>
-                    <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
-                      <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Academic Dept</span>
-                      <p className="text-sm font-black text-gray-900 truncate">{selectedUser.department || 'General'}</p>
+                {/* Data Grid Section */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                    <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Primary Contact</span>
+                    <div className="flex items-center gap-2">
+                      <Phone size={12} className="text-gray-400" />
+                      <p className="text-[12px] font-black text-gray-900 leading-none">{selectedUser?.phone || 'Registry Missing'}</p>
                     </div>
-                    <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
-                      <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">App Count</span>
-                      <p className="text-sm font-black text-primary">{selectedUser.applications || 0} Submissions</p>
+                  </div>
+                  <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                    <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Registry Entry</span>
+                    <div className="flex items-center gap-2">
+                      <Calendar size={12} className="text-gray-400" />
+                      <p className="text-[12px] font-black text-gray-900 leading-none">{formatDate(selectedUser?.createdAt)}</p>
                     </div>
-                  </>
+                  </div>
+
+                  {selectedUser?.role === 'student' ? (
+                    <>
+                      <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Academic Dept</span>
+                        <p className="text-[12px] font-black text-gray-900 truncate tracking-tight">{selectedUser?.department || 'General'}</p>
+                      </div>
+                      <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">App Count</span>
+                        <p className="text-[12px] font-black text-primary tracking-tight">{selectedUser?.applications || 0} Submissions</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30 col-span-2">
+                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Company Affiliation</span>
+                        <div className="flex items-center gap-2">
+                          <Building size={12} className="text-gray-400" />
+                          <p className="text-[12px] font-black text-gray-900 truncate tracking-tight">{selectedUser?.companyName || 'Corporate Entity'}</p>
+                        </div>
+                      </div>
+                      <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30 col-span-2">
+                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Posting History</span>
+                        <div className="flex items-center gap-2">
+                          <Briefcase size={12} className="text-primary/60" />
+                          <p className="text-[12px] font-black text-primary tracking-tight">{selectedUser?.internshipsPosted || 0} Active Internships</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Unique Identifier Area */}
+                <div className="bg-gray-900 rounded-2xl p-3 shadow-xl shadow-gray-200/50 ring-1 ring-white/10 relative overflow-hidden group">
+                  <div className="absolute right-0 top-0 p-3 opacity-[0.05] group-hover:opacity-10 transition-opacity">
+                    <Shield size={48} className="text-white" />
+                  </div>
+                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Internal Registry ID</span>
+                  <code className="text-[12px] font-mono text-gray-300 break-all leading-relaxed relative z-10">
+                    {selectedUser?._id}
+                  </code>
+                </div>
+              </div>
+
+              <div className="px-4 py-1.5 bg-white border-t border-gray-100 flex justify-end gap-2 shrink-0">
+                <button
+                  onClick={() => setSelectedUser(null)}
+                  className="px-5 py-1.5 bg-gray-50 text-[9px] font-black uppercase tracking-widest text-gray-500 rounded-xl hover:bg-gray-100 hover:text-gray-900 transition-all border border-gray-100"
+                >
+                  Close View
+                </button>
+                {selectedUser?.status === 'active' ? (
+                  <button
+                    onClick={() => {
+                      if (selectedUser?._id) {
+                        handleAction(selectedUser._id, 'suspend');
+                        setSelectedUser(null);
+                      }
+                    }}
+                    className="px-5 py-1.5 bg-orange-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-600 transition-all shadow-lg shadow-orange-200 active:scale-95"
+                  >
+                    Suspend Entry
+                  </button>
                 ) : (
-                  <>
-                    <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100 col-span-2">
-                      <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Company Affiliation</span>
-                      <p className="text-sm font-black text-gray-900">{selectedUser.companyName || 'Corporate Entity'}</p>
-                    </div>
-                    <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100 col-span-2">
-                      <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Posting History</span>
-                      <p className="text-sm font-black text-primary">{selectedUser.internshipsPosted || 0} Active Internships</p>
-                    </div>
-                  </>
+                  <button
+                    onClick={() => {
+                      if (selectedUser?._id) {
+                        handleAction(selectedUser._id, 'activate');
+                        setSelectedUser(null);
+                      }
+                    }}
+                    className="px-5 py-1.5 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200 active:scale-95"
+                  >
+                    Activate Entry
+                  </button>
                 )}
               </div>
-
-              {/* Unique Identifier Area */}
-              <div className="bg-gray-900 rounded-2xl p-4 shadow-xl shadow-gray-200/50 ring-1 ring-white/10">
-                <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Internal Registry ID</span>
-                <code className="text-[11px] font-mono text-gray-200 break-all leading-relaxed">
-                  {selectedUser._id}
-                </code>
-              </div>
-            </div>
-
-            <div className="px-6 py-5 bg-white border-t border-gray-50 flex justify-end gap-3 shrink-0">
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="px-6 py-2.5 border border-gray-100 text-[11px] font-black uppercase tracking-widest text-gray-500 rounded-xl hover:bg-gray-50 transition-all"
-              >
-                Close View
-              </button>
-              {selectedUser.status === 'active' ? (
-                <button
-                  onClick={() => {
-                    handleAction(selectedUser._id, 'suspend');
-                    setSelectedUser(null);
-                  }}
-                  className="px-6 py-2.5 bg-orange-50 text-orange-600 border border-orange-100 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-100 transition-all shadow-sm shadow-orange-100"
-                >
-                  Suspend Entry
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    handleAction(selectedUser._id, 'activate');
-                    setSelectedUser(null);
-                  }}
-                  className="px-6 py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-100 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-100 transition-all shadow-sm shadow-emerald-100"
-                >
-                  Activate Entry
-                </button>
-              )}
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
@@ -704,7 +766,7 @@ function ManageUsersContent() {
         onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
         type={confirmDialog.type}
       />
-    </div>
+    </div >
   )
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Users, Briefcase, Building2, FileText, Download, TrendingDown, Clock, Globe, Zap, Target } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Briefcase, Building2, FileText, Download, TrendingDown, Clock, Globe, Zap, Target, Shield, Activity } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, PieChart, Pie, Cell } from 'recharts';
 import api from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -51,29 +51,40 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-5">
+    <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-4">
       {/* Header - Compact & Premium */}
-      {/* Ultra-Compact Premium Header Card */}
-      <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-3.5 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 shrink-0 group-hover:scale-105 transition-all duration-500">
-            <BarChart3 size={22} />
+      <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-2.5 sm:p-3 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-3">
+        {/* Background Glow Effect */}
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover/header:bg-primary/10 transition-colors duration-700" />
+        <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl group-hover/header:bg-blue-500/10 transition-colors duration-700" />
+
+        <div className="relative flex items-center gap-4">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center transform group-hover/header:scale-110 group-hover/header:rotate-6 transition-all duration-500 shadow-lg shadow-gray-200">
+              <BarChart3 className="w-6 h-6 text-white" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-green-500 border-2 border-white flex items-center justify-center animate-pulse">
+              <div className="w-1.5 h-1.5 rounded-full bg-white" />
+            </div>
           </div>
           <div>
-            <h1 className="text-[17px] font-black text-gray-900 leading-none tracking-tight uppercase">
-              Platform Intelligence
+            <h1 className="text-[15px] font-black text-gray-900 leading-none tracking-tight uppercase">
+              System Analytics
             </h1>
-            <div className="flex items-center gap-2 mt-1.5">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-                Live Real-Time performance metrics & forecasting
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                Platform performance and growth metrics
               </p>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Engine Live" />
+              <div className="h-1 w-1 rounded-full bg-gray-300" />
+              <div className="flex items-center gap-1">
+                <Activity className="w-3 h-3 text-green-500" />
+                <span className="text-[9px] font-bold text-green-600 uppercase tracking-widest">System Active</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 relative z-10">
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-3 relative z-10 w-full sm:w-auto">
           <div className="flex bg-gray-100/50 p-1 rounded-xl border border-gray-100">
             {['7days', '30days', '3months'].map((range) => (
               <button
@@ -132,11 +143,11 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Primary Trend Chart - Large & Clean */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 transition-all hover:shadow-xl hover:shadow-gray-100/50">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 transition-all hover:shadow-xl hover:shadow-gray-100/50">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-[15px] font-black text-gray-900 leading-none">Entity Acquisition Curve</h2>
-            <p className="text-[11px] font-bold text-gray-400 mt-1.5 uppercase tracking-widest">Growth across stakeholders</p>
+            <h2 className="text-[17px] font-black text-gray-900 leading-none">Growth Trends</h2>
+            <p className="text-[11px] font-bold text-gray-400 mt-1.5 uppercase tracking-widest">Acquisition Analysis</p>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -209,7 +220,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Internship Lifecycle - High Density */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
-          <h2 className="text-[15px] font-black text-gray-900 mb-6 flex items-center justify-between">
+          <h2 className="text-[17px] font-black text-gray-900 mb-6 flex items-center justify-between">
             Inventory Health
             <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Distribution</span>
           </h2>
@@ -239,7 +250,7 @@ export default function AnalyticsPage() {
 
         {/* Application Velocity Funnel */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
-          <h2 className="text-[15px] font-black text-gray-900 mb-6 flex items-center justify-between">
+          <h2 className="text-[17px] font-black text-gray-900 mb-6 flex items-center justify-between">
             Conversion Pipeline
             <TrendingUp size={16} className="text-emerald-500" />
           </h2>
@@ -280,7 +291,7 @@ export default function AnalyticsPage() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-[15px] font-black text-gray-900 leading-none">Market Leaders</h2>
+            <h2 className="text-[17px] font-black text-gray-900 leading-none">Market Leaders</h2>
             <p className="text-[11px] font-bold text-gray-400 mt-1.5 uppercase tracking-widest">Top conversion by company</p>
           </div>
         </div>
@@ -337,7 +348,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Most In-Demand Skills - Redesigned */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
-          <h2 className="text-[15px] font-black text-gray-900 mb-6 flex items-center justify-between">
+          <h2 className="text-[17px] font-black text-gray-900 mb-6 flex items-center justify-between">
             Talent Demand
             <Target size={16} className="text-red-500" />
           </h2>
@@ -364,7 +375,7 @@ export default function AnalyticsPage() {
 
         {/* Geographic Distribution - Redesigned */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
-          <h2 className="text-[15px] font-black text-gray-900 mb-6 flex items-center justify-between">
+          <h2 className="text-[17px] font-black text-gray-900 mb-6 flex items-center justify-between">
             Regional Density
             <Globe size={16} className="text-blue-500" />
           </h2>
@@ -393,7 +404,7 @@ export default function AnalyticsPage() {
       {/* Activity by Day - Redesigned */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[15px] font-black text-gray-900 uppercase">Weekly Frequency</h2>
+          <h2 className="text-[17px] font-black text-gray-900 uppercase">Weekly Frequency</h2>
           <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Inflow Traffic</span>

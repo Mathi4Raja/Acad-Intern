@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { cn } from '@/lib/utils'
-import { Search, Filter, MapPin, Clock, IndianRupee, Users, Eye, CheckCircle, XCircle, Trash2, AlertCircle, Building, Loader2, Calendar, Briefcase, X } from 'lucide-react'
+import { Search, Filter, MapPin, Clock, IndianRupee, Users, Eye, CheckCircle, XCircle, Trash2, AlertCircle, Building, Loader2, Calendar, Briefcase, X, Shield, Activity, Ban } from 'lucide-react'
 import api from '@/lib/api'
 import { StatCard } from '@/components/analytics/StatCard'
 import { useAdminStats } from '@/lib/AdminStatsContext'
@@ -19,6 +19,7 @@ interface Internship {
     _id: string
     companyName: string
     verified: boolean
+    logo?: string
   }
   location: string
   mode: string
@@ -203,23 +204,35 @@ function ManageInternshipsContent() {
   }
 
   return (
-    <div className="p-3 sm:p-4 max-w-7xl mx-auto">
+    <div className="p-2 sm:p-3 max-w-7xl mx-auto space-y-4">
       {/* Ultra-Compact Premium Header Card */}
-      <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-3.5 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 shrink-0 group-hover:scale-105 transition-all duration-500">
-            <Briefcase size={22} />
+      <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-2.5 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-2">
+        {/* Background Glow Effect */}
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover/header:bg-primary/10 transition-colors duration-700" />
+        <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl group-hover/header:bg-blue-500/10 transition-colors duration-700" />
+
+        <div className="relative flex items-center gap-4">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center transform group-hover/header:scale-110 group-hover/header:rotate-6 transition-all duration-500 shadow-lg shadow-gray-200">
+              <Briefcase className="w-6 h-6 text-white" />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-green-500 border-2 border-white flex items-center justify-center animate-pulse">
+              <div className="w-1.5 h-1.5 rounded-full bg-white" />
+            </div>
           </div>
           <div>
-            <h1 className="text-[17px] font-black text-gray-900 leading-none tracking-tight uppercase">
-              Opportunity Grid
+            <h1 className="text-[15px] font-black text-gray-900 leading-none tracking-tight uppercase">
+              Internship Management
             </h1>
-            <div className="flex items-center gap-2 mt-1.5">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-                Active Postings & Regulatory Moderation
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                Review and moderate internship postings
               </p>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Feed Synchronized" />
+              <div className="h-1 w-1 rounded-full bg-gray-300" />
+              <div className="flex items-center gap-1">
+                <Activity className="w-3 h-3 text-orange-500" />
+                <span className="text-[9px] font-bold text-orange-600 uppercase tracking-widest">Live Updates</span>
+              </div>
             </div>
           </div>
         </div>
@@ -248,7 +261,7 @@ function ManageInternshipsContent() {
 
 
       {/* Stats and stats grid... (kept brief for artifact but assumes full implementation in real file) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
         <StatCard
           title="Total"
           value={stats.total}
@@ -313,7 +326,7 @@ function ManageInternshipsContent() {
                 <div className="w-2.5 h-1.5 border-l-2 border-b-2 border-white -rotate-45 opacity-0 peer-checked:opacity-100 mb-0.5"></div>
               </div>
             </div>
-            <span className="font-bold text-gray-600 group-hover:text-primary transition-colors">Select All ({internships.length})</span>
+            <span className="text-xs font-black text-gray-400 uppercase tracking-widest group-hover:text-primary transition-colors">Select All ({internships.length})</span>
           </label>
         </div>
       )}
@@ -334,12 +347,33 @@ function ManageInternshipsContent() {
 
             return (
               <div key={internship._id} className={cn(
-                "group bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-xl hover:border-primary/20 transition-all duration-300 relative flex flex-col h-full",
+                "group bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-xl hover:border-primary/20 transition-all duration-300 relative flex flex-col h-full",
                 selectedInternships.includes(internship._id) && "ring-2 ring-primary/20 border-primary/30"
               )}>
-                <div className="flex gap-4 h-full">
-                  {/* Column 1: Checkbox & Company Logo */}
-                  <div className="flex flex-col items-center gap-3 pt-0.5 shrink-0 w-10">
+                {/* Header: Icon + Info + Actions */}
+                <div className="flex items-start gap-4 mb-4">
+                  {/* Company Logo Area */}
+                  <div className="w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-primary/5 group-hover:text-primary transition-all duration-300 shadow-sm overflow-hidden p-1 shrink-0">
+                    {internship.companyId?.logo ? (
+                      <img src={internship.companyId.logo} alt="" className="w-full h-full object-contain rounded-lg" />
+                    ) : (
+                      <Building size={22} />
+                    )}
+                  </div>
+
+                  {/* Identity Area */}
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <h3 className="text-[17px] font-black text-gray-900 leading-tight group-hover:text-primary transition-colors truncate" title={internship.title}>
+                      {internship.title}
+                    </h3>
+                    <p className="text-[11px] font-bold text-gray-400 truncate mt-0.5 uppercase tracking-widest leading-none flex items-center gap-1.5">
+                      {internship.company}
+                      {internship.companyId?.verified && <CheckCircle size={10} className="text-blue-500" fill="currentColor" />}
+                    </p>
+                  </div>
+
+                  {/* Actions Area */}
+                  <div className="flex flex-col items-end gap-2 shrink-0 pt-0.5">
                     <div className="relative flex items-center justify-center">
                       <input
                         type="checkbox"
@@ -351,109 +385,92 @@ function ManageInternshipsContent() {
                         <div className="w-2.5 h-1.5 border-l-2 border-b-2 border-white -rotate-45 opacity-0 peer-checked:opacity-100 mb-0.5"></div>
                       </div>
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-primary/5 group-hover:text-primary transition-all duration-300 shadow-sm overflow-hidden p-0.5">
-                      <Building size={20} />
+                    <div className={cn(
+                      "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border h-fit",
+                      internship.status === 'active' ? "bg-green-50 text-green-700 border-green-100" : "bg-red-50 text-red-700 border-red-100"
+                    )}>
+                      {internship.status}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Body: Full Width Metrics */}
+                <div className="space-y-4 flex-1">
+
+                  {/* Metadata Badges */}
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-gray-50 text-gray-600 border border-gray-100 shadow-sm flex items-center gap-1">
+                      <MapPin size={10} />
+                      {internship.location}
+                    </span>
+                    {isClosingSoon && (
+                      <span className="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-orange-50 text-orange-600 border border-orange-100 animate-pulse shadow-sm">
+                        Closes in {diffDays}d
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Info Grid - Rich Data */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Stipend</p>
+                      <p className="text-[11px] font-black text-emerald-600 truncate flex items-center gap-1">
+                        <IndianRupee size={10} />
+                        {internship.stipend > 0 ? internship.stipend.toLocaleString() : 'Unpaid'}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Duration</p>
+                      <p className="text-[11px] font-bold text-gray-700 truncate">{internship.durationWeeks || internship.duration || 0} Weeks</p>
+                    </div>
+                    <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors col-span-2 flex items-center justify-between">
+                      <div>
+                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Applicant Activity</p>
+                        <p className="text-[11px] font-black text-primary truncate flex items-center gap-1.5">
+                          <Users size={12} />
+                          {internship.applicants || 0} Submissions
+                        </p>
+                      </div>
+                      <div className="bg-primary/5 px-2 py-1 rounded-lg border border-primary/10">
+                        <p className="text-[8px] font-black text-primary/60 uppercase tracking-tighter leading-none">Openings</p>
+                        <p className="text-[13px] font-black text-primary leading-none mt-1">{internship.openings || internship.positions || 1}</p>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Column 2: Main Content */}
-                  <div className="flex-1 min-w-0 flex flex-col">
-                    {/* Header */}
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="min-w-0">
-                        <h3 className="text-[17px] font-black text-gray-900 leading-tight group-hover:text-primary transition-colors truncate" title={internship.title}>
-                          {internship.title}
-                        </h3>
-                        <p className="text-[11px] font-bold text-gray-400 truncate mt-0.5 flex items-center gap-1.5">
-                          {internship.company}
-                          {internship.companyId?.verified && <CheckCircle size={10} className="text-blue-500" fill="currentColor" />}
-                        </p>
-                      </div>
-                      <div className={cn(
-                        "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shrink-0 border h-fit mt-0.5",
-                        internship.status === 'active'
-                          ? "bg-green-50 text-green-700 border-green-100"
-                          : "bg-red-50 text-red-700 border-red-100"
-                      )}>
-                        {internship.status}
-                      </div>
-                    </div>
-
-                    {/* Metadata Badges */}
-                    <div className="flex flex-wrap items-center gap-2 mb-3">
-                      <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-gray-50 text-gray-600 border border-gray-100 shadow-sm flex items-center gap-1">
-                        <MapPin size={10} />
-                        {internship.location}
-                      </span>
-                      {isClosingSoon && (
-                        <span className="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-orange-50 text-orange-600 border border-orange-100 animate-pulse shadow-sm">
-                          Closes in {diffDays}d
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Info Grid - Rich Data */}
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
-                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Renumeration</p>
-                        <p className="text-[11px] font-black text-emerald-600 truncate flex items-center gap-1">
-                          <IndianRupee size={10} />
-                          {internship.stipend > 0 ? internship.stipend.toLocaleString() : 'Unpaid'}
-                        </p>
-                      </div>
-                      <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
-                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Duration</p>
-                        <p className="text-[11px] font-bold text-gray-700 truncate">{internship.durationWeeks || internship.duration || 0} Weeks</p>
-                      </div>
-                      <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors col-span-2 flex items-center justify-between">
-                        <div>
-                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Applicant Pulse</p>
-                          <p className="text-[11px] font-black text-primary truncate flex items-center gap-1.5">
-                            <Users size={12} />
-                            {internship.applicants || 0} Submissions
-                          </p>
-                        </div>
-                        <div className="bg-primary/5 px-2 py-1 rounded-lg border border-primary/10">
-                          <p className="text-[8px] font-black text-primary/60 uppercase tracking-tighter leading-none">Quota</p>
-                          <p className="text-[13px] font-black text-primary leading-none mt-1">{internship.openings || internship.positions || 1}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actions Area */}
-                    <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
-                      <button
-                        onClick={() => setSelectedInternship(internship)}
-                        className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest flex items-center gap-1"
-                      >
-                        <Eye size={12} /> View Details
-                      </button>
-                      <div className="flex items-center gap-1">
-                        {internship.status !== 'active' ? (
-                          <button
-                            onClick={() => handleAction(internship._id, 'activate')}
-                            className="p-1.5 text-emerald-400 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-all"
-                            title="Activate"
-                          >
-                            <CheckCircle size={15} />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleAction(internship._id, 'deactivate')}
-                            className="p-1.5 text-orange-400 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-all"
-                            title="Deactivate"
-                          >
-                            <XCircle size={15} />
-                          </button>
-                        )}
+                  {/* Actions Area */}
+                  <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
+                    <button
+                      onClick={() => setSelectedInternship(internship)}
+                      className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest flex items-center gap-1"
+                    >
+                      <Eye size={12} /> View Details
+                    </button>
+                    <div className="flex items-center gap-1">
+                      {internship.status !== 'active' ? (
                         <button
-                          onClick={() => handleAction(internship._id, 'delete')}
-                          className="p-1.5 text-red-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
-                          title="Purge Posting"
+                          onClick={() => handleAction(internship._id, 'activate')}
+                          className="p-1.5 text-emerald-400 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-all"
+                          title="Activate"
                         >
-                          <Trash2 size={15} />
+                          <CheckCircle size={15} />
                         </button>
-                      </div>
+                      ) : (
+                        <button
+                          onClick={() => handleAction(internship._id, 'deactivate')}
+                          className="p-1.5 text-orange-400 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-all"
+                          title="Deactivate"
+                        >
+                          <XCircle size={15} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleAction(internship._id, 'delete')}
+                        className="p-1.5 text-red-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
+                        title="Delete Internship"
+                      >
+                        <Trash2 size={15} />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -483,141 +500,159 @@ function ManageInternshipsContent() {
       />
 
       {/* Internship Details Modal */}
-      {selectedInternship && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col max-h-[90vh]">
-            <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-white shrink-0">
-              <div>
-                <h2 className="text-[17px] font-black text-gray-900 leading-none">Internship Registry Detail</h2>
-                <p className="text-[11px] font-bold text-gray-400 mt-1.5 uppercase tracking-widest">Posting & Recruiter Overview</p>
-              </div>
-              <button
-                onClick={() => setSelectedInternship(null)}
-                className="text-gray-400 hover:text-gray-900 p-2 rounded-xl hover:bg-gray-100 transition-all"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto space-y-8 scrollbar-hide">
-              {/* Profile Header Block */}
-              <div className="flex items-center gap-5">
-                <div className="w-20 h-20 rounded-2xl bg-gray-50 border-2 border-gray-100 flex items-center justify-center text-gray-300 font-black text-3xl shrink-0 group hover:border-primary/20 transition-colors">
-                  <Building size={32} />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-xl font-black text-gray-900 mb-1 truncate">{selectedInternship.title}</h3>
-                  <p className="text-xs font-bold text-gray-500 mb-3 truncate flex items-center gap-1.5">
-                    {selectedInternship.company}
-                    {selectedInternship.companyId?.verified && <CheckCircle size={10} className="text-blue-500" fill="currentColor" />}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={cn(
-                      "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm",
-                      selectedInternship.status === 'active' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-orange-50 text-orange-600 border-orange-100'
-                    )}>
-                      {selectedInternship.status}
-                    </span>
-                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-gray-50 text-gray-600 border border-gray-100">
-                      {selectedInternship.mode || 'On-site'}
-                    </span>
+      {/* Internship Details Modal */}
+      {
+        selectedInternship && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-2xl shadow-2xl w-fit max-w-[95vw] sm:max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col h-auto max-h-[95vh]">
+              {/* Premium Header Pattern */}
+              <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100 p-2 sm:px-3 sm:py-2.5 flex items-center justify-between overflow-hidden relative group/modal-header shrink-0">
+                <div className="absolute -right-16 -top-16 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover/modal-header:bg-primary/10 transition-colors duration-700" />
+                <div className="relative flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center transform group-hover/modal-header:scale-105 transition-all duration-500 shadow-md">
+                    <Briefcase className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-[13px] font-black text-gray-900 leading-normal tracking-tight uppercase px-1">Internship Registry Detail</h2>
+                    <p className="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest px-1">Posting & Recruiter Overview</p>
                   </div>
                 </div>
+                <button
+                  onClick={() => setSelectedInternship(null)}
+                  className="relative z-10 text-gray-400 hover:text-gray-900 p-1.5 rounded-xl hover:bg-gray-100 transition-all active:scale-90"
+                >
+                  <X size={16} />
+                </button>
               </div>
 
-              {/* Data Grid Section */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
-                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Stipend</span>
-                  <p className="text-sm font-black text-emerald-600 flex items-center gap-1">
-                    <IndianRupee size={12} />
-                    {selectedInternship.stipend.toLocaleString()}
-                  </p>
-                </div>
-                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
-                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Duration</span>
-                  <p className="text-sm font-black text-gray-900">{selectedInternship.durationWeeks || selectedInternship.duration || 0} Weeks</p>
-                </div>
-                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
-                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Applicants</span>
-                  <p className="text-sm font-black text-primary">{selectedInternship.applicants || 0}</p>
-                </div>
-                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
-                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Openings</span>
-                  <p className="text-sm font-black text-gray-900">{selectedInternship.openings || selectedInternship.positions || 1}</p>
-                </div>
-              </div>
-
-              {/* Supplemental Info */}
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Timeline & Reach</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1 px-3 py-2 bg-gray-50/30 rounded-xl border border-gray-100">
-                      <span className="text-[9px] font-bold text-gray-400 uppercase">Posted Date</span>
-                      <span className="text-xs font-black text-gray-700">{formatDate(selectedInternship.createdAt)}</span>
-                    </div>
-                    <div className="flex flex-col gap-1 px-3 py-2 bg-gray-50/30 rounded-xl border border-gray-100">
-                      <span className="text-[9px] font-bold text-gray-400 uppercase">Expiry Date</span>
-                      <span className="text-xs font-black text-gray-700">{formatDate(selectedInternship.deadline)}</span>
-                    </div>
+              <div className="p-2.5 sm:p-3 overflow-y-visible space-y-2.5 scrollbar-hide bg-gray-50/20 flex-1">
+                {/* Profile Header Block */}
+                <div className="flex items-center gap-4 bg-white p-2.5 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                  <div className="w-12 h-12 rounded-[14px] bg-gray-50 border-2 border-gray-100 flex items-center justify-center text-gray-300 font-black text-xl shrink-0 group hover:border-primary/20 transition-all duration-300 hover:shadow-inner">
+                    <Building size={24} />
                   </div>
-                </div>
-
-                <div>
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 px-1">Required Skills</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedInternship.skills?.map((skill, i) => (
-                      <span key={i} className="px-3 py-1 bg-white border border-gray-100 text-[10px] font-black text-gray-600 rounded-lg shadow-sm">
-                        {skill}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-[15px] font-black text-gray-900 mb-0.5 truncate tracking-tight">{selectedInternship?.title}</h3>
+                    <p className="text-[11px] font-bold text-gray-400 mb-1.5 truncate flex items-center gap-1.5 leading-none">
+                      <span className="text-gray-900">{selectedInternship?.company}</span>
+                      {selectedInternship?.companyId?.verified && <CheckCircle size={10} className="text-blue-500" fill="currentColor" />}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm flex items-center gap-1.5",
+                        selectedInternship?.status === 'active' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-orange-50 text-orange-700 border-orange-100'
+                      )}>
+                        <div className={cn("w-1.5 h-1.5 rounded-full", selectedInternship?.status === 'active' ? 'bg-green-500' : 'bg-orange-500')} />
+                        {selectedInternship?.status}
                       </span>
-                    ))}
+                      <span className="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-gray-50 text-gray-500 border border-gray-100 flex items-center gap-1.5">
+                        <MapPin size={10} />
+                        {selectedInternship?.mode || 'On-site'}
+                      </span>
+                    </div>
                   </div>
+                </div>
+
+                {/* Data Grid Section */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                    <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Stipend</span>
+                    <p className="text-[13px] font-black text-emerald-600 flex items-center gap-1">
+                      <IndianRupee size={12} />
+                      {selectedInternship?.stipend?.toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                    <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Duration</span>
+                    <p className="text-[13px] font-black text-gray-900 leading-none">{selectedInternship?.durationWeeks || selectedInternship?.duration || 0} Weeks</p>
+                  </div>
+                  <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                    <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Applicants</span>
+                    <p className="text-[13px] font-black text-primary leading-none">{selectedInternship?.applicants || 0}</p>
+                  </div>
+                  <div className="bg-white p-2 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                    <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Openings</span>
+                    <p className="text-[13px] font-black text-gray-900 leading-none">{selectedInternship?.openings || selectedInternship?.positions || 1}</p>
+                  </div>
+                </div>
+
+                {/* Supplemental Info */}
+                <div className="space-y-2.5">
+                  <div className="bg-white p-3 rounded-3xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                    <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 px-0.5">Timeline & Reach</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1 px-2.5 py-1.5 bg-gray-50/50 rounded-2xl border border-gray-100">
+                        <span className="text-[8px] font-black text-gray-400 uppercase leading-none">Posted Date</span>
+                        <span className="text-[10px] font-bold text-gray-700">{formatDate(selectedInternship?.createdAt)}</span>
+                      </div>
+                      <div className="flex flex-col gap-1 px-2.5 py-1.5 bg-gray-50/50 rounded-2xl border border-gray-100">
+                        <span className="text-[8px] font-black text-gray-400 uppercase leading-none">Expiry Date</span>
+                        <span className="text-[10px] font-bold text-gray-700">{formatDate(selectedInternship?.deadline)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-3xl border border-gray-100 shadow-sm shadow-gray-100/30">
+                    <h4 className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2 px-0.5">Required Expertise</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedInternship?.skills?.map((skill, i) => (
+                        <span key={i} className="px-2.5 py-1 bg-gray-50/50 border border-gray-100 text-[9px] font-black text-gray-600 rounded-xl hover:bg-white transition-colors">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-900 rounded-2xl p-3 shadow-xl shadow-gray-200/50 ring-1 ring-white/10 relative overflow-hidden group">
+                  <div className="absolute right-0 top-0 p-3 opacity-[0.05] group-hover:opacity-10 transition-opacity">
+                    <Briefcase size={48} className="text-white" />
+                  </div>
+                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Internal System ID</span>
+                  <code className="text-[12px] font-mono text-gray-300 break-all leading-relaxed relative z-10">
+                    {selectedInternship?._id}
+                  </code>
                 </div>
               </div>
 
-              {/* Unique Identifier Area */}
-              <div className="bg-gray-900 rounded-2xl p-4 shadow-xl shadow-gray-200/50 ring-1 ring-white/10">
-                <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Internal Registry ID</span>
-                <code className="text-[11px] font-mono text-gray-200 break-all leading-relaxed">
-                  {selectedInternship._id}
-                </code>
+              <div className="px-4 py-1.5 bg-white border-t border-gray-100 flex justify-end gap-2 shrink-0">
+                <button
+                  onClick={() => setSelectedInternship(null)}
+                  className="px-5 py-1.5 bg-gray-50 text-[9px] font-black uppercase tracking-widest text-gray-500 rounded-xl hover:bg-gray-100 hover:text-gray-900 transition-all border border-gray-100"
+                >
+                  Close View
+                </button>
+                {selectedInternship?.status !== 'active' ? (
+                  <button
+                    onClick={() => {
+                      if (selectedInternship?._id) {
+                        handleAction(selectedInternship._id, 'activate');
+                        setSelectedInternship(null);
+                      }
+                    }}
+                    className="px-5 py-1.5 bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200 active:scale-95 flex items-center gap-1.5"
+                  >
+                    <CheckCircle size={12} /> Activate Entry
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (selectedInternship?._id) {
+                        handleAction(selectedInternship._id, 'deactivate');
+                        setSelectedInternship(null);
+                      }
+                    }}
+                    className="px-5 py-1.5 bg-orange-500 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-600 transition-all shadow-lg shadow-orange-200 active:scale-95 flex items-center gap-1.5"
+                  >
+                    <Ban size={12} /> Deactivate Entry
+                  </button>
+                )}
               </div>
-            </div>
-
-            <div className="px-6 py-5 bg-white border-t border-gray-50 flex justify-end gap-3 shrink-0">
-              <button
-                onClick={() => setSelectedInternship(null)}
-                className="px-6 py-2.5 border border-gray-100 text-[11px] font-black uppercase tracking-widest text-gray-500 rounded-xl hover:bg-gray-50 transition-all"
-              >
-                Close View
-              </button>
-              {selectedInternship.status !== 'active' ? (
-                <button
-                  onClick={() => {
-                    handleAction(selectedInternship._id, 'activate');
-                    setSelectedInternship(null);
-                  }}
-                  className="px-6 py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-100 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-100 transition-all shadow-sm shadow-emerald-100"
-                >
-                  Activate
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    handleAction(selectedInternship._id, 'deactivate');
-                    setSelectedInternship(null);
-                  }}
-                  className="px-6 py-2.5 bg-orange-50 text-orange-600 border border-orange-100 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-100 transition-all shadow-sm shadow-orange-100"
-                >
-                  Deactivate
-                </button>
-              )}
             </div>
           </div>
-        </div>
-      )}
-    </div >
+        )
+      }
+    </div>
   )
 }
 

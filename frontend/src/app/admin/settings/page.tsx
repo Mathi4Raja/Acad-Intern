@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { Settings, Bell, Shield, Database, Mail, Users, Building2, Save, AlertCircle, CheckCircle, RotateCcw, AlertTriangle, FileText, Clock, IndianRupee } from 'lucide-react'
+import { Settings, Bell, Shield, Database, Mail, Users, Building2, Save, AlertCircle, CheckCircle, RotateCcw, AlertTriangle, FileText, Clock, IndianRupee, Activity } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { adminApi } from '@/lib/api'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -164,30 +164,41 @@ function AdminSettingsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/30 p-3 sm:p-5">
-      <div className="max-w-6xl mx-auto">
+    <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-4">
+      <div className="space-y-4">
         {/* Header */}
-        {/* Ultra-Compact Premium Header Card */}
-        <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-3.5 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
-          <div className="flex items-center gap-4 relative z-10">
-            <div className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 shrink-0 group-hover:scale-105 transition-all duration-500">
-              <Settings size={22} />
+        <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-2.5 sm:p-3 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-4">
+          {/* Background Glow Effect */}
+          <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover/header:bg-primary/10 transition-colors duration-700" />
+          <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl group-hover/header:bg-blue-500/10 transition-colors duration-700" />
+
+          <div className="relative flex items-center gap-4">
+            <div className="relative">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center transform group-hover/header:scale-110 group-hover/header:rotate-6 transition-all duration-500 shadow-lg shadow-gray-200">
+                <Settings className="w-6 h-6 text-white" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg bg-blue-500 border-2 border-white flex items-center justify-center animate-pulse">
+                <div className="w-1.5 h-1.5 rounded-full bg-white" />
+              </div>
             </div>
             <div>
-              <h1 className="text-[17px] font-black text-gray-900 leading-none tracking-tight uppercase">
-                System Control
+              <h1 className="text-[15px] font-black text-gray-900 leading-none tracking-tight uppercase">
+                Global Settings
               </h1>
-              <div className="flex items-center gap-2 mt-1.5">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
-                  Manage Global Identity, Security & Infrastructure
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                  Configure system-wide settings and security
                 </p>
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" title="Core Config Active" />
+                <div className="h-1 w-1 rounded-full bg-gray-300" />
+                <div className="flex items-center gap-1">
+                  <Activity className="w-3 h-3 text-blue-500" />
+                  <span className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Settings Active</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 relative z-10">
+          <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 relative z-10 w-full sm:w-auto">
             <button
               onClick={handleReset}
               disabled={!isDirty || saveStatus === 'saving'}
@@ -224,14 +235,14 @@ function AdminSettingsContent() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
           {/* Sidebar Navigation */}
           <div className="lg:col-span-3">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden sticky top-5">
               <div className="p-3 border-b border-gray-50 bg-gray-50/30">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[2px]">Configuration</p>
               </div>
-              <nav className="p-1.5 space-y-0.5">
+              <nav className="p-1 grid grid-cols-2 lg:flex lg:flex-col gap-1 sm:gap-0.5">
                 {tabs.map((tab) => {
                   const Icon = tab.icon
                   const isActive = activeTab === tab.id
@@ -240,7 +251,7 @@ function AdminSettingsContent() {
                       key={tab.id}
                       onClick={() => handleTabChange(tab.id)}
                       className={cn(
-                        "w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-xl transition-all group relative",
+                        "w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left rounded-xl transition-all group relative",
                         isActive
                           ? "bg-primary text-white shadow-md shadow-primary/20 z-10"
                           : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
@@ -265,7 +276,7 @@ function AdminSettingsContent() {
 
           {/* Settings Canvas */}
           <div className="lg:col-span-9 space-y-5">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-7 min-h-[550px] relative transition-all duration-500">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-7 min-h-[550px] relative transition-all duration-500">
 
               {/* Tab Title Decor */}
               <div className="absolute top-0 right-0 p-6 opacity-[0.02] pointer-events-none">
@@ -383,7 +394,7 @@ function AdminSettingsContent() {
 
                   <div className="grid gap-6 max-w-xl">
                     <div className="space-y-2">
-                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-tight">Dispatch Provider</label>
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Dispatch Provider</label>
                       <div className="grid grid-cols-3 gap-2">
                         {['resend', 'sendgrid', 'smtp'].map((p) => (
                           <button
@@ -403,7 +414,7 @@ function AdminSettingsContent() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-tight">Verified Sender Identity</label>
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Verified Sender Identity</label>
                       <input
                         type="email"
                         value={settings.emailFrom}
@@ -414,7 +425,7 @@ function AdminSettingsContent() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-tight flex items-center justify-between">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-between">
                         Infrastructure Auth Key
                         <span className="text-[9px] text-primary bg-primary/10 px-2 py-0.5 rounded italic font-black uppercase tracking-wider">Secure Storage</span>
                       </label>
@@ -439,8 +450,8 @@ function AdminSettingsContent() {
               {activeTab === 'notifications' && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
-                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Global Alerts</h2>
-                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Dispatch Rules</p>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Notifications</h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Delivery Settings</p>
                   </header>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -578,7 +589,7 @@ function AdminSettingsContent() {
                             </div>
                             <div>
                               <p className="text-[13px] font-black text-indigo-900 leading-tight">Lifecycle Assets</p>
-                              <p className="text-[11px] text-indigo-600 font-bold tracking-tight">Enable Resume/CV repository</p>
+                              <p className="text-[11px] text-indigo-600 font-bold tracking-widest">Enable Resume/CV repository</p>
                             </div>
                           </div>
                           <label className="relative inline-flex items-center cursor-pointer">

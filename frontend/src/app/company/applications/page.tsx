@@ -219,7 +219,7 @@ export default function Applications() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-2 sm:p-3">
+    <div className="max-w-7xl mx-auto p-3 sm:p-5">
       {/* Header */}
       <div className="mb-6 flex flex-col items-center sm:flex-row justify-between gap-4">
         <div className="bg-gradient-to-br from-white to-green-50/50 rounded-2xl shadow-sm border border-green-100/50 p-3 sm:px-4 sm:py-3 w-full sm:w-auto overflow-hidden relative group">

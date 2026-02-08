@@ -68,39 +68,39 @@ export function TopNavbar({
     const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <nav className={cn("bg-white border-b border-gray-200 fixed w-full top-0 z-[60]", className)}>
-            <div className="px-3 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-14 sm:h-16">
+        <nav className={cn("bg-white/80 backdrop-blur-md border-b border-gray-100 fixed w-full top-0 z-[60] shadow-sm shadow-gray-200/20", className)}>
+            <div className="px-3 sm:px-5">
+                <div className="flex items-center justify-between h-11 sm:h-12">
                     {/* Left Side: Menu + Logo */}
-                    <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                         <button
                             onClick={onToggleSidebar}
-                            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
                             aria-label="Toggle menu"
                         >
-                            {isSidebarOpen ? <X size={22} /> : <Menu size={22} />}
+                            {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
                         </button>
 
                         <Link
                             href={variant === "admin" ? "/admin/dashboard" : "/"}
-                            className="flex items-center gap-1.5 sm:gap-2 min-w-0"
+                            className="flex items-center gap-1.5 min-w-0 group/logo"
                         >
                             {LogoIcon && (
                                 <LogoIcon
-                                    className={cn("flex-shrink-0", logoIconColor ?? config.labelColor)}
-                                    size={20}
+                                    className={cn("flex-shrink-0 transition-transform group-hover/logo:scale-110", logoIconColor ?? config.labelColor)}
+                                    size={18}
                                 />
                             )}
                             <div className="flex items-baseline gap-1 min-w-0">
-                                <span className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
+                                <span className="text-sm sm:text-base font-black text-gray-900 truncate tracking-tight">
                                     AcadIntern
                                 </span>
                                 {variant === "admin" ? (
-                                    <span className={cn("text-xs sm:text-sm lg:text-base font-bold flex-shrink-0", config.labelColor)}>
+                                    <span className={cn("text-[10px] sm:text-xs font-black uppercase tracking-widest flex-shrink-0 opacity-80", config.labelColor)}>
                                         {displayLabel}
                                     </span>
                                 ) : (
-                                    <span className={cn("hidden md:inline-block text-xs sm:text-sm ml-2", config.labelColor)}>
+                                    <span className={cn("hidden md:inline-block text-[10px] sm:text-xs font-bold uppercase tracking-wide ml-1.5 text-gray-400", config.labelColor)}>
                                         {displayLabel}
                                     </span>
                                 )}
@@ -109,8 +109,8 @@ export function TopNavbar({
                     </div>
 
                     {/* Right Side: Notifications + User */}
-                    <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-                        {/* Notifications - Use dropdown if we have data, otherwise link */}
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                        {/* Notifications */}
                         {notifications.length > 0 ? (
                             <NotificationDropdown
                                 notifications={notifications}
@@ -121,53 +121,53 @@ export function TopNavbar({
                         ) : notificationHref ? (
                             <Link
                                 href={notificationHref}
-                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors relative"
                             >
-                                <Bell size={18} className="sm:w-5 sm:h-5 text-gray-600" />
+                                <Bell size={16} className="text-gray-500" />
                                 {unreadCount > 0 && (
-                                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                                    <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
                                 )}
                             </Link>
                         ) : (
                             <button
-                                className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors relative"
                                 aria-label="Notifications"
                             >
-                                <Bell size={18} className="sm:w-5 sm:h-5 text-gray-600" />
+                                <Bell size={16} className="text-gray-500" />
                             </button>
                         )}
 
                         {/* User Info */}
-                        <div className="hidden md:flex items-center gap-2 sm:gap-3 pl-3 sm:pl-4 border-l border-gray-200">
+                        <div className="hidden md:flex items-center gap-2 pl-2 sm:pl-3 border-l border-gray-100">
                             <div
                                 className={cn(
-                                    "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white font-bold text-sm bg-gradient-to-br",
+                                    "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-white font-black text-xs bg-gradient-to-br shadow-sm transform transition-transform hover:scale-105",
                                     config.gradient
                                 )}
                             >
                                 {userName.charAt(0).toUpperCase()}
                             </div>
                             <div className="hidden lg:block">
-                                <p className="text-sm font-semibold text-gray-900">{userName}</p>
-                                {userEmail && <p className="text-xs text-gray-500">{userEmail}</p>}
+                                <p className="text-[12px] font-black text-gray-900 leading-none">{userName}</p>
+                                {userEmail && <p className="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-tighter">{userEmail}</p>}
                             </div>
                         </div>
 
                         {/* Mobile User Avatar */}
                         {UserIcon && (
-                            <button className="md:hidden p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                                <UserIcon size={20} />
+                            <button className="md:hidden p-1.5 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                                <UserIcon size={18} />
                             </button>
                         )}
 
-                        {/* Logout Button (Admin or when callback provided) */}
+                        {/* Logout Button */}
                         {(variant === "admin" || onLogout) && (
                             <button
                                 onClick={onLogout}
-                                className="p-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors"
+                                className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
                                 aria-label="Logout"
                             >
-                                <LogOut size={18} className="sm:w-5 sm:h-5" />
+                                <LogOut size={16} />
                             </button>
                         )}
                     </div>
