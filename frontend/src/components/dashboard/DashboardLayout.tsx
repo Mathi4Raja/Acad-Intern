@@ -87,13 +87,13 @@ export function DashboardLayout({
                     {/* Overlay for mobile */}
                     {sidebarOpen && (
                         <div
-                            className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden top-16"
+                            className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden top-14 sm:top-16"
                             onClick={closeSidebar}
                         />
                     )}
 
                     {/* Main Content */}
-                    <main className={`lg:ml-56 pt-16 ${disableContentPadding ? '' : ''}`}>
+                    <main className={`lg:ml-56 pt-14 sm:pt-16 ${disableContentPadding ? '' : ''}`}>
                         {children}
                     </main>
                 </>

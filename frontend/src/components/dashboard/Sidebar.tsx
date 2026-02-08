@@ -63,7 +63,7 @@ export function Sidebar({
                 "fixed inset-y-0 left-0 z-50 w-56 bg-white border-r border-gray-100 transform transition-all duration-300 ease-in-out shadow-[1px_0_10px_rgba(0,0,0,0.02)]",
                 // All variants stay fixed
                 isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-                variant === "admin" ? "top-16 bottom-0 w-56" : "mt-14 sm:mt-16",
+                variant === "admin" ? "top-14 sm:top-16 bottom-0 w-56" : "mt-14 sm:mt-16",
                 className
             )}
         >
