@@ -22,9 +22,11 @@ interface Internship {
   }
   location: string
   mode: string
-  duration: number
+  durationWeeks?: number // Backend field
+  duration?: number // Mapping for potential legacy data
   stipend: number
-  positions: number
+  openings?: number // Backend field
+  positions?: number // Mapping for potential legacy data
   status: 'active' | 'inactive' | 'completed' | 'in_progress' | 'rejected'
   applicants: number
   createdAt: string
@@ -401,7 +403,7 @@ function ManageInternshipsContent() {
                       </div>
                       <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
                         <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Duration</p>
-                        <p className="text-[11px] font-bold text-gray-700 truncate">{internship.duration} Months</p>
+                        <p className="text-[11px] font-bold text-gray-700 truncate">{internship.durationWeeks || internship.duration || 0} Weeks</p>
                       </div>
                       <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors col-span-2 flex items-center justify-between">
                         <div>
@@ -413,7 +415,7 @@ function ManageInternshipsContent() {
                         </div>
                         <div className="bg-primary/5 px-2 py-1 rounded-lg border border-primary/10">
                           <p className="text-[8px] font-black text-primary/60 uppercase tracking-tighter leading-none">Quota</p>
-                          <p className="text-[13px] font-black text-primary leading-none mt-1">{internship.positions}</p>
+                          <p className="text-[13px] font-black text-primary leading-none mt-1">{internship.openings || internship.positions || 1}</p>
                         </div>
                       </div>
                     </div>
@@ -534,7 +536,7 @@ function ManageInternshipsContent() {
                 </div>
                 <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
                   <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Duration</span>
-                  <p className="text-sm font-black text-gray-900">{selectedInternship.duration} Months</p>
+                  <p className="text-sm font-black text-gray-900">{selectedInternship.durationWeeks || selectedInternship.duration || 0} Weeks</p>
                 </div>
                 <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
                   <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Applicants</span>
@@ -542,7 +544,7 @@ function ManageInternshipsContent() {
                 </div>
                 <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
                   <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Openings</span>
-                  <p className="text-sm font-black text-gray-900">{selectedInternship.positions}</p>
+                  <p className="text-sm font-black text-gray-900">{selectedInternship.openings || selectedInternship.positions || 1}</p>
                 </div>
               </div>
 

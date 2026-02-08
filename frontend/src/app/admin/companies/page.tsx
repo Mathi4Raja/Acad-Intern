@@ -42,6 +42,7 @@ function ManageCompaniesContent() {
 
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery)
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([])
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
 
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -446,6 +447,12 @@ function ManageCompaniesContent() {
 
                   {/* Actions Area */}
                   <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
+                    <button
+                      onClick={() => setSelectedCompany(company)}
+                      className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest flex items-center gap-1"
+                    >
+                      <Eye size={12} /> View Details
+                    </button>
                     <div className="flex items-center gap-1">
                       {!company.verified ? (
                         <button
@@ -515,6 +522,166 @@ function ManageCompaniesContent() {
         onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
         type={confirmDialog.type}
       />
+
+      {/* Company Details Modal */}
+      {selectedCompany && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col max-h-[90vh]">
+            <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-white shrink-0">
+              <div>
+                <h2 className="text-[17px] font-black text-gray-900 leading-none">Corporate Registry Detail</h2>
+                <p className="text-[11px] font-bold text-gray-400 mt-1.5 uppercase tracking-widest">Partner Profile & Compliance</p>
+              </div>
+              <button
+                onClick={() => setSelectedCompany(null)}
+                className="text-gray-400 hover:text-gray-900 p-2 rounded-xl hover:bg-gray-100 transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-8 scrollbar-hide">
+              {/* Profile Header Block */}
+              <div className="flex items-center gap-5">
+                <div className="w-20 h-20 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-gray-300 font-black text-3xl shrink-0 group hover:border-primary/20 transition-colors overflow-hidden p-1 shadow-sm">
+                  {selectedCompany.logo ? (
+                    <img src={selectedCompany.logo} alt="" className="w-full h-full object-contain rounded-xl" />
+                  ) : (
+                    <Building2 size={32} />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-xl font-black text-gray-900 mb-1 truncate">{selectedCompany.companyName}</h3>
+                  <p className="text-xs font-bold text-gray-500 mb-3 truncate flex items-center gap-1.5">
+                    <Mail size={12} /> {selectedCompany.userId.email}
+                    {selectedCompany.verified && <Shield size={12} className="text-blue-500 ml-1" fill="currentColor" />}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm",
+                      (selectedCompany.userId.status || selectedCompany.status) === 'active' ? 'bg-green-50 text-green-600 border-green-100' :
+                        (selectedCompany.userId.status || selectedCompany.status) === 'suspended' ? 'bg-red-50 text-red-600 border-red-100' :
+                          'bg-yellow-50 text-yellow-600 border-yellow-100'
+                    )}>
+                      {selectedCompany.userId.status || selectedCompany.status}
+                    </span>
+                    {selectedCompany.verified && (
+                      <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 border border-blue-100 shadow-sm flex items-center gap-1">
+                        <Shield size={10} fill="currentColor" /> Verified Partner
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Data Grid Section */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Corporate ID (CIN/Tax)</span>
+                  <p className="text-sm font-black text-gray-900 font-mono tracking-tight">{selectedCompany.cin || 'N/A'}</p>
+                </div>
+                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Registration Date</span>
+                  <p className="text-sm font-black text-gray-900">{formatDate(selectedCompany.createdAt)}</p>
+                </div>
+              </div>
+
+              {/* About Section */}
+              {selectedCompany.description && (
+                <div className="bg-gray-50/30 p-4 rounded-2xl border border-gray-100">
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">About Organization</h4>
+                  <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                    {selectedCompany.description}
+                  </p>
+                </div>
+              )}
+
+              {/* Supplemental Info */}
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Contact & Web</h4>
+                  <div className="flex flex-col gap-2">
+                    {selectedCompany.website && (
+                      <a href={selectedCompany.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-3 py-2 bg-white rounded-xl border border-gray-100 hover:border-primary/30 hover:shadow-sm transition-all group/link">
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover/link:text-primary transition-colors">
+                          <Globe size={16} />
+                        </div>
+                        <span className="text-xs font-bold text-gray-600 group-hover/link:text-primary transition-colors truncate">{selectedCompany.website}</span>
+                      </a>
+                    )}
+                    <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-xl border border-gray-100">
+                      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400">
+                        <Users size={16} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">Manager</span>
+                        <span className="text-xs font-bold text-gray-900">{selectedCompany.userId.name}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Unique Identifier Area */}
+              <div className="bg-gray-900 rounded-2xl p-4 shadow-xl shadow-gray-200/50 ring-1 ring-white/10">
+                <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Internal UUID Reference</span>
+                <code className="text-[11px] font-mono text-gray-200 break-all leading-relaxed">
+                  {selectedCompany._id}
+                </code>
+              </div>
+            </div>
+
+            <div className="px-6 py-5 bg-white border-t border-gray-50 flex justify-end gap-3 shrink-0">
+              <button
+                onClick={() => setSelectedCompany(null)}
+                className="px-6 py-2.5 border border-gray-100 text-[11px] font-black uppercase tracking-widest text-gray-500 rounded-xl hover:bg-gray-50 transition-all"
+              >
+                Close View
+              </button>
+
+              {(selectedCompany.userId.status || selectedCompany.status) !== 'suspended' ? (
+                <button
+                  onClick={() => {
+                    handleAction(selectedCompany._id, 'suspend');
+                  }}
+                  className="px-6 py-2.5 bg-red-50 text-red-600 border border-red-100 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-red-100 transition-all shadow-sm shadow-red-100 flex items-center gap-2"
+                >
+                  <Ban size={14} /> Suspend Access
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    handleAction(selectedCompany._id, 'activate');
+                  }}
+                  className="px-6 py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-100 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-100 transition-all shadow-sm shadow-emerald-100 flex items-center gap-2"
+                >
+                  <CheckCircle size={14} /> Restore Access
+                </button>
+              )}
+
+              {!selectedCompany.verified ? (
+                <button
+                  onClick={() => {
+                    handleAction(selectedCompany._id, 'verify');
+                  }}
+                  className="px-6 py-2.5 bg-blue-600 text-white border border-blue-600 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2"
+                >
+                  <Shield size={14} /> Verify Entity
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    handleAction(selectedCompany._id, 'unverify');
+                  }}
+                  className="px-6 py-2.5 bg-gray-100 text-gray-600 border border-gray-200 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-200 transition-all shadow-sm flex items-center gap-2"
+                >
+                  <XCircle size={14} /> Revoke Cert.
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -86,9 +86,9 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
             User.countDocuments({ status: 'suspended' }),
             Company.countDocuments({ verified: true }),
             Company.countDocuments({ verified: false }),
-            Company.countDocuments({ status: 'active' }),
-            Company.countDocuments({ status: 'pending' }),
-            Company.countDocuments({ status: 'suspended' }),
+            User.countDocuments({ role: 'company', status: 'active' }),
+            User.countDocuments({ role: 'company', status: 'pending' }),
+            User.countDocuments({ role: 'company', status: 'suspended' }),
             Internship.countDocuments(),
             Internship.countDocuments({ status: 'active' }),
             Report.countDocuments({ status: 'open' }),
@@ -256,27 +256,60 @@ export const deleteUser = async (req: AuthRequest, res: Response, next: NextFunc
 export const getAllCompanies = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         const { status, verified, search } = req.query;
-        const query: CompanyQuery = {};
 
-        if (status && status !== 'all' && typeof status === 'string') query.status = status;
-        if (verified !== undefined && verified !== 'all') query.verified = verified === 'true';
-        if (search && typeof search === 'string') {
-            query.$or = [{ companyName: { $regex: search, $options: 'i' } }];
+        const pipeline: any[] = [];
+
+        // Lookup User details
+        pipeline.push({
+            $lookup: {
+                from: 'users',
+                localField: 'userId',
+                foreignField: '_id',
+                as: 'user'
+            }
+        });
+        pipeline.push({ $unwind: '$user' });
+
+        // Match Logic
+        const match: any = {};
+
+        if (status && status !== 'all') {
+            match['user.status'] = status;
         }
 
-        const companies = await Company.find(query).populate('userId', 'name email createdAt status').sort({ createdAt: -1 });
+        if (verified !== undefined && verified !== 'all') {
+            match['verified'] = verified === 'true';
+        }
+
+        if (search) {
+            match['companyName'] = { $regex: search, $options: 'i' };
+        }
+
+        if (Object.keys(match).length > 0) {
+            pipeline.push({ $match: match });
+        }
+
+        pipeline.push({ $sort: { createdAt: -1 } });
+
+        const companies = await Company.aggregate(pipeline);
 
         const companiesWithStats = await Promise.all(companies.map(async (company) => {
-            const companyObj = company.toObject() as any;
             const internships = await Internship.countDocuments({ companyId: company._id });
             const activeInternships = await Internship.countDocuments({ companyId: company._id, status: 'active' });
+            // Retrieve distinct internship IDs for application count
+            const companyInternships = await Internship.find({ companyId: company._id }).distinct('_id');
             const applications = await Application.countDocuments({
-                internshipId: { $in: await Internship.find({ companyId: company._id }).distinct('_id') }
+                internshipId: { $in: companyInternships }
             });
 
             return {
-                ...companyObj, email: companyObj.userId?.email, joinedDate: companyObj.userId?.createdAt,
-                internshipsPosted: internships, activeInternships, totalApplications: applications
+                ...company,
+                userId: company.user, // Re-attach user object from lookup
+                email: company.user?.email,
+                joinedDate: company.user?.createdAt,
+                internshipsPosted: internships,
+                activeInternships,
+                totalApplications: applications
             };
         }));
 
@@ -299,7 +332,12 @@ export const updateCompany = async (req: AuthRequest, res: Response, next: NextF
             return;
         }
 
-        if (validatedData.status !== undefined) company.set('status', validatedData.status);
+        if (validatedData.status !== undefined) {
+            company.set('status', validatedData.status);
+            if (company.userId) {
+                await User.findByIdAndUpdate(company.userId, { status: validatedData.status });
+            }
+        }
         if (validatedData.verified !== undefined) company.verified = validatedData.verified;
 
         await company.save();
