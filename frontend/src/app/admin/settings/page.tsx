@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { Settings, Bell, Shield, Database, Mail, Users, Building2, Save, AlertCircle, CheckCircle, RotateCcw, AlertTriangle, FileText } from 'lucide-react'
+import { Settings, Bell, Shield, Database, Mail, Users, Building2, Save, AlertCircle, CheckCircle, RotateCcw, AlertTriangle, FileText, Clock, IndianRupee } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { adminApi } from '@/lib/api'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'react-hot-toast'
@@ -148,67 +149,75 @@ function AdminSettingsContent() {
   }
 
   const tabs = [
-    { id: 'general', label: 'General', icon: Settings },
-    { id: 'email', label: 'Email', icon: Mail },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'companies', label: 'Companies', icon: Building2 },
-    { id: 'students', label: 'Students', icon: Users },
-    { id: 'files', label: 'Files', icon: FileText },
-    { id: 'database', label: 'Database', icon: Database }
+    { id: 'general', label: 'General', icon: Settings, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { id: 'email', label: 'Email', icon: Mail, color: 'text-purple-600', bg: 'bg-purple-50' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    { id: 'security', label: 'Security', icon: Shield, color: 'text-red-600', bg: 'bg-red-50' },
+    { id: 'companies', label: 'Companies', icon: Building2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { id: 'students', label: 'Students', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { id: 'files', label: 'Files', icon: FileText, color: 'text-cyan-600', bg: 'bg-cyan-50' },
+    { id: 'database', label: 'Database', icon: Database, color: 'text-orange-600', bg: 'bg-orange-50' }
   ]
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50/50"><Loader2 className="animate-spin h-10 w-10 text-primary" /></div>
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50/30 p-3 sm:p-5">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Platform Settings</h1>
-            <p className="text-gray-600">Manage system-wide configurations and preferences</p>
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900 leading-tight tracking-tight mb-1">System Control</h1>
+            <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Manage global identity, security, and infrastructure</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleReset}
               disabled={!isDirty || saveStatus === 'saving'}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium"
+              className="px-3.5 py-1.5 border border-gray-200 bg-white text-gray-600 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-[12px] font-black shadow-sm"
             >
-              <RotateCcw size={16} />
-              Reset
+              <RotateCcw size={14} />
+              DISCARD
             </button>
             <button
               onClick={handleSave}
               disabled={!isDirty || saveStatus === 'saving'}
-              className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium shadow-sm"
+              className={cn(
+                "flex items-center gap-2 px-5 py-1.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-[12px] font-black shadow-lg shadow-primary/20",
+                saveStatus === 'saved' ? "bg-green-500 text-white" : "bg-primary text-white hover:scale-105"
+              )}
             >
               {saveStatus === 'saving' ? (
                 <>
-                  <Loader2 className="animate-spin w-4 h-4" />
-                  Saving...
+                  <Loader2 className="animate-spin w-3.5 h-3.5" />
+                  SAVING...
+                </>
+              ) : saveStatus === 'saved' ? (
+                <>
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  SAVED
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4" />
-                  Save Changes
+                  <Save className="w-3.5 h-3.5" />
+                  SAVE CONFIG
                 </>
               )}
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
+          {/* Sidebar Navigation */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden sticky top-6">
-              <div className="lg:hidden p-4 bg-gray-50 font-medium text-gray-900 border-b border-gray-200">
-                Settings Menu
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-100/50 overflow-hidden sticky top-5">
+              <div className="p-3 border-b border-gray-50 bg-gray-50/30">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[2px]">Configuration</p>
               </div>
-              <nav className="p-2 space-y-1">
+              <nav className="p-1.5 space-y-0.5">
                 {tabs.map((tab) => {
                   const Icon = tab.icon
                   const isActive = activeTab === tab.id
@@ -216,13 +225,23 @@ function AdminSettingsContent() {
                     <button
                       key={tab.id}
                       onClick={() => handleTabChange(tab.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-2 text-left rounded-md transition-colors ${isActive
-                        ? 'bg-primary/10 text-primary font-medium'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
+                      className={cn(
+                        "w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-xl transition-all group relative",
+                        isActive
+                          ? "bg-primary text-white shadow-md shadow-primary/20 z-10"
+                          : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                      )}
                     >
-                      <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-gray-400'}`} />
-                      {tab.label}
+                      <div className={cn(
+                        "w-7 h-7 rounded-lg flex items-center justify-center transition-colors",
+                        isActive ? "bg-white/20" : cn(tab.bg, tab.color)
+                      )}>
+                        <Icon size={16} />
+                      </div>
+                      <span className="text-[13px] font-bold">{tab.label}</span>
+                      {isActive && (
+                        <div className="absolute right-2.5 w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      )}
                     </button>
                   )
                 })}
@@ -230,86 +249,109 @@ function AdminSettingsContent() {
             </div>
           </div>
 
-          {/* Content */}
-          <div className="lg:col-span-9">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 min-h-[500px]">
+          {/* Settings Canvas */}
+          <div className="lg:col-span-9 space-y-5">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-7 min-h-[550px] relative transition-all duration-500">
+
+              {/* Tab Title Decor */}
+              <div className="absolute top-0 right-0 p-6 opacity-[0.02] pointer-events-none">
+                {(() => {
+                  const Icon = tabs.find(t => t.id === activeTab)?.icon || Settings
+                  return <Icon size={100} />
+                })()}
+              </div>
 
               {/* General Settings */}
               {activeTab === 'general' && (
-                <div className="space-y-8">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-100">General Information</h2>
-                    <div className="grid gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Site Name</label>
-                        <input
-                          type="text"
-                          value={settings.siteName}
-                          onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
-                          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Site Description</label>
-                        <textarea
-                          value={settings.siteDescription}
-                          onChange={(e) => setSettings({ ...settings, siteDescription: e.target.value })}
-                          rows={3}
-                          className="w-full max-w-xl px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Support Email</label>
-                        <input
-                          type="email"
-                          value={settings.contactEmail}
-                          onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })}
-                          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                      </div>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <header>
+                    <h2 className="text-[17px] font-black text-gray-900 leading-tight">Global Identity</h2>
+                    <p className="text-[12px] text-gray-500 font-bold">Define how the platform presents itself</p>
+                  </header>
+
+                  <div className="grid gap-5">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <FileText size={12} className="text-primary" />
+                        Platform Branding Name
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.siteName}
+                        onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
+                        className="w-full max-w-md px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-[14px] text-gray-900"
+                        placeholder="e.g. AcadIntern"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <AlertCircle size={12} className="text-primary" />
+                        Meta Description
+                      </label>
+                      <textarea
+                        value={settings.siteDescription}
+                        onChange={(e) => setSettings({ ...settings, siteDescription: e.target.value })}
+                        rows={3}
+                        className="w-full max-w-xl px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-[14px] text-gray-900"
+                        placeholder="What is this platform about?"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                        <Mail size={12} className="text-primary" />
+                        Primary Contact / Support
+                      </label>
+                      <input
+                        type="email"
+                        value={settings.contactEmail}
+                        onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })}
+                        className="w-full max-w-md px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-[14px] text-gray-900"
+                      />
                     </div>
                   </div>
 
-                  {/* Danger Zone */}
-                  <div className="pt-6">
-                    <h2 className="text-xl font-semibold text-red-700 mb-4 pb-2 border-b border-red-100 flex items-center gap-2">
-                      <AlertTriangle className="w-5 h-5" />
-                      Danger Zone
-                    </h2>
-                    <div className="bg-red-50 border border-red-200 rounded-xl overflow-hidden divide-y divide-red-200">
-                      <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                          <h3 className="text-base font-semibold text-red-900">Maintenance Mode</h3>
-                          <p className="text-sm text-red-700 mt-1">
-                            Temporarily disable the platform for all users except admins.
-                          </p>
+                  <div className="pt-8 mt-8 border-t border-gray-50">
+                    <h3 className="text-[13px] font-black text-red-600 uppercase tracking-[2px] mb-4">Critical Overrides</h3>
+                    <div className="grid gap-4">
+                      <div className="bg-red-50/30 border border-red-100 rounded-2xl p-5 flex items-center justify-between group hover:bg-red-50 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm border border-red-200">
+                            <AlertTriangle size={20} />
+                          </div>
+                          <div>
+                            <p className="text-[14px] font-black text-red-900">Maintenance Mode</p>
+                            <p className="text-[12px] text-red-600/70 font-bold">Killswitch for all non-admin traffic</p>
+                          </div>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                        <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
                             checked={settings.maintenanceMode}
                             onChange={(e) => setSettings({ ...settings, maintenanceMode: e.target.checked })}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-red-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                          <div className="w-11 h-6 bg-red-200/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
                         </label>
                       </div>
 
-                      <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                          <h3 className="text-base font-semibold text-red-900">Disable Registration</h3>
-                          <p className="text-sm text-red-700 mt-1">
-                            Prevent new users from signing up. Existing users can still log in.
-                          </p>
+                      <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex items-center justify-between group hover:border-gray-200 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 shadow-sm border border-gray-200">
+                            <Users size={20} />
+                          </div>
+                          <div>
+                            <p className="text-[14px] font-black text-gray-900">Registration Status</p>
+                            <p className="text-[12px] text-gray-500 font-bold">Lock or unlock new user onboarding</p>
+                          </div>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                        <label className="relative inline-flex items-center cursor-pointer">
                           <input
                             type="checkbox"
-                            checked={!settings.allowRegistration}
-                            onChange={(e) => setSettings({ ...settings, allowRegistration: !e.target.checked })}
+                            checked={settings.allowRegistration}
+                            onChange={(e) => setSettings({ ...settings, allowRegistration: e.target.checked })}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-red-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                         </label>
                       </div>
                     </div>
@@ -319,40 +361,60 @@ function AdminSettingsContent() {
 
               {/* Email Settings */}
               {activeTab === 'email' && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-100">Email Configuration</h2>
-                    <div className="grid gap-6 max-w-xl">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Email Provider</label>
-                        <select
-                          value={settings.emailProvider}
-                          onChange={(e) => setSettings({ ...settings, emailProvider: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        >
-                          <option value="resend">Resend</option>
-                          <option value="sendgrid">SendGrid</option>
-                          <option value="smtp">SMTP</option>
-                        </select>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <header>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Mailing Infrastructure</h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Dispatch flows</p>
+                  </header>
+
+                  <div className="grid gap-6 max-w-xl">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-tight">Dispatch Provider</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {['resend', 'sendgrid', 'smtp'].map((p) => (
+                          <button
+                            key={p}
+                            onClick={() => setSettings({ ...settings, emailProvider: p })}
+                            className={cn(
+                              "px-3 py-2 rounded-xl border-2 text-[11px] font-black transition-all",
+                              settings.emailProvider === p
+                                ? "border-primary bg-primary/5 text-primary shadow-sm"
+                                : "border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200"
+                            )}
+                          >
+                            {p.toUpperCase()}
+                          </button>
+                        ))}
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">From Email Address</label>
-                        <input
-                          type="email"
-                          value={settings.emailFrom}
-                          onChange={(e) => setSettings({ ...settings, emailFrom: e.target.value })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">API Key</label>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-tight">Verified Sender Identity</label>
+                      <input
+                        type="email"
+                        value={settings.emailFrom}
+                        onChange={(e) => setSettings({ ...settings, emailFrom: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
+                        placeholder="noreply@domain.com"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-tight flex items-center justify-between">
+                        Infrastructure Auth Key
+                        <span className="text-[9px] text-primary bg-primary/10 px-2 py-0.5 rounded italic font-black uppercase tracking-wider">Secure Storage</span>
+                      </label>
+                      <div className="relative group">
                         <input
                           type="password"
                           value={settings.emailApiKey}
                           onChange={(e) => setSettings({ ...settings, emailApiKey: e.target.value })}
-                          placeholder="••••••••••••••••"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-mono"
+                          placeholder="API_KEY_PROTECTED"
+                          className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-xs font-bold text-gray-900"
                         />
+                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none opacity-50">
+                          <Shield size={14} className="text-gray-400" />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -361,145 +423,149 @@ function AdminSettingsContent() {
 
               {/* Notification Settings */}
               {activeTab === 'notifications' && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-100">Notification Preferences</h2>
-                    <div className="space-y-4">
-                      {[
-                        { key: 'emailNotifications', label: 'Email Notifications', desc: 'Enable global email notifications system' },
-                        { key: 'applicationNotifications', label: 'Application Updates', desc: 'Notify users when their application status changes' },
-                        { key: 'reminderNotifications', label: 'Reminder Notifications', desc: 'Send automated reminders for pending actions' },
-                        { key: 'marketingEmails', label: 'Marketing Emails', desc: 'Allow sending promotional and update emails' }
-                      ].map((item) => (
-                        <div key={item.key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
-                          <div>
-                            <div className="font-medium text-gray-900">{item.label}</div>
-                            <div className="text-sm text-gray-600">{item.desc}</div>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <header>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Global Alerts</h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Dispatch Rules</p>
+                  </header>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    {[
+                      { key: 'emailNotifications', label: 'Mailing Engine', desc: 'System dispatches', icon: Mail },
+                      { key: 'applicationNotifications', label: 'Flow Intelligence', desc: 'Status change alerts', icon: RotateCcw },
+                      { key: 'reminderNotifications', label: 'Smart Reminders', desc: 'Review auto-followups', icon: Clock },
+                      { key: 'marketingEmails', label: 'Lifecycle Comms', desc: 'Engagement workflows', icon: Users }
+                    ].map((item) => (
+                      <div key={item.key} className="p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between group hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-primary/5 group-hover:text-primary transition-all border border-gray-50">
+                            <item.icon size={18} />
                           </div>
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={settings[item.key as keyof typeof settings] as boolean}
-                              onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                          </label>
+                          <div>
+                            <p className="text-[13px] font-black text-gray-900 leading-tight">{item.label}</p>
+                            <p className="text-[11px] text-gray-500 font-bold mt-0.5">{item.desc}</p>
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={settings[item.key as keyof typeof settings] as boolean}
+                            onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
               {/* Security Settings */}
               {activeTab === 'security' && (
-                <div className="space-y-8">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-100">Access Control</h2>
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 mb-6">
-                      <div>
-                        <div className="font-medium text-gray-900">Require Email Verification</div>
-                        <div className="text-sm text-gray-600">Users must verify email before accessing platform</div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={settings.requireEmailVerification}
-                          onChange={(e) => setSettings({ ...settings, requireEmailVerification: e.target.checked })}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                      </label>
-                    </div>
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <header>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Infrastructure Guard</h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Access & Hardening</p>
+                  </header>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Password Min Length</label>
-                        <input
-                          type="number"
-                          min="6"
-                          max="20"
-                          value={settings.passwordMinLength}
-                          onChange={(e) => setSettings({ ...settings, passwordMinLength: parseInt(e.target.value) })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
+                  <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 flex items-center justify-between group">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                        <Shield size={22} />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Max Login Attempts</label>
-                        <input
-                          type="number"
-                          min="3"
-                          max="10"
-                          value={settings.maxLoginAttempts}
-                          onChange={(e) => setSettings({ ...settings, maxLoginAttempts: parseInt(e.target.value) })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Session Timeout (hours)</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="168"
-                          value={settings.sessionTimeout}
-                          onChange={(e) => setSettings({ ...settings, sessionTimeout: parseInt(e.target.value) })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Reset Token Expiry (mins)</label>
-                        <input
-                          type="number"
-                          min="5"
-                          max="1440"
-                          value={settings.passwordResetExpiry}
-                          onChange={(e) => setSettings({ ...settings, passwordResetExpiry: parseInt(e.target.value) })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
+                        <p className="text-[14px] font-black text-gray-900 leading-tight">Enforced Email Verification</p>
+                        <p className="text-[12px] text-primary font-bold">Mandatory identity check</p>
                       </div>
                     </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.requireEmailVerification}
+                        onChange={(e) => setSettings({ ...settings, requireEmailVerification: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-5.5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2.5px] after:left-[3px] after:bg-white after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {[
+                      { key: 'passwordMinLength', label: 'Complexity Min.', unit: 'CHARS' },
+                      { key: 'maxLoginAttempts', label: 'Threshold', unit: 'LOGINS' },
+                      { key: 'sessionTimeout', label: 'Persistence', unit: 'HOURS' },
+                      { key: 'passwordResetExpiry', label: 'Recovery', unit: 'MINS' }
+                    ].map((f) => (
+                      <div key={f.key} className="space-y-1.5">
+                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">{f.label}</label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={settings[f.key as keyof typeof settings] as number}
+                            onChange={(e) => setSettings({ ...settings, [f.key]: parseInt(e.target.value) })}
+                            className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
+                          />
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400">{f.unit}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {/* File Settings */}
-              {activeTab === 'files' && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6 pb-2 border-b border-gray-100">File Upload Settings</h2>
-                    <div className="grid gap-6 max-w-xl">
-                      <div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Standard Upload Size (MB)</label>
-                          <p className="text-sm text-gray-500 mb-2">Limit for Profile Pictures, Banners, and Resumes (Max 10MB).</p>
+              {/* Company & Student Logic Abstraction into Cards */}
+              {['companies', 'students'].includes(activeTab) && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <header>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">{activeTab === 'companies' ? 'Enterprise Operations' : 'Talent Ecosystem'}</h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Interaction Policies</p>
+                  </header>
+
+                  <div className="grid gap-5">
+                    {activeTab === 'companies' ? (
+                      <>
+                        <div className="p-4 bg-emerald-50/30 border border-emerald-100 rounded-2xl flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 border border-emerald-200 shadow-sm">
+                              <CheckCircle size={18} />
+                            </div>
+                            <div>
+                              <p className="text-[13px] font-black text-emerald-900 leading-tight">Zero-Touch Onboarding</p>
+                              <p className="text-[11px] text-emerald-600 font-bold tracking-tight">Auto-verify new company profiles</p>
+                            </div>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={settings.autoApproveCompanies}
+                              onChange={(e) => setSettings({ ...settings, autoApproveCompanies: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-emerald-200/50 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                          </label>
+                        </div>
+                        <div className="max-w-xs space-y-1.5">
+                          <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Listing Volume Cap</label>
                           <input
                             type="number"
-                            min="1"
-                            max="10"
-                            value={settings.maxFileSize || 5}
-                            onChange={(e) => setSettings({ ...settings, maxFileSize: Math.min(10, Math.max(1, parseInt(e.target.value) || 1)) })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            value={settings.maxInternshipsPerCompany}
+                            onChange={(e) => setSettings({ ...settings, maxInternshipsPerCompany: parseInt(e.target.value) })}
+                            className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
                           />
                         </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Message Attachment Size (MB)</label>
-                          <p className="text-sm text-gray-500 mb-2">Limit for files sent in chat messages (No hard limit).</p>
-                          <input
-                            type="number"
-                            min="1"
-                            max="500"
-                            value={settings.maxMessageSize || 15}
-                            onChange={(e) => setSettings({ ...settings, maxMessageSize: Math.max(1, parseInt(e.target.value) || 1) })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
-                          <div>
-                            <div className="font-medium text-gray-900">Allow Resume Uploads</div>
-                            <div className="text-sm text-gray-600">Enable or disable resume uploads for students</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="p-4 bg-indigo-50/30 border border-indigo-100 rounded-2xl flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 border border-indigo-200 shadow-sm">
+                              <FileText size={18} />
+                            </div>
+                            <div>
+                              <p className="text-[13px] font-black text-indigo-900 leading-tight">Lifecycle Assets</p>
+                              <p className="text-[11px] text-indigo-600 font-bold tracking-tight">Enable Resume/CV repository</p>
+                            </div>
                           </div>
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
@@ -508,20 +574,125 @@ function AdminSettingsContent() {
                               onChange={(e) => setSettings({ ...settings, allowResumeUpload: e.target.checked })}
                               className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            <div className="w-9 h-5 bg-indigo-200/50 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
                           </label>
                         </div>
+                        <div className="max-w-xs space-y-1.5">
+                          <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Concurrent Applications Cap</label>
+                          <input
+                            type="number"
+                            value={settings.maxApplicationsPerStudent}
+                            onChange={(e) => setSettings({ ...settings, maxApplicationsPerStudent: parseInt(e.target.value) })}
+                            className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Files Management */}
+              {activeTab === 'files' && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <header>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Asset Policy</h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Quotas & Limitations</p>
+                  </header>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      { key: 'maxResumeSize', label: 'Resume Rep.' },
+                      { key: 'maxFileSize', label: 'Standard Assets' },
+                      { key: 'maxMessageSize', label: 'Chat Payloads' }
+                    ].map((f) => (
+                      <div key={f.key} className="p-5 bg-gray-50 border border-gray-100 rounded-2xl group hover:border-primary/20 transition-all">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{f.label}</label>
+                        <div className="flex items-end gap-1.5">
+                          <input
+                            type="number"
+                            value={settings[f.key as keyof typeof settings] as number}
+                            onChange={(e) => setSettings({ ...settings, [f.key]: parseInt(e.target.value) })}
+                            className="bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 w-full text-lg font-black text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
+                          />
+                          <span className="text-[12px] font-black text-gray-400 mb-2">MB</span>
+                        </div>
+                        <div className={`h-1 w-full bg-gray-200 rounded-full mt-3 overflow-hidden`}>
+                          <div className={`h-full bg-primary w-[40%] group-hover:w-[60%] transition-all duration-700 opacity-60`} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Database & Infrastructure */}
+              {activeTab === 'database' && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <header>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Infrastructure Persistence</h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Snapshots & Recovery</p>
+                  </header>
+
+                  <div className="bg-orange-50/50 border border-orange-100 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-5">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-orange-600 border border-orange-200 shadow-sm transition-transform group-hover:scale-105">
+                        <Database size={24} />
+                      </div>
+                      <div>
+                        <p className="text-[15px] font-black text-orange-900">Automated Recovery Cycle</p>
+                        <p className="text-[12px] text-orange-700 font-bold opacity-70 tracking-tight">High-frequency snapshots</p>
+                      </div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer scale-105">
+                      <input
+                        type="checkbox"
+                        checked={settings.autoBackup}
+                        onChange={(e) => setSettings({ ...settings, autoBackup: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-5.5 bg-orange-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2.5px] after:left-[3px] after:bg-white after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-orange-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Cycle Frequency</label>
+                      <select
+                        value={settings.backupFrequency}
+                        onChange={(e) => setSettings({ ...settings, backupFrequency: e.target.value })}
+                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
+                      >
+                        <option value="hourly">Every Hour</option>
+                        <option value="daily">Daily Snapshot</option>
+                        <option value="weekly">Weekly Routine</option>
+                      </select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Snapshot Retention</label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={settings.retentionDays}
+                          onChange={(e) => setSettings({ ...settings, retentionDays: parseInt(e.target.value) })}
+                          className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400">DAYS</span>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Companies & Students Settings abbreviated for brevity, assuming standard inputs */}
-              {(activeTab === 'companies' || activeTab === 'students' || activeTab === 'database') && (
-                <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-                  <p>Settings for {activeTab} are ready to be configured via json or standard inputs.</p>
-                  <p className="text-sm mt-2">(Rendered standard inputs for {activeTab} here in full implementation)</p>
+              {/* Dirty State Indicator */}
+              {isDirty && (
+                <div className="mt-6 p-3 bg-primary/5 border border-primary/20 rounded-2xl flex items-center justify-between group animate-pulse">
+                  <div className="flex items-center gap-2.5">
+                    <div className="animate-spin text-primary">
+                      <Settings size={16} />
+                    </div>
+                    <p className="text-[12px] font-bold text-primary">Configuration delta detected. Save to persist.</p>
+                  </div>
                 </div>
               )}
 
@@ -535,7 +706,7 @@ function AdminSettingsContent() {
 
 export default function AdminSettingsPage() {
   return (
-    <Suspense fallback={<div className="p-8 flex justify-center"><Loader2 className="animate-spin" /></div>}>
+    <Suspense fallback={<div className="p-8 flex justify-center min-h-screen bg-gray-50 items-center"><Loader2 className="animate-spin text-primary h-12 w-12" /></div>}>
       <AdminSettingsContent />
     </Suspense>
   )

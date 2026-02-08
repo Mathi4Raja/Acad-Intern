@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { Search, Filter, AlertCircle, CheckCircle, XCircle, Eye, Clock, User, Briefcase, MessageSquare, Loader2, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import api from '@/lib/api'
+import { useAdminStats } from '@/lib/AdminStatsContext'
 import ChatInterface from '@/components/messages/ChatInterface'
 import { useAlert } from '@/components/ui/AlertProvider'
 
@@ -33,8 +35,6 @@ export default function ManageReports() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
-  const [showFilters, setShowFilters] = useState(false)
-  const [showSearch, setShowSearch] = useState(false)
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [activeChatName, setActiveChatName] = useState<string>('')
 
@@ -99,6 +99,8 @@ export default function ManageReports() {
     fetchData()
   }, [debouncedSearch, filterStatus, filterPriority])
 
+  const { refreshStats } = useAdminStats()
+
   const handleAction = async (id: string, action: 'under_review' | 'resolved' | 'dismissed') => {
     showConfirm({
       title: 'Update Report Status',
@@ -114,6 +116,7 @@ export default function ManageReports() {
           await api.put(`/admin/reports/${id}`, updates)
           showAlert(`Report ${action.replace('_', ' ')} successfully`, 'success')
           fetchData()
+          refreshStats()
         } catch (error) {
           console.error(`Error updating report status to ${action}:`, error)
           showAlert('Failed to update report status', 'error')
@@ -157,52 +160,33 @@ export default function ManageReports() {
 
   return (
     <div className="p-3 sm:p-4 max-w-7xl mx-auto">
-      <div className="mb-4 flex items-start justify-between">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Reports & Moderation</h1>
-          <p className="text-xs text-gray-600">Review and handle reported content and user complaints</p>
+          <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight mb-1">Reports & Moderation</h1>
+          <p className="text-xs text-gray-600 font-medium">Review and handle reported content and user complaints</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowSearch(!showSearch)}
-            className={`p-2 rounded-lg transition-colors ${showSearch ? 'bg-primary/20 text-primary' : 'bg-white text-gray-600 hover:bg-gray-100'} border border-gray-200 shadow-sm`}
-            title="Search"
-          >
-            <Search size={20} />
-          </button>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`p-2 rounded-lg transition-colors ${showFilters ? 'bg-primary/20 text-primary' : 'bg-white text-gray-600 hover:bg-gray-100'} border border-gray-200 shadow-sm`}
-            title="Filter"
-          >
-            <Filter size={20} />
-          </button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <input
+              type="text"
+              placeholder="Search by reason, reporter..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Search Modal */}
-      {showSearch && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-            <div className="p-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search by reason, reporter..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  autoFocus
-                />
-              </div>
-            </div>
-            <div className="bg-gray-50 px-6 py-4 flex justify-end rounded-b-xl">
-              <button onClick={() => setShowSearch(false)} className="text-sm font-medium text-gray-600 hover:text-gray-900">Close</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* View Details Modal */}
       {selectedReport && (
@@ -308,150 +292,147 @@ export default function ManageReports() {
       }
 
       {/* Stats Grid */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 mb-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2 sm:p-4">
-          <p className="text-[10px] sm:text-xs text-gray-600 mb-0.5 sm:mb-1">Total Reports</p>
-          <p className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900">{stats.total}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2 sm:p-4">
-          <p className="text-[10px] sm:text-xs text-gray-600 mb-0.5 sm:mb-1">Open</p>
-          <p className="text-base sm:text-xl lg:text-2xl font-bold text-red-600">{stats.open}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2 sm:p-4">
-          <p className="text-[10px] sm:text-xs text-gray-600 mb-0.5 sm:mb-1">Under Review</p>
-          <p className="text-base sm:text-xl lg:text-2xl font-bold text-yellow-600">{stats.underReview}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2 sm:p-4">
-          <p className="text-[10px] sm:text-xs text-gray-600 mb-0.5 sm:mb-1">Resolved</p>
-          <p className="text-base sm:text-xl lg:text-2xl font-bold text-green-600">{stats.resolved}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-2 sm:p-4">
-          <p className="text-[10px] sm:text-xs text-gray-600 mb-0.5 sm:mb-1">High Priority</p>
-          <p className="text-base sm:text-xl lg:text-2xl font-bold text-red-600">{stats.highPriority}</p>
-        </div>
+        {[
+          { label: 'Total Reports', value: stats.total, color: 'text-gray-900' },
+          { label: 'Open', value: stats.open, color: 'text-red-600' },
+          { label: 'Under Review', value: stats.underReview, color: 'text-yellow-600' },
+          { label: 'Resolved', value: stats.resolved, color: 'text-green-600' },
+          { label: 'High Priority', value: stats.highPriority, color: 'text-red-600' },
+        ].map((stat, idx) => (
+          <div key={idx} className="bg-white rounded-lg shadow-sm border border-gray-100 p-2.5 flex flex-col justify-center h-16">
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-500 mb-0.5">{stat.label}</p>
+            <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Filter Modal */}
-      {
-        showFilters && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-              <div className="p-6 space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                  <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full px-4 py-2 border rounded-lg">
-                    <option value="all">All Status</option>
-                    <option value="open">Open</option>
-                    <option value="under_review">Under Review</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="dismissed">Dismissed</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-                  <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="w-full px-4 py-2 border rounded-lg">
-                    <option value="all">All Priority</option>
-                    <option value="high">High Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="low">Low Priority</option>
-                  </select>
-                </div>
-              </div>
-              <div className="bg-gray-50 px-6 py-4 flex justify-between rounded-b-xl">
-                <button onClick={() => { setFilterStatus('all'); setFilterPriority('all') }} className="text-sm font-medium text-gray-600">Clear All</button>
-                <button onClick={() => setShowFilters(false)} className="px-4 py-2 bg-primary text-white rounded-lg text-sm">Apply</button>
-              </div>
-            </div>
-          </div>
-        )
-      }
 
-      {/* Reports List */}
-      <div className="space-y-3 sm:space-y-4">
+      {/* Reports Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {loading ? (
-          <div className="p-12 text-center flex justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>
+          <div className="col-span-full p-12 text-center flex justify-center">
+            <Loader2 className="animate-spin text-primary" size={32} />
+          </div>
         ) : reports.length > 0 ? (
           reports.map((report) => (
-            <div key={report.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-2 sm:p-3 hover:shadow-md transition-all duration-200 hover:border-gray-300">
-              <div className="flex gap-3">
-                {/* Report Content */}
-                <div className="flex-1 min-w-0 space-y-3">
-                  {/* Header */}
-                  <div>
-                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                      <span className={`inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(report.status)}`}>
-                        {report.status.replace('_', ' ').charAt(0).toUpperCase() + report.status.replace('_', ' ').slice(1)}
-                      </span>
-                      <span className={`inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(report.priority)}`}>
-                        <AlertCircle size={12} />
-                        {report.priority.charAt(0).toUpperCase() + report.priority.slice(1)} Priority
-                      </span>
-                      <span className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                        {getTypeIcon(report.type)}
-                        {report.type.charAt(0).toUpperCase() + report.type.slice(1)}
-                      </span>
-                    </div>
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1.5">{report.reason}</h3>
+            <div key={report.id} className="group bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-3 hover:shadow-xl hover:border-primary/20 transition-all duration-300 relative flex flex-col h-full">
+
+              <div className="flex gap-2.5 sm:gap-3 flex-1">
+                {/* Column 1: Side Column (Type Icon & Actions) */}
+                <div className="flex flex-col items-center gap-2 shrink-0 py-0.5">
+                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500 shadow-sm border border-gray-100 group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
+                    {getTypeIcon(report.type)}
+                  </div>
+
+                  <div className="flex flex-col gap-1.5 mt-1">
+                    <div className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      report.priority === 'high' ? "bg-red-500 animate-pulse" :
+                        report.priority === 'medium' ? "bg-yellow-500" : "bg-blue-500"
+                    )} title={`${report.priority} priority`} />
+                  </div>
+                </div>
+
+                {/* Column 2: Main Content */}
+                <div className="flex-1 min-w-0 flex flex-col">
+                  {/* Status & Priority Badges */}
+                  <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider h-fit border transition-all",
+                      getStatusColor(report.status),
+                      report.status === 'open' ? "border-red-200" :
+                        report.status === 'under_review' ? "border-yellow-200" :
+                          report.status === 'resolved' ? "border-green-200" : "border-gray-200"
+                    )}>
+                      {report.status.replace('_', ' ')}
+                    </span>
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider h-fit border transition-all",
+                      getPriorityColor(report.priority),
+                      report.priority === 'high' ? "border-red-200" :
+                        report.priority === 'medium' ? "border-yellow-200" : "border-blue-200"
+                    )}>
+                      {report.priority}
+                    </span>
+                  </div>
+
+                  {/* Reason & Date */}
+                  <div className="mb-2">
+                    <h3 className="text-[14px] sm:text-[15px] font-black text-gray-900 leading-tight group-hover:text-primary transition-colors flex items-start gap-1.5 mb-1">
+                      {report.reason}
+                    </h3>
+                    <p className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
+                      <Clock size={10} />
+                      {formatDate(report.reportedDate)}
+                    </p>
+                  </div>
+
+                  {/* Context Info */}
+                  <div className="space-y-1.5 mb-3">
                     {report.internshipTitle && (
-                      <p className="text-xs sm:text-sm text-gray-600 mb-1">Reported Internship: <span className="font-medium">{report.internshipTitle}</span></p>
+                      <div className="flex items-center gap-2 text-[12px] font-medium text-gray-600">
+                        <Briefcase size={12} className="text-gray-400 shrink-0" />
+                        <span className="truncate" title={report.internshipTitle}>{report.internshipTitle}</span>
+                      </div>
                     )}
                     {report.companyName && (
-                      <p className="text-xs sm:text-sm text-gray-600 mb-1">Company: <span className="font-medium">{report.companyName}</span></p>
+                      <div className="flex items-center gap-2 text-[12px] font-medium text-gray-600">
+                        <AlertCircle size={12} className="text-gray-400 shrink-0" />
+                        <span className="truncate" title={report.companyName}>{report.companyName}</span>
+                      </div>
                     )}
+                    <div className="flex items-center gap-2 text-[12px] font-medium text-gray-600">
+                      <User size={12} className="text-gray-400 shrink-0" />
+                      <span className="truncate font-bold text-gray-700">By {report.reportedBy}</span>
+                    </div>
                   </div>
 
-                  {/* Description (Empty for now as API doesn't return it) */}
-                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
-                    <span className="flex items-center gap-1">
-                      <User size={12} />
-                      Reported by: <span className="font-medium">{report.reportedBy}</span>
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock size={12} />
-                      {formatDate(report.reportedDate)}
-                    </span>
-                  </div>
-
-                  {/* Resolution (if resolved) */}
+                  {/* Resolution Snippet */}
                   {report.resolution && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
-                      <div className="flex items-start gap-2">
-                        <CheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={16} />
-                        <div>
-                          <p className="text-xs sm:text-sm font-semibold text-green-900 mb-1">Resolution</p>
-                          <p className="text-xs sm:text-sm text-green-700">{report.resolution}</p>
-                        </div>
+                    <div className="mt-auto pt-2 border-t border-gray-50">
+                      <div className="bg-green-50/50 border border-green-100 rounded-lg p-1.5 flex items-start gap-1.5">
+                        <CheckCircle size={12} className="text-green-600 shrink-0 mt-0.5" />
+                        <p className="text-[11px] text-green-700 leading-tight font-medium italic">
+                          "{report.resolution}"
+                        </p>
                       </div>
                     </div>
                   )}
                 </div>
+              </div>
 
-                {/* Action Buttons - Right Side */}
-                {(report.status !== 'resolved' && report.status !== 'dismissed') && (
-                  <div className="flex flex-col gap-1.5 ml-2">
-                    {report.applicationId && (
-                      <button
-                        onClick={() => {
-                          setActiveChatId(report.applicationId || null)
-                          setActiveChatName(report.reportedBy || 'Reported Chat')
-                        }}
-                        className="p-2 text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                        title="View Chat History"
-                      >
-                        <MessageSquare size={16} />
-                      </button>
-                    )}
+              {/* Footer Actions */}
+              <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between">
+                <div className="flex items-center gap-0.5">
+                  {report.applicationId && (
                     <button
-                      onClick={() => setSelectedReport(report)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="View Details"
+                      onClick={() => {
+                        setActiveChatId(report.applicationId || null)
+                        setActiveChatName(report.reportedBy || 'Reported Chat')
+                      }}
+                      className="p-1.5 text-primary hover:bg-primary/5 rounded-lg transition-all"
+                      title="View Chat Context"
                     >
-                      <Eye size={16} />
+                      <MessageSquare size={16} />
                     </button>
+                  )}
+                  <button
+                    onClick={() => setSelectedReport(report)}
+                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                    title="Detailed View"
+                  >
+                    <Eye size={16} />
+                  </button>
+                </div>
+
+                {(report.status !== 'resolved' && report.status !== 'dismissed') && (
+                  <div className="flex items-center gap-1">
                     {report.status !== 'under_review' && (
                       <button
                         onClick={() => handleAction(report.id, 'under_review')}
-                        className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
+                        className="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all"
                         title="Mark Under Review"
                       >
                         <Clock size={16} />
@@ -459,15 +440,14 @@ export default function ManageReports() {
                     )}
                     <button
                       onClick={() => handleAction(report.id, 'resolved')}
-                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                      title="Resolve"
+                      className="px-2.5 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-[10px] font-black transition-all border border-green-100"
                     >
-                      <CheckCircle size={16} />
+                      RESOLVE
                     </button>
                     <button
                       onClick={() => handleAction(report.id, 'dismissed')}
-                      className="p-1 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                      title="Dismiss"
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      title="Dismiss Report"
                     >
                       <XCircle size={16} />
                     </button>
@@ -477,10 +457,12 @@ export default function ManageReports() {
             </div>
           ))
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 sm:p-12 text-center">
-            <CheckCircle className="mx-auto text-green-500 mb-4" size={48} />
-            <p className="text-gray-500 text-base sm:text-lg mb-2">No reports found</p>
-            <p className="text-sm text-gray-400">All clear! No reports matching your filters.</p>
+          <div className="col-span-full bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+            <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={32} />
+            </div>
+            <p className="text-gray-900 font-bold text-lg mb-1">All Clear!</p>
+            <p className="text-sm text-gray-500">No reports matching your current filters were found.</p>
           </div>
         )}
       </div>

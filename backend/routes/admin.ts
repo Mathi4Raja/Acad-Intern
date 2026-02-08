@@ -7,6 +7,7 @@ import {
     deleteUser,
     getAllCompanies,
     updateCompany,
+    deleteCompany,
     getAllInternships,
     updateInternshipStatus,
     deleteInternship,
@@ -35,6 +36,7 @@ router.delete('/users/:id', deleteUser);
 // Companies management
 router.get('/companies', getAllCompanies);
 router.put('/companies/:id', updateCompany);
+router.delete('/companies/:id', deleteCompany);
 
 // Internships management
 router.get('/internships', getAllInternships);

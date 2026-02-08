@@ -1,7 +1,8 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { LucideIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { LucideIcon, TrendingUp, TrendingDown, Minus, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
 
 interface StatCardProps {
     title: string
@@ -15,6 +16,9 @@ interface StatCardProps {
     iconBg?: string
     description?: string
     className?: string
+    href?: string
+    onClick?: () => void
+    active?: boolean
 }
 
 export function StatCard({
@@ -25,7 +29,10 @@ export function StatCard({
     iconColor = 'text-primary',
     iconBg = 'bg-primary/10',
     description,
-    className
+    className,
+    href,
+    onClick,
+    active
 }: StatCardProps) {
     const getTrendIcon = () => {
         if (!change) return null
@@ -51,15 +58,26 @@ export function StatCard({
         }
     }
 
-    return (
-        <div className={cn('bg-white rounded-xl p-2.5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow', className)}>
-            <div className="flex items-start justify-between mb-1">
-                {Icon && (
-                    <div className={cn('p-1.5 rounded-md', iconBg)}>
-                        <Icon className={cn('w-3 h-3', iconColor)} />
-                    </div>
-                )}
-                {change && (
+    const Content = (
+        <div
+            className={cn(
+                'bg-white rounded-xl p-3 border border-gray-200 shadow-sm transition-all h-full flex flex-col justify-between relative overflow-hidden',
+                (href || onClick) && 'cursor-pointer hover:shadow-md hover:border-primary/50 group',
+                active && 'ring-2 ring-primary border-primary bg-primary/5',
+                className
+            )}
+            onClick={onClick}
+        >
+            <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2">
+                    {Icon && (
+                        <div className={cn('p-1.5 rounded-md flex-shrink-0', iconBg, active && 'bg-white')}>
+                            <Icon className={cn('w-4 h-4', iconColor)} />
+                        </div>
+                    )}
+                    <h3 className={cn("text-[10px] uppercase tracking-wider font-semibold text-gray-500", active && "text-primary")}>{title}</h3>
+                </div>
+                {change ? (
                     <div className={cn('flex items-center gap-0.5 text-[10px] font-medium', getTrendColor())}>
                         {getTrendIcon()}
                         <span>
@@ -68,15 +86,23 @@ export function StatCard({
                                 : `${change.value}%`}
                         </span>
                     </div>
+                ) : (href || onClick) && (
+                    <ChevronRight className={cn("w-4 h-4 text-gray-300 group-hover:text-primary transition-colors", active && "text-primary")} />
                 )}
             </div>
-            <div className="space-y-0.5">
-                <p className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">{title}</p>
-                <p className="text-lg font-bold text-gray-900 leading-none">{value}</p>
+
+            <div className="flex items-end justify-between mt-auto">
+                <p className="text-xl font-bold text-gray-900 leading-none">{value}</p>
                 {description && (
-                    <p className="text-[10px] text-gray-400 leading-tight">{description}</p>
+                    <p className="text-[10px] text-gray-400 leading-tight ml-2 text-right">{description}</p>
                 )}
             </div>
         </div>
     )
+
+    if (href) {
+        return <Link href={href} className="block h-full">{Content}</Link>
+    }
+
+    return Content
 }

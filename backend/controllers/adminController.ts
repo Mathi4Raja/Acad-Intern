@@ -233,6 +233,11 @@ export const deleteUser = async (req: AuthRequest, res: Response, next: NextFunc
         } else if (user.role === 'company') {
             const company = await Company.findOne({ userId: user._id });
             if (company) {
+                // Find all internships and delete their applications first
+                const internships = await Internship.find({ companyId: company._id });
+                const internshipIds = internships.map(i => i._id);
+                await Application.deleteMany({ internshipId: { $in: internshipIds } });
+
                 await Internship.deleteMany({ companyId: company._id });
                 await company.deleteOne();
             }
@@ -304,6 +309,41 @@ export const updateCompany = async (req: AuthRequest, res: Response, next: NextF
             res.status(400).json({ success: false, message: 'Validation error', errors: error.errors });
             return;
         }
+        next(error);
+    }
+};
+
+// @desc    Delete company
+// @route   DELETE /api/admin/companies/:id
+// @access  Private (Admin)
+export const deleteCompany = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const company = await Company.findById(req.params.id);
+        if (!company) {
+            res.status(404).json({ success: false, message: 'Company not found' });
+            return;
+        }
+
+        // Find all internships posted by this company
+        const internships = await Internship.find({ companyId: company._id });
+        const internshipIds = internships.map(i => i._id);
+
+        // Delete all applications for these internships
+        await Application.deleteMany({ internshipId: { $in: internshipIds } });
+
+        // Delete all internships
+        await Internship.deleteMany({ companyId: company._id });
+
+        // Delete the company user account if it exists
+        if (company.userId) {
+            await User.deleteOne({ _id: company.userId });
+        }
+
+        // Delete the company profile
+        await company.deleteOne();
+
+        res.status(200).json({ success: true, message: 'Company and all associated data (internships, applications, user account) deleted successfully' });
+    } catch (error) {
         next(error);
     }
 };
@@ -718,7 +758,33 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
             };
         });
 
-        // 8. Key Insights
+        // Helper to calculate percentage growth
+        const calculateGrowth = async (Model: any, currentStart: Date, previousStart: Date) => {
+            const currentCount = await Model.countDocuments({ createdAt: { $gte: currentStart } });
+            const previousCount = await Model.countDocuments({ createdAt: { $gte: previousStart, $lt: currentStart } });
+
+            if (previousCount === 0) return currentCount > 0 ? 100 : 0;
+            return ((currentCount - previousCount) / previousCount) * 100;
+        };
+
+        // Determine previous period start date
+        const duration = new Date().getTime() - startDate.getTime();
+        const previousStartDate = new Date(startDate.getTime() - duration);
+
+        // Calculate trends
+        const userGrowthPct = await calculateGrowth(User, startDate, previousStartDate);
+        const internshipGrowthPct = await calculateGrowth(Internship, startDate, previousStartDate);
+        const appGrowthPct = await calculateGrowth(Application, startDate, previousStartDate);
+        const companyGrowthPct = await calculateGrowth(Company, startDate, previousStartDate);
+
+        // 8. Key Insights & Hiring Rate
+        // Real Average Hiring Rate: (Total Accepted Applications / Total Applications) * 100
+        const totalApplicationsCount = await Application.countDocuments();
+        const acceptedApplicationsCount = await Application.countDocuments({ status: 'accepted' });
+        const realAvgHiringRate = totalApplicationsCount > 0
+            ? ((acceptedApplicationsCount / totalApplicationsCount) * 100).toFixed(1)
+            : "0.0";
+
         // Peak Activity Day
         const peakDay = activityData.reduce((prev, current) => (prev.applications > current.applications) ? prev : current, { day: 'N/A', applications: 0 });
 
@@ -746,13 +812,17 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
                     topLocationPct: topLocation.percentage,
                     topSkill: topSkill.skill,
                     topSkillCount: topSkill.count,
-                    avgHiringRate: "8.5%" // Calculated placeholder
+                    avgHiringRate: `${realAvgHiringRate}%`
                 },
                 overview: {
                     totalUsers: await User.countDocuments(),
+                    userGrowth: userGrowthPct.toFixed(1),
                     totalInternships: totalInternships,
+                    internshipGrowth: internshipGrowthPct.toFixed(1),
                     totalApplications: await Application.countDocuments(),
-                    activeCompanies: await Company.countDocuments({ status: 'active' })
+                    applicationGrowth: appGrowthPct.toFixed(1),
+                    activeCompanies: await Company.countDocuments({ status: 'active' }),
+                    companyGrowth: companyGrowthPct.toFixed(1)
                 }
             }
         });

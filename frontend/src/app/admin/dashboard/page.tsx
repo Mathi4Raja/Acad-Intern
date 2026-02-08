@@ -6,6 +6,7 @@ import api from '@/lib/api'
 import Link from 'next/link'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2 } from 'lucide-react'
+import { StatCard } from '@/components/analytics/StatCard'
 
 interface DashboardStats {
     totalUsers: number
@@ -131,78 +132,54 @@ function AdminDashboardContent() {
         <div className="p-3 sm:p-4 max-w-7xl mx-auto">
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Admin Dashboard</h1>
-                    <p className="text-sm text-gray-600">Overview of platform performance and activities</p>
+                    <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight mb-1">Admin Dashboard</h1>
+                    <p className="text-xs text-gray-600 font-medium">Overview of platform performance and activities</p>
                 </div>
-                <div className="text-sm text-gray-500 bg-white px-3 py-1 rounded-md border border-gray-200">
+                <div className="text-xs text-gray-500 bg-white px-3 py-1 rounded-md border border-gray-200">
                     Last updated: {new Date().toLocaleTimeString()}
                 </div>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-                <Link href="/admin/users?role=student" className="block group">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 transition-all hover:shadow-md hover:border-primary/50 cursor-pointer h-full">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
-                                <Users size={18} />
-                            </div>
-                            <span className="flex items-center text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                                <TrendingUp size={12} className="mr-1" /> +12%
-                            </span>
-                        </div>
-                        <h3 className="text-sm font-medium text-gray-500 mb-1">Total Users</h3>
-                        <p className="text-2xl font-bold text-gray-900 group-hover:text-primary transition-colors">{stats.totalUsers.toLocaleString()}</p>
-                        <p className="text-xs text-gray-400 mt-1">{stats.totalStudents} students • {stats.totalCompanies} companies</p>
-                    </div>
-                </Link>
+                <StatCard
+                    title="Total Users"
+                    value={stats.totalUsers.toLocaleString()}
+                    change={{ value: 12, type: 'increase' }}
+                    icon={Users}
+                    iconColor="text-blue-500"
+                    iconBg="bg-blue-50"
+                    href="/admin/users"
+                />
 
-                <Link href="/admin/internships" className="block group">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 transition-all hover:shadow-md hover:border-primary/50 cursor-pointer h-full">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="p-2 bg-primary/10 text-primary rounded-lg group-hover:bg-primary/20 transition-colors">
-                                <Briefcase size={18} />
-                            </div>
-                            <span className="flex items-center text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                                <TrendingUp size={12} className="mr-1" /> +5%
-                            </span>
-                        </div>
-                        <h3 className="text-sm font-medium text-gray-500 mb-1">Active Internships</h3>
-                        <p className="text-2xl font-bold text-gray-900 group-hover:text-primary transition-colors">{stats.activeInternships.toLocaleString()}</p>
-                        <p className="text-xs text-gray-400 mt-1">out of {stats.totalInternships} total posted</p>
-                    </div>
-                </Link>
+                <StatCard
+                    title="Active Internships"
+                    value={stats.activeInternships.toLocaleString()}
+                    change={{ value: 5, type: 'increase' }}
+                    icon={Briefcase}
+                    iconColor="text-primary"
+                    iconBg="bg-primary/10"
+                    href="/admin/internships?status=active"
+                />
 
-                <Link href="/admin/users?verified=false" className="block group">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 transition-all hover:shadow-md hover:border-primary/50 cursor-pointer h-full">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="p-2 bg-purple-50 text-purple-600 rounded-lg group-hover:bg-purple-100 transition-colors">
-                                <Building size={18} />
-                            </div>
-                        </div>
-                        <h3 className="text-sm font-medium text-gray-500 mb-1">Total Companies</h3>
-                        <p className="text-2xl font-bold text-gray-900 group-hover:text-primary transition-colors">{stats.totalCompanies.toLocaleString()}</p>
-                        <p className="text-xs text-gray-400 mt-1">Partnered with AcadIntern</p>
-                    </div>
-                </Link>
+                <StatCard
+                    title="Total Companies"
+                    value={stats.totalCompanies.toLocaleString()}
+                    icon={Building}
+                    iconColor="text-purple-500"
+                    iconBg="bg-purple-50"
+                    href="/admin/companies"
+                />
 
-                <Link href="/admin/reports" className="block group">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 transition-all hover:shadow-md hover:border-red-300 cursor-pointer h-full">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="p-2 bg-red-50 text-red-600 rounded-lg group-hover:bg-red-100 transition-colors">
-                                <AlertCircle size={18} />
-                            </div>
-                            {stats.pendingReports > 0 && (
-                                <span className="flex items-center text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full animate-pulse">
-                                    Action Required
-                                </span>
-                            )}
-                        </div>
-                        <h3 className="text-sm font-medium text-gray-500 mb-1">Pending Reports</h3>
-                        <p className="text-2xl font-bold text-gray-900 group-hover:text-red-600 transition-colors">{stats.pendingReports}</p>
-                        <p className="text-xs text-gray-400 mt-1">Requires moderation</p>
-                    </div>
-                </Link>
+                <StatCard
+                    title="Pending Reports"
+                    value={stats.pendingReports}
+                    icon={AlertCircle}
+                    iconColor="text-red-500"
+                    iconBg="bg-red-50"
+                    href="/admin/reports"
+                    className={stats.pendingReports > 0 ? "border-red-200 bg-red-50/10" : ""}
+                />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
