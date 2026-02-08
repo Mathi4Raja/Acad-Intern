@@ -167,27 +167,41 @@ function AdminSettingsContent() {
     <div className="min-h-screen bg-gray-50/30 p-3 sm:p-5">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-gray-900 leading-tight tracking-tight mb-1">System Control</h1>
-            <p className="text-[11px] text-gray-500 font-bold uppercase tracking-wider">Manage global identity, security, and infrastructure</p>
+        {/* Ultra-Compact Premium Header Card */}
+        <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-3.5 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-6">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 shrink-0 group-hover:scale-105 transition-all duration-500">
+              <Settings size={22} />
+            </div>
+            <div>
+              <h1 className="text-[17px] font-black text-gray-900 leading-none tracking-tight uppercase">
+                System Control
+              </h1>
+              <div className="flex items-center gap-2 mt-1.5">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                  Manage Global Identity, Security & Infrastructure
+                </p>
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" title="Core Config Active" />
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative z-10">
             <button
               onClick={handleReset}
               disabled={!isDirty || saveStatus === 'saving'}
-              className="px-3.5 py-1.5 border border-gray-200 bg-white text-gray-600 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-[12px] font-black shadow-sm"
+              className="px-4 py-2 border border-gray-200 bg-white text-gray-600 rounded-xl hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-sm"
             >
-              <RotateCcw size={14} />
+              <RotateCcw size={12} />
               DISCARD
             </button>
             <button
               onClick={handleSave}
               disabled={!isDirty || saveStatus === 'saving'}
               className={cn(
-                "flex items-center gap-2 px-5 py-1.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-[12px] font-black shadow-lg shadow-primary/20",
-                saveStatus === 'saved' ? "bg-green-500 text-white" : "bg-primary text-white hover:scale-105"
+                "px-5 py-2 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20",
+                saveStatus === 'saved' ? "bg-green-500 text-white" : "bg-primary text-white hover:scale-105 active:scale-95"
               )}
             >
               {saveStatus === 'saving' ? (

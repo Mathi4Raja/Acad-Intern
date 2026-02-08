@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, AlertCircle, CheckCircle, XCircle, Eye, Clock, User, Briefcase, MessageSquare, Loader2, X } from 'lucide-react'
+import { Search, Filter, AlertCircle, CheckCircle, XCircle, Eye, Clock, User, Briefcase, MessageSquare, Loader2, X, Flag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import api from '@/lib/api'
 import { useAdminStats } from '@/lib/AdminStatsContext'
@@ -160,25 +160,40 @@ export default function ManageReports() {
 
   return (
     <div className="p-3 sm:p-4 max-w-7xl mx-auto">
-      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight mb-1">Reports & Moderation</h1>
-          <p className="text-xs text-gray-600 font-medium">Review and handle reported content and user complaints</p>
+      {/* Ultra-Compact Premium Header Card */}
+      <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-3.5 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-4">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 shrink-0 group-hover:scale-105 transition-all duration-500">
+            <Flag size={22} />
+          </div>
+          <div>
+            <h1 className="text-[17px] font-black text-gray-900 leading-none tracking-tight uppercase">
+              Security Feed
+            </h1>
+            <div className="flex items-center gap-2 mt-1.5">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                Incident Response & Behavioral Auditing
+              </p>
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" title="Feed Synchronized" />
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+
+        <div className="flex items-center gap-3 relative z-10">
           <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
             <input
               type="text"
-              placeholder="Search by reason, reporter..."
+              placeholder="Search incidents..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              className="w-full pl-9 pr-8 py-2 text-xs bg-gray-50/50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-[10px] placeholder:font-bold placeholder:uppercase placeholder:tracking-widest"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-900"
               >
                 <X size={14} />
               </button>
@@ -188,321 +203,319 @@ export default function ManageReports() {
       </div>
 
 
-      {/* View Details Modal */}
+      {/* Audit Modal */}
       {selectedReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Report Details</h2>
-                <button
-                  onClick={() => setSelectedReport(null)}
-                  className="text-gray-400 hover:text-gray-600 p-1"
-                >
-                  <XCircle size={24} />
-                </button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col max-h-[90vh]">
+            <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-white shrink-0">
+              <div>
+                <h2 className="text-[17px] font-black text-gray-900 leading-none">Incident Audit Log</h2>
+                <p className="text-[11px] font-bold text-gray-400 mt-1.5 uppercase tracking-widest">Case ID: {selectedReport.id.slice(-8).toUpperCase()}</p>
+              </div>
+              <button
+                onClick={() => setSelectedReport(null)}
+                className="text-gray-400 hover:text-gray-900 p-2 rounded-xl hover:bg-gray-100 transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-8 scrollbar-hide">
+              {/* Profile Header Block */}
+              <div className="flex items-center gap-5">
+                <div className={cn(
+                  "w-16 h-16 rounded-2xl border-2 flex items-center justify-center text-gray-300 font-black text-2xl shrink-0 group hover:scale-105 transition-all shadow-sm",
+                  selectedReport.priority === 'high' ? "bg-red-50 border-red-100 text-red-400" : "bg-gray-50 border-gray-100"
+                )}>
+                  {getTypeIcon(selectedReport.type)}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-lg font-black text-gray-900 mb-1 truncate">{selectedReport.reason}</h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm",
+                      getStatusColor(selectedReport.status)
+                    )}>
+                      {selectedReport.status}
+                    </span>
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border",
+                      getPriorityColor(selectedReport.priority)
+                    )}>
+                      {selectedReport.priority} Priority
+                    </span>
+                  </div>
+                </div>
               </div>
 
+              {/* Data Grid Section */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Origin of Report</span>
+                  <p className="text-[11px] font-black text-gray-900 truncate">By {selectedReport.reportedBy}</p>
+                  <p className="text-[10px] font-bold text-gray-400 truncate">{selectedReport.reporterEmail || 'No Email'}</p>
+                </div>
+                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Timestamp</span>
+                  <p className="text-[11px] font-black text-gray-900">{formatDate(selectedReport.reportedDate)}</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Official Filing</p>
+                </div>
+              </div>
+
+              {/* Subject Entity */}
               <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status & Priority</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedReport.status)}`}>
-                      {selectedReport.status.replace('_', ' ').charAt(0).toUpperCase() + selectedReport.status.replace('_', ' ').slice(1)}
-                    </span>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${getPriorityColor(selectedReport.priority)}`}>
-                      <AlertCircle size={12} />
-                      {selectedReport.priority.charAt(0).toUpperCase() + selectedReport.priority.slice(1)} Priority
-                    </span>
+                <div className="bg-white p-4 rounded-2xl border border-gray-100 space-y-3">
+                  <h4 className="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 pb-2">Investigated Subject</h4>
+                  <div className="space-y-1">
+                    <p className="text-sm font-black text-gray-900">{selectedReport.internshipTitle || 'Platform Interaction'}</p>
+                    <p className="text-xs font-bold text-gray-500">{selectedReport.companyName || 'Unknown Entity'}</p>
                   </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Reason</label>
-                  <p className="mt-1 text-gray-900 bg-gray-50 p-3 rounded-lg border border-gray-100">{selectedReport.reason}</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Reporter</label>
-                    <div className="mt-1 flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs">
-                        {selectedReport.reportedBy.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="overflow-hidden">
-                        <p className="text-sm font-medium text-gray-900 truncate">{selectedReport.reportedBy}</p>
-                        {selectedReport.reporterEmail && <p className="text-xs text-gray-500 truncate">{selectedReport.reporterEmail}</p>}
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Reported Item</label>
-                    <div className="mt-1">
-                      <p className="text-sm font-medium text-gray-900">{selectedReport.internshipTitle || 'N/A'}</p>
-                      <p className="text-xs text-gray-500">{selectedReport.companyName || 'Unknown Company'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Reported Date</label>
-                    <p className="mt-1 text-sm text-gray-700">{formatDate(selectedReport.reportedDate)}</p>
-                  </div>
-                  {selectedReport.reviewedAt && (
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Reviewed Date</label>
-                      <p className="mt-1 text-sm text-gray-700">{formatDate(selectedReport.reviewedAt)}</p>
-                    </div>
-                  )}
                 </div>
 
                 {selectedReport.resolution && (
-                  <div>
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Resolution</label>
-                    <div className="mt-1 bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-sm text-green-800">{selectedReport.resolution}</p>
-                    </div>
+                  <div className="bg-emerald-50/20 p-4 rounded-2xl border border-emerald-100 space-y-3">
+                    <h4 className="text-[9px] font-black text-emerald-600 uppercase tracking-widest border-b border-emerald-100/30 pb-2">Resolution Protocol</h4>
+                    <p className="text-[12px] font-medium text-emerald-800 leading-relaxed italic">"{selectedReport.resolution}"</p>
                   </div>
                 )}
               </div>
+
+              {/* Action Log Area */}
+              <div className="bg-gray-900 rounded-2xl p-4 shadow-xl shadow-gray-200/50 ring-1 ring-white/10">
+                <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Internal Incident ID</span>
+                <code className="text-[11px] font-mono text-gray-200 break-all leading-relaxed">
+                  {selectedReport.id}
+                </code>
+              </div>
             </div>
-            <div className="bg-gray-50 px-6 py-4 rounded-b-xl flex justify-end gap-3">
+
+            <div className="px-6 py-5 bg-white border-t border-gray-50 flex justify-end gap-3 shrink-0">
               <button
                 onClick={() => setSelectedReport(null)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+                className="px-6 py-2.5 border border-gray-100 text-[11px] font-black uppercase tracking-widest text-gray-500 rounded-xl hover:bg-gray-50 transition-all"
               >
-                Close
+                Exit Audit
               </button>
-              {selectedReport.status !== 'resolved' && selectedReport.status !== 'dismissed' && (
+              {selectedReport.status !== 'resolved' && (
                 <button
                   onClick={() => {
                     handleAction(selectedReport.id, 'resolved');
                     setSelectedReport(null);
                   }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                  className="px-6 py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-100 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-100 transition-all shadow-sm shadow-emerald-100"
                 >
-                  Resolve Report
+                  Finalize Resolution
                 </button>
               )}
             </div>
           </div>
         </div>
-      )
-      }
+      )}
 
       {/* Stats Grid */}
-      {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3 mb-4">
-        {[
-          { label: 'Total Reports', value: stats.total, color: 'text-gray-900' },
-          { label: 'Open', value: stats.open, color: 'text-red-600' },
-          { label: 'Under Review', value: stats.underReview, color: 'text-yellow-600' },
-          { label: 'Resolved', value: stats.resolved, color: 'text-green-600' },
-          { label: 'High Priority', value: stats.highPriority, color: 'text-red-600' },
-        ].map((stat, idx) => (
-          <div key={idx} className="bg-white rounded-lg shadow-sm border border-gray-100 p-2.5 flex flex-col justify-center h-16">
-            <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-500 mb-0.5">{stat.label}</p>
-            <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
-          </div>
-        ))}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 flex flex-col justify-center h-20 hover:shadow-md transition-all">
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 leading-none">Global Queue</p>
+          <p className="text-2xl font-black text-gray-900 leading-none">{stats.total}</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 flex flex-col justify-center h-20 hover:shadow-md transition-all">
+          <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1.5 leading-none">Unattended</p>
+          <p className="text-2xl font-black text-red-600 leading-none">{stats.open}</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 flex flex-col justify-center h-20 hover:shadow-md transition-all">
+          <p className="text-[10px] font-black text-yellow-400 uppercase tracking-widest mb-1.5 leading-none">In Review</p>
+          <p className="text-2xl font-black text-yellow-600 leading-none">{stats.underReview}</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 flex flex-col justify-center h-20 hover:shadow-md transition-all">
+          <p className="text-[10px] font-black text-green-400 uppercase tracking-widest mb-1.5 leading-none">Resolved</p>
+          <p className="text-2xl font-black text-green-600 leading-none">{stats.resolved}</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 flex flex-col justify-center h-20 hover:shadow-md transition-all ring-1 ring-red-100 bg-red-50/10">
+          <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1.5 leading-none">High Priority</p>
+          <p className="text-2xl font-black text-red-700 leading-none">{stats.highPriority}</p>
+        </div>
       </div>
 
 
       {/* Reports Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {loading ? (
-          <div className="col-span-full p-12 text-center flex justify-center">
+          <div className="col-span-full p-12 text-center flex justify-center items-center flex-col gap-3">
             <Loader2 className="animate-spin text-primary" size={32} />
+            <p className="text-sm text-gray-500 font-black uppercase tracking-widest">Scanning Complaints...</p>
           </div>
         ) : reports.length > 0 ? (
           reports.map((report) => (
-            <div key={report.id} className="group bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-3 hover:shadow-xl hover:border-primary/20 transition-all duration-300 relative flex flex-col h-full">
-
-              <div className="flex gap-2.5 sm:gap-3 flex-1">
-                {/* Column 1: Side Column (Type Icon & Actions) */}
-                <div className="flex flex-col items-center gap-2 shrink-0 py-0.5">
-                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-500 shadow-sm border border-gray-100 group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
-                    {getTypeIcon(report.type)}
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 mt-1">
+            <div key={report.id} className={cn(
+              "group bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-xl hover:border-primary/20 transition-all duration-300 relative flex flex-col h-full",
+              report.priority === 'high' && report.status === 'open' && "ring-1 ring-red-100 bg-red-50/5"
+            )}>
+              <div className="flex gap-4 h-full">
+                {/* Column 1: Priority & Type Icon */}
+                <div className="flex flex-col items-center gap-3 pt-0.5 shrink-0 w-10">
+                  <div className="relative flex items-center justify-center">
                     <div className={cn(
-                      "w-1.5 h-1.5 rounded-full",
-                      report.priority === 'high' ? "bg-red-500 animate-pulse" :
-                        report.priority === 'medium' ? "bg-yellow-500" : "bg-blue-500"
-                    )} title={`${report.priority} priority`} />
+                      "w-4 h-4 rounded-full border-2",
+                      report.priority === 'high' ? "bg-red-500 border-red-100 animate-pulse" :
+                        report.priority === 'medium' ? "bg-yellow-400 border-yellow-50" : "bg-blue-400 border-blue-50"
+                    )} />
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-primary/5 group-hover:text-primary transition-all duration-300 shadow-sm">
+                    {getTypeIcon(report.type)}
                   </div>
                 </div>
 
                 {/* Column 2: Main Content */}
                 <div className="flex-1 min-w-0 flex flex-col">
-                  {/* Status & Priority Badges */}
-                  <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <h3 className="text-[17px] font-black text-gray-900 leading-tight group-hover:text-primary transition-colors truncate" title={report.reason}>
+                        {report.reason}
+                      </h3>
+                      <p className="text-[11px] font-bold text-gray-400 truncate mt-0.5 flex items-center gap-1.5">
+                        By {report.reportedBy} • {report.reporterEmail || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Status Chips */}
+                  <div className="flex items-center gap-2 mb-4 flex-wrap">
                     <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider h-fit border transition-all",
-                      getStatusColor(report.status),
-                      report.status === 'open' ? "border-red-200" :
-                        report.status === 'under_review' ? "border-yellow-200" :
-                          report.status === 'resolved' ? "border-green-200" : "border-gray-200"
+                      "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border h-fit",
+                      report.status === 'open' ? "bg-red-50 text-red-600 border-red-100" :
+                        report.status === 'under_review' ? "bg-yellow-50 text-yellow-600 border-yellow-100" :
+                          report.status === 'resolved' ? "bg-green-50 text-green-600 border-green-100" : "bg-gray-50 text-gray-600 border-gray-100"
                     )}>
                       {report.status.replace('_', ' ')}
                     </span>
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider h-fit border transition-all",
-                      getPriorityColor(report.priority),
-                      report.priority === 'high' ? "border-red-200" :
-                        report.priority === 'medium' ? "border-yellow-200" : "border-blue-200"
-                    )}>
-                      {report.priority}
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gray-50 text-gray-500 border border-gray-100">
+                      {report.type} report
                     </span>
                   </div>
 
-                  {/* Reason & Date */}
-                  <div className="mb-2">
-                    <h3 className="text-[14px] sm:text-[15px] font-black text-gray-900 leading-tight group-hover:text-primary transition-colors flex items-start gap-1.5 mb-1">
-                      {report.reason}
-                    </h3>
-                    <p className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
-                      <Clock size={10} />
-                      {formatDate(report.reportedDate)}
-                    </p>
-                  </div>
-
-                  {/* Context Info */}
-                  <div className="space-y-1.5 mb-3">
-                    {report.internshipTitle && (
-                      <div className="flex items-center gap-2 text-[12px] font-medium text-gray-600">
-                        <Briefcase size={12} className="text-gray-400 shrink-0" />
-                        <span className="truncate" title={report.internshipTitle}>{report.internshipTitle}</span>
-                      </div>
-                    )}
-                    {report.companyName && (
-                      <div className="flex items-center gap-2 text-[12px] font-medium text-gray-600">
-                        <AlertCircle size={12} className="text-gray-400 shrink-0" />
-                        <span className="truncate" title={report.companyName}>{report.companyName}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-[12px] font-medium text-gray-600">
-                      <User size={12} className="text-gray-400 shrink-0" />
-                      <span className="truncate font-bold text-gray-700">By {report.reportedBy}</span>
-                    </div>
-                  </div>
-
-                  {/* Resolution Snippet */}
-                  {report.resolution && (
-                    <div className="mt-auto pt-2 border-t border-gray-50">
-                      <div className="bg-green-50/50 border border-green-100 rounded-lg p-1.5 flex items-start gap-1.5">
-                        <CheckCircle size={12} className="text-green-600 shrink-0 mt-0.5" />
-                        <p className="text-[11px] text-green-700 leading-tight font-medium italic">
-                          "{report.resolution}"
-                        </p>
+                  {/* Info Grid - Rich Data */}
+                  <div className="grid grid-cols-1 gap-2 mb-4">
+                    <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Subject Entity</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-black text-gray-700 truncate">{report.internshipTitle || report.companyName || 'Platform General'}</p>
+                        <p className="text-[10px] font-bold text-primary shrink-0 ml-2">Context Link</p>
                       </div>
                     </div>
-                  )}
-                </div>
-              </div>
+                    {report.resolution && (
+                      <div className="bg-emerald-50/30 rounded-xl p-2 border border-emerald-100 group-hover:bg-white transition-colors">
+                        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1">Resolution Detail</p>
+                        <p className="text-[11px] font-bold text-emerald-700 leading-tight italic">"{report.resolution}"</p>
+                      </div>
+                    )}
+                  </div>
 
-              {/* Footer Actions */}
-              <div className="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between">
-                <div className="flex items-center gap-0.5">
-                  {report.applicationId && (
-                    <button
-                      onClick={() => {
-                        setActiveChatId(report.applicationId || null)
-                        setActiveChatName(report.reportedBy || 'Reported Chat')
-                      }}
-                      className="p-1.5 text-primary hover:bg-primary/5 rounded-lg transition-all"
-                      title="View Chat Context"
-                    >
-                      <MessageSquare size={16} />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setSelectedReport(report)}
-                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                    title="Detailed View"
-                  >
-                    <Eye size={16} />
-                  </button>
-                </div>
-
-                {(report.status !== 'resolved' && report.status !== 'dismissed') && (
-                  <div className="flex items-center gap-1">
-                    {report.status !== 'under_review' && (
+                  {/* Actions Area */}
+                  <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleAction(report.id, 'under_review')}
-                        className="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all"
-                        title="Mark Under Review"
+                        onClick={() => setSelectedReport(report)}
+                        className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest flex items-center gap-1"
                       >
-                        <Clock size={16} />
+                        <Eye size={12} /> Audit
                       </button>
-                    )}
-                    <button
-                      onClick={() => handleAction(report.id, 'resolved')}
-                      className="px-2.5 py-1 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-[10px] font-black transition-all border border-green-100"
-                    >
-                      RESOLVE
-                    </button>
-                    <button
-                      onClick={() => handleAction(report.id, 'dismissed')}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                      title="Dismiss Report"
-                    >
-                      <XCircle size={16} />
-                    </button>
+                      {report.applicationId && (
+                        <button
+                          onClick={() => {
+                            setActiveChatId(report.applicationId || null)
+                            setActiveChatName(report.reportedBy || 'Reported Chat')
+                          }}
+                          className="text-[10px] font-black text-gray-400 hover:text-primary uppercase tracking-widest flex items-center gap-1"
+                        >
+                          <MessageSquare size={12} /> Chat Context
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      {report.status !== 'resolved' && (
+                        <button
+                          onClick={() => handleAction(report.id, 'resolved')}
+                          className="p-1.5 text-emerald-400 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-all"
+                          title="Mark Resolved"
+                        >
+                          <CheckCircle size={15} />
+                        </button>
+                      )}
+                      {report.status === 'open' && (
+                        <button
+                          onClick={() => handleAction(report.id, 'under_review')}
+                          className="p-1.5 text-yellow-400 hover:bg-yellow-50 hover:text-yellow-600 rounded-lg transition-all"
+                          title="Move to Review"
+                        >
+                          <Clock size={15} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleAction(report.id, 'dismissed')}
+                        className="p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
+                        title="Dismiss"
+                      >
+                        <XCircle size={15} />
+                      </button>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="col-span-full bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-            <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle size={32} />
+          <div className="col-span-full">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center flex flex-col items-center">
+              <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mb-4 transition-transform hover:scale-110 duration-500">
+                <CheckCircle size={32} />
+              </div>
+              <p className="text-gray-900 font-black text-lg mb-1">Queue Empty</p>
+              <p className="text-sm text-gray-500 font-bold max-w-xs">All moderation tasks for the current filters have been handled.</p>
             </div>
-            <p className="text-gray-900 font-bold text-lg mb-1">All Clear!</p>
-            <p className="text-sm text-gray-500">No reports matching your current filters were found.</p>
           </div>
         )}
       </div>
       {/* Chat History Modal */}
-      {activeChatId && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center">
-                  <MessageSquare size={20} />
+      {
+        activeChatId && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center">
+                    <MessageSquare size={20} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-900">Chat History Context</h2>
+                    <p className="text-xs text-gray-500">Read-only view for investigation</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">Chat History Context</h2>
-                  <p className="text-xs text-gray-500">Read-only view for investigation</p>
-                </div>
+                <button
+                  onClick={() => setActiveChatId(null)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-full transition-all"
+                >
+                  <X size={20} />
+                </button>
               </div>
-              <button
-                onClick={() => setActiveChatId(null)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-full transition-all"
-              >
-                <X size={20} />
-              </button>
-            </div>
 
-            <div className="flex-1 min-h-0 bg-white">
-              <ChatInterface
-                applicationId={activeChatId}
-                currentUserId="admin" // Passed to satisfy prop, but readOnly mode avoids owner checks for sending
-                otherPartyName={activeChatName}
-                readOnly={true}
-              />
-            </div>
+              <div className="flex-1 min-h-0 bg-white">
+                <ChatInterface
+                  applicationId={activeChatId}
+                  currentUserId="admin" // Passed to satisfy prop, but readOnly mode avoids owner checks for sending
+                  otherPartyName={activeChatName}
+                  readOnly={true}
+                />
+              </div>
 
-            <div className="p-4 bg-gray-50 border-t border-gray-100 text-center">
-              <p className="text-xs text-gray-400 italic">Admin Review Mode • All actions recorded • Read Only</p>
+              <div className="p-4 bg-gray-50 border-t border-gray-100 text-center">
+                <p className="text-xs text-gray-400 italic">Admin Review Mode • All actions recorded • Read Only</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
     </div >
   )
 }

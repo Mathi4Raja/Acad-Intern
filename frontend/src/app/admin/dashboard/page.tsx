@@ -1,9 +1,10 @@
 'use client'
 
-import { TrendingUp, Users, Briefcase, Building, AlertCircle, CheckCircle, XCircle, Clock, ArrowUp, ArrowDown, Eye, ChevronRight } from 'lucide-react'
+import { TrendingUp, Users, Briefcase, Building, AlertCircle, CheckCircle, XCircle, Clock, ArrowUp, ArrowDown, Eye, ChevronRight, Home, Shield } from 'lucide-react'
 import { useEffect, useState, Suspense } from 'react'
 import api from '@/lib/api'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2 } from 'lucide-react'
 import { StatCard } from '@/components/analytics/StatCard'
@@ -129,182 +130,271 @@ function AdminDashboardContent() {
     }
 
     return (
-        <div className="p-3 sm:p-4 max-w-7xl mx-auto">
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                    <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight mb-1">Admin Dashboard</h1>
-                    <p className="text-xs text-gray-600 font-medium">Overview of platform performance and activities</p>
-                </div>
-                <div className="text-xs text-gray-500 bg-white px-3 py-1 rounded-md border border-gray-200">
-                    Last updated: {new Date().toLocaleTimeString()}
-                </div>
-            </div>
-
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-                <StatCard
-                    title="Total Users"
-                    value={stats.totalUsers.toLocaleString()}
-                    change={{ value: 12, type: 'increase' }}
-                    icon={Users}
-                    iconColor="text-blue-500"
-                    iconBg="bg-blue-50"
-                    href="/admin/users"
-                />
-
-                <StatCard
-                    title="Active Internships"
-                    value={stats.activeInternships.toLocaleString()}
-                    change={{ value: 5, type: 'increase' }}
-                    icon={Briefcase}
-                    iconColor="text-primary"
-                    iconBg="bg-primary/10"
-                    href="/admin/internships?status=active"
-                />
-
-                <StatCard
-                    title="Total Companies"
-                    value={stats.totalCompanies.toLocaleString()}
-                    icon={Building}
-                    iconColor="text-purple-500"
-                    iconBg="bg-purple-50"
-                    href="/admin/companies"
-                />
-
-                <StatCard
-                    title="Pending Reports"
-                    value={stats.pendingReports}
-                    icon={AlertCircle}
-                    iconColor="text-red-500"
-                    iconBg="bg-red-50"
-                    href="/admin/reports"
-                    className={stats.pendingReports > 0 ? "border-red-200 bg-red-50/10" : ""}
-                />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-                {/* Recent Users */}
-                <div className="lg:col-span-2 space-y-6">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                            <h2 className="text-base font-bold text-gray-900">Recent Registrations</h2>
-                            <Link href="/admin/users" className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1">
-                                View all <ChevronRight size={16} />
-                            </Link>
+        <div className="p-3 sm:p-5 max-w-7xl mx-auto space-y-5">
+            <div className="space-y-6">
+                {/* Ultra-Compact Premium Header Card */}
+                <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-3.5 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-1">
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
+                    <div className="flex items-center gap-4 relative z-10">
+                        <div className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 shrink-0 group-hover:scale-105 transition-all duration-500">
+                            <Home size={22} />
                         </div>
-                        <div className="divide-y divide-gray-100">
-                            {recentUsers.length > 0 ? recentUsers.map((user) => (
-                                <div key={user.id} className="p-3 hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-sm">
+                        <div>
+                            <h1 className="text-[17px] font-black text-gray-900 leading-none tracking-tight uppercase">
+                                Command Center
+                            </h1>
+                            <div className="flex items-center gap-2 mt-1.5">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                                    Terminal Overview & System Health
+                                </p>
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="System Live" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 relative z-10">
+                        <div className="flex flex-col items-end px-3 py-1.5 bg-gray-50/50 border border-gray-100 rounded-xl">
+                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Last Sync</span>
+                            <span className="text-[10px] font-black text-gray-700 uppercase">
+                                {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                            </span>
+                        </div>
+                        <div className="w-9 h-9 rounded-xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-primary transition-colors cursor-pointer shadow-sm">
+                            <Shield size={16} />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <StatCard
+                        title="Total Users"
+                        value={stats.totalUsers.toLocaleString()}
+                        change={{ value: 12, type: 'increase' }}
+                        icon={Users}
+                        iconColor="text-blue-600"
+                        iconBg="bg-blue-50"
+                        href="/admin/users"
+                    />
+
+                    <StatCard
+                        title="Active Posts"
+                        value={stats.activeInternships.toLocaleString()}
+                        change={{ value: 5, type: 'increase' }}
+                        icon={Briefcase}
+                        iconColor="text-primary"
+                        iconBg="bg-primary/5"
+                        href="/admin/internships?status=active"
+                    />
+
+                    <StatCard
+                        title="Verified Companies"
+                        value={stats.totalCompanies.toLocaleString()}
+                        icon={Building}
+                        iconColor="text-purple-600"
+                        iconBg="bg-purple-50"
+                        href="/admin/companies"
+                    />
+
+                    <StatCard
+                        title="Reports"
+                        value={stats.pendingReports}
+                        icon={AlertCircle}
+                        iconColor="text-red-500"
+                        iconBg="bg-red-50"
+                        href="/admin/reports"
+                        className={stats.pendingReports > 0 ? "border-red-100 bg-red-50/10" : ""}
+                    />
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    {/* Main Content Areas */}
+                    <div className="lg:col-span-8 space-y-5">
+                        {/* Recent Registrations - Side Column Pattern */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group/card transition-all hover:shadow-xl hover:shadow-gray-100/50">
+                            <div className="px-4 py-4 border-b border-gray-50 flex items-center justify-between bg-white">
+                                <div>
+                                    <h2 className="text-[17px] font-black text-gray-900 leading-none">Recent Onboarding</h2>
+                                    <p className="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-widest">New users in last 24h</p>
+                                </div>
+                                <Link href="/admin/users" className="text-[11px] font-black text-primary hover:bg-primary/5 px-2.5 py-1.5 rounded-xl uppercase tracking-wider transition-all flex items-center gap-1.5 border border-transparent hover:border-primary/10">
+                                    EXPLORE <ChevronRight size={14} />
+                                </Link>
+                            </div>
+                            <div className="divide-y divide-gray-50">
+                                {recentUsers.length > 0 ? recentUsers.map((user) => (
+                                    <div key={user.id} className="p-3 sm:p-4 hover:bg-gray-50/30 transition-all group/item">
+                                        <div className="flex gap-4">
+                                            {/* Side Column Icon */}
+                                            <div className="w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 font-black text-sm group-hover/item:bg-white group-hover/item:shadow-md group-hover/item:border-primary/20 transition-all shrink-0">
                                                 {user.name.charAt(0).toUpperCase()}
                                             </div>
-                                            <div>
-                                                <h3 className="text-sm font-semibold text-gray-900">{user.name}</h3>
-                                                <p className="text-xs text-gray-500">{user.email}</p>
+                                            <div className="flex-1 min-w-0 flex items-center justify-between">
+                                                <div className="space-y-0.5">
+                                                    <h3 className="text-sm font-black text-gray-900 truncate tracking-tight">{user.name}</h3>
+                                                    <p className="text-[11px] font-bold text-gray-400 truncate uppercase mt-0.5 tracking-tighter">{user.email}</p>
+                                                </div>
+                                                <div className="text-right shrink-0">
+                                                    <div className="flex items-center gap-2 justify-end mb-1">
+                                                        <span className={cn(
+                                                            "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border",
+                                                            user.role === 'student' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'
+                                                        )}>
+                                                            {user.role}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{formatDate(user.joinedDate)}</p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="flex flex-col items-end gap-1">
-                                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRoleColor(user.role)}`}>
-                                                {user.role}
-                                            </span>
-                                            <span className="text-xs text-gray-400">{formatDate(user.joinedDate)}</span>
+                                    </div>
+                                )) : (
+                                    <div className="p-12 text-center text-gray-400 text-[11px] font-black uppercase tracking-widest italic opacity-50">No entry records</div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Recent Internships - Side Column Pattern */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group/card transition-all hover:shadow-xl hover:shadow-gray-100/50">
+                            <div className="px-4 py-4 border-b border-gray-50 flex items-center justify-between bg-white">
+                                <div>
+                                    <h2 className="text-[17px] font-black text-gray-900 leading-none">Fresh Opportunities</h2>
+                                    <p className="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Active market listings</p>
+                                </div>
+                                <Link href="/admin/internships" className="text-[11px] font-black text-primary hover:bg-primary/5 px-2.5 py-1.5 rounded-xl uppercase tracking-wider transition-all flex items-center gap-1.5 border border-transparent hover:border-primary/10">
+                                    MANAGE <ChevronRight size={14} />
+                                </Link>
+                            </div>
+                            <div className="divide-y divide-gray-50">
+                                {recentInternships.length > 0 ? recentInternships.map((internship) => (
+                                    <div key={internship.id} className="p-3 sm:p-4 hover:bg-gray-50/30 transition-all group/item">
+                                        <div className="flex gap-4">
+                                            {/* Side Column Icon */}
+                                            <div className="w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-500 group-hover/item:bg-white group-hover/item:shadow-md group-hover/item:border-primary/20 transition-all shrink-0 shadow-sm">
+                                                <Briefcase size={18} />
+                                            </div>
+                                            <div className="flex-1 min-w-0 flex items-center justify-between">
+                                                <div className="space-y-0.5">
+                                                    <h3 className="text-sm font-black text-gray-900 truncate tracking-tight mb-0.5" title={internship.title}>{internship.title}</h3>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Building size={10} className="text-gray-400" />
+                                                        <p className="text-[11px] font-bold text-gray-500 truncate uppercase tracking-tighter">{internship.company}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right shrink-0">
+                                                    <div className="flex items-center gap-2 justify-end mb-1">
+                                                        <span className={cn(
+                                                            "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border",
+                                                            internship.status === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-gray-50 text-gray-600 border-gray-100'
+                                                        )}>
+                                                            {internship.status}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{formatDate(internship.postedDate)}</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )) : (
-                                <div className="p-8 text-center text-gray-500 text-sm">No recent users</div>
-                            )}
+                                )) : (
+                                    <div className="p-12 text-center text-gray-400 text-[11px] font-black uppercase tracking-widest italic opacity-50">No market activity</div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Recent Internships */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-3 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                            <h2 className="text-base font-bold text-gray-900">Recently Posted Internships</h2>
-                            <Link href="/admin/internships" className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1">
-                                View all <ChevronRight size={16} />
-                            </Link>
-                        </div>
-                        <div className="divide-y divide-gray-100">
-                            {recentInternships.length > 0 ? recentInternships.map((internship) => (
-                                <div key={internship.id} className="p-3 hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h3 className="text-sm font-semibold text-gray-900 mb-0.5">{internship.title}</h3>
-                                            <p className="text-xs text-gray-600 flex items-center gap-1">
-                                                <Building size={12} /> {internship.company}
-                                            </p>
+                    {/* Sidebar Areas */}
+                    <div className="lg:col-span-4 space-y-5">
+                        {/* Pending Reports Widget - Enriched */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex transition-all hover:shadow-xl hover:shadow-red-900/[0.02]">
+                            <div className="w-1 bg-red-500 shrink-0" />
+                            <div className="flex-1">
+                                <div className="px-4 py-4 border-b border-gray-50 flex items-center justify-between bg-white">
+                                    <div>
+                                        <h2 className="text-[17px] font-black text-gray-900 leading-none">Security Feed</h2>
+                                        <p className="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Awaiting moderation</p>
+                                    </div>
+                                    <div className="relative">
+                                        <AlertCircle className="text-red-500/20" size={20} />
+                                        {pendingReports.length > 0 && (
+                                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-ping" />
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="divide-y divide-gray-50 max-h-[400px] overflow-y-auto custom-scrollbar">
+                                    {pendingReports.length > 0 ? pendingReports.map((report) => (
+                                        <div key={report.id} className="p-4 hover:bg-red-50/10 transition-colors group/report">
+                                            <div className="flex items-start justify-between gap-3 mb-2">
+                                                <h3 className="font-black text-[13px] text-gray-900 line-clamp-1 group-hover/report:text-red-600 transition-colors">{report.internshipTitle}</h3>
+                                                <span className={cn(
+                                                    "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border shrink-0",
+                                                    report.priority === 'high' ? 'bg-red-50 text-red-600 border-red-100 shadow-sm' : 'bg-orange-50 text-orange-600 border-orange-100'
+                                                )}>
+                                                    {report.priority}
+                                                </span>
+                                            </div>
+                                            <div className="text-[11px] font-bold text-gray-500 mb-3 line-clamp-2 italic leading-relaxed bg-gray-50/50 p-2.5 rounded-xl border border-gray-100 group-hover/report:bg-white group-hover/report:border-red-100 transition-all">
+                                                "{report.reason}"
+                                            </div>
+                                            <div className="flex items-center justify-between mt-auto">
+                                                <div className="flex items-center gap-1.5 opacity-60">
+                                                    <Clock size={10} className="text-gray-400" />
+                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{formatDate(report.reportedDate)}</span>
+                                                </div>
+                                                <Link href="/admin/reports" className="text-[10px] font-black text-red-600 hover:bg-red-50 px-2.5 py-1 rounded-lg uppercase tracking-widest transition-all border border-transparent hover:border-red-100">
+                                                    RESOLVE
+                                                </Link>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col items-end gap-1">
-                                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusColor(internship.status)}`}>
-                                                {internship.status}
-                                            </span>
-                                            <span className="text-xs text-gray-400">{formatDate(internship.postedDate)}</span>
+                                    )) : (
+                                        <div className="p-12 text-center">
+                                            <div className="w-16 h-16 rounded-[2rem] bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto mb-4 border border-emerald-100 shadow-sm shadow-emerald-100/50">
+                                                <CheckCircle size={32} />
+                                            </div>
+                                            <p className="text-[13px] font-black text-gray-900 uppercase tracking-widest mb-1">Grid Secured</p>
+                                            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-tight">System health nominal</p>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
-                            )) : (
-                                <div className="p-8 text-center text-gray-500 text-sm">No recent internships</div>
-                            )}
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Sidebar - Pending Reports & Quick Actions */}
-                <div className="space-y-6">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-3 border-b border-gray-100 flex items-center justify-between bg-red-50/50">
-                            <h2 className="text-base font-bold text-gray-900">Pending Reports</h2>
-                            <AlertCircle className="text-red-500" size={18} />
-                        </div>
-                        <div className="divide-y divide-gray-100">
-                            {pendingReports.length > 0 ? pendingReports.map((report) => (
-                                <div key={report.id} className="p-3 hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-start justify-between mb-2">
-                                        <h3 className="font-semibold text-sm text-gray-900 line-clamp-1 mr-2">{report.internshipTitle}</h3>
-                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${getPriorityColor(report.priority)}`}>
-                                            {report.priority}
-                                        </span>
+                        {/* Quick Access Menu */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Quick Access</h3>
+                            <div className="grid grid-cols-1 gap-2.5">
+                                <Link href="/admin/users" className="flex items-center gap-3 p-3 bg-blue-50/10 border border-blue-100/20 rounded-xl hover:bg-blue-50/30 transition-all group">
+                                    <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:scale-110 transition-transform shadow-sm">
+                                        <Users size={18} />
                                     </div>
-                                    <p className="text-xs text-gray-600 mb-2 line-clamp-2 bg-gray-50 p-2 rounded border border-gray-100 italic">"{report.reason}"</p>
-                                    <div className="flex items-center justify-between text-xs text-gray-500">
-                                        <span>{formatDate(report.reportedDate)}</span>
-                                        <button className="text-primary hover:text-primary/80 font-medium text-xs">Review</button>
+                                    <div className="flex-1">
+                                        <span className="block text-xs font-black text-gray-900 group-hover:text-blue-600 transition-colors">Users Registry</span>
+                                        <span className="text-[10px] font-bold text-gray-400">Moderation & Approval</span>
                                     </div>
-                                </div>
-                            )) : (
-                                <div className="p-8 text-center">
-                                    <CheckCircle className="mx-auto text-green-500 mb-2 opacity-20" size={32} />
-                                    <p className="text-sm text-gray-500">All caught up! No pending reports.</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                                    <ChevronRight className="text-gray-300" size={14} />
+                                </Link>
 
-                    {/* Quick Actions */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
-                        <h3 className="text-base font-bold text-gray-900 mb-3">Quick Actions</h3>
-                        <div className="space-y-3">
-                            <Link href="/admin/users" className="flex items-center gap-3 p-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100 group">
-                                <div className="bg-white p-2 rounded-md shadow-sm text-blue-600 group-hover:text-blue-700">
-                                    <Users size={18} />
-                                </div>
-                                <span className="font-medium text-sm">Manage Users</span>
-                            </Link>
-                            <Link href="/admin/companies" className="flex items-center gap-3 p-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100 group">
-                                <div className="bg-white p-2 rounded-md shadow-sm text-purple-600 group-hover:text-purple-700">
-                                    <Building size={18} />
-                                </div>
-                                <span className="font-medium text-sm">Verify Companies</span>
-                            </Link>
-                            <Link href="/admin/reports" className="flex items-center gap-3 p-3 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100 group">
-                                <div className="bg-white p-2 rounded-md shadow-sm text-red-600 group-hover:text-red-700">
-                                    <AlertCircle size={18} />
-                                </div>
-                                <span className="font-medium text-sm">Review Reports</span>
-                            </Link>
+                                <Link href="/admin/companies" className="flex items-center gap-3 p-3 bg-purple-50/20 border border-purple-100/20 rounded-xl hover:bg-purple-50/40 transition-all group">
+                                    <div className="bg-purple-50 p-2 rounded-lg text-purple-600 group-hover:scale-110 transition-transform shadow-sm">
+                                        <Building size={18} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <span className="block text-xs font-black text-gray-900 group-hover:text-purple-600 transition-colors">Company Hub</span>
+                                        <span className="text-[10px] font-bold text-gray-400">Verification Center</span>
+                                    </div>
+                                    <ChevronRight className="text-gray-300" size={14} />
+                                </Link>
+
+                                <Link href="/admin/settings" className="flex items-center gap-3 p-3 bg-emerald-50/20 border border-emerald-100/20 rounded-xl hover:bg-emerald-50/40 transition-all group">
+                                    <div className="bg-emerald-50 p-2 rounded-lg text-emerald-600 group-hover:scale-110 transition-transform shadow-sm">
+                                        <Clock size={18} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <span className="block text-xs font-black text-gray-900 group-hover:text-emerald-600 transition-colors">System Settings</span>
+                                        <span className="text-[10px] font-bold text-gray-400">Config & Performance</span>
+                                    </div>
+                                    <ChevronRight className="text-gray-300" size={14} />
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </div>

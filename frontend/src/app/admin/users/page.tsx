@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { Search, Filter, Mail, Phone, Calendar, Edit, Trash2, Ban, CheckCircle, XCircle, Eye, Download, Loader2, X, ChevronRight, Users as UsersIcon, Building, Briefcase } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import api from '@/lib/api'
 import { StatCard } from '@/components/analytics/StatCard'
 import { useAdminStats } from '@/lib/AdminStatsContext'
@@ -239,25 +240,40 @@ function ManageUsersContent() {
 
   return (
     <div className="p-3 sm:p-4 max-w-7xl mx-auto">
-      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight tracking-tight mb-1">Manage Users</h1>
-          <p className="text-xs text-gray-600 font-medium">View and manage all registered users on the platform</p>
+      {/* Ultra-Compact Premium Header Card */}
+      <div className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-3.5 shadow-sm shadow-gray-200/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 overflow-hidden relative group/header mb-4">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 shrink-0 group-hover:scale-105 transition-all duration-500">
+            <UsersIcon size={22} />
+          </div>
+          <div>
+            <h1 className="text-[17px] font-black text-gray-900 leading-none tracking-tight uppercase">
+              User Registry
+            </h1>
+            <div className="flex items-center gap-2 mt-1.5">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">
+                System Directory & Authentication Audit
+              </p>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Security Grid Active" />
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+
+        <div className="flex items-center gap-3 relative z-10">
           <div className="relative flex-1 sm:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Search registry..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+              className="w-full pl-9 pr-8 py-2 text-xs bg-gray-50/50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-[10px] placeholder:font-bold placeholder:uppercase placeholder:tracking-widest"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-900"
               >
                 <X size={14} />
               </button>
@@ -365,234 +381,304 @@ function ManageUsersContent() {
         </div>
       )}
 
-      {/* Users Table */}
-      <div className="bg-white rounded-2xl shadow-md border-2 border-gray-200 overflow-hidden">
+      {/* Users Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {loading ? (
-          <div className="p-12 text-center flex justify-center"><Loader2 className="animate-spin text-primary" size={32} /></div>
+          <div className="col-span-full p-12 text-center flex justify-center items-center flex-col gap-3">
+            <Loader2 className="animate-spin text-primary" size={32} />
+            <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">Loading registry...</p>
+          </div>
         ) : users.length > 0 ? (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="p-2 w-10">
-                      <input type="checkbox" checked={selectedUsers.length === users.length && users.length > 0} onChange={handleSelectAll} className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" />
-                    </th>
-                    <th className="p-2 text-xs font-bold text-gray-700 uppercase">User</th>
-                    <th className="p-2 text-xs font-bold text-gray-700 uppercase">Role</th>
-                    <th className="p-2 text-xs font-bold text-gray-700 uppercase">Status</th>
-                    <th className="p-2 text-xs font-bold text-gray-700 uppercase hidden sm:table-cell">Info</th>
-                    <th className="p-2 text-right text-xs font-bold text-gray-700 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-3">
-                        <input type="checkbox" checked={selectedUsers.includes(user._id)} onChange={() => handleSelectUser(user._id)} className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary" />
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
-                            {user.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-sm text-gray-900 truncate">{user.name}</p>
-                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${getRoleColor(user.role)}`}>
-                          {user.role}
-                          {user.role === 'company' && user.verified && <CheckCircle size={10} />}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${getStatusColor(user.status)}`}>
-                          {user.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-xs text-gray-600 hidden sm:table-cell">
-                        {user.role === 'student' && (
-                          <>
-                            <p>Dept: {user.department || '-'}</p>
-                            <p>{user.applications || 0} applications</p>
-                          </>
-                        )}
-                        {user.role === 'company' && (
-                          <p>{user.internshipsPosted || 0} posts</p>
-                        )}
-                        <p className="text-gray-400 mt-0.5">{formatDate(user.createdAt)}</p>
-                      </td>
-                      <td className="p-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => setSelectedUser(user)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors" title="View Details"><Eye size={16} /></button>
-                          {user.status === 'active' ? (
-                            <button onClick={() => handleAction(user._id, 'suspend')} className="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded transition-colors" title="Suspend"><Ban size={16} /></button>
-                          ) : (
-                            <button onClick={() => handleAction(user._id, 'activate')} className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors" title="Activate"><CheckCircle size={16} /></button>
-                          )}
-                          <button onClick={() => handleAction(user._id, 'delete')} className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors" title="Delete"><Trash2 size={16} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
-                <div className="flex-1 flex justify-between sm:hidden">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </div>
-                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm text-gray-700">
-                      Showing <span className="font-medium">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium">{Math.min(currentPage * ITEMS_PER_PAGE, stats.total)}</span> results
-                    </p>
+          users.map((user) => (
+            <div key={user._id} className={cn(
+              "group bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-xl hover:border-primary/20 transition-all duration-300 relative flex flex-col h-full",
+              selectedUsers.includes(user._id) && "ring-2 ring-primary/20 border-primary/30"
+            )}>
+              <div className="flex gap-4 h-full">
+                {/* Column 1: Checkbox & Avatar */}
+                <div className="flex flex-col items-center gap-3 pt-0.5 shrink-0 w-10">
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.includes(user._id)}
+                      onChange={() => handleSelectUser(user._id)}
+                      className="peer absolute opacity-0 w-6 h-6 cursor-pointer z-10"
+                    />
+                    <div className="w-5 h-5 border-2 border-gray-200 rounded-lg transition-all peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center shadow-sm">
+                      <div className="w-2.5 h-1.5 border-l-2 border-b-2 border-white -rotate-45 opacity-0 peer-checked:opacity-100 mb-0.5"></div>
+                    </div>
                   </div>
-                  <div>
-                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                      <button
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
-                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <span className="sr-only">Previous</span>
-                        <ChevronRight className="h-5 w-5 rotate-180" aria-hidden="true" />
-                      </button>
-                      {/* Simple Page Numbers - can be robustified later */}
-                      <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                        Page {currentPage} of {totalPages}
+                  <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-primary/5 group-hover:text-primary transition-all duration-300 shadow-sm overflow-hidden">
+                    {user.role === 'company' ? <Building size={20} /> : <UsersIcon size={20} />}
+                  </div>
+                </div>
+
+                {/* Column 2: Main Content */}
+                <div className="flex-1 min-w-0 flex flex-col">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <h3 className="text-[15px] font-black text-gray-900 leading-tight group-hover:text-primary transition-colors truncate" title={user.name}>
+                        {user.name}
+                      </h3>
+                      <p className="text-[11px] font-bold text-gray-400 truncate mt-0.5">{user.email}</p>
+                    </div>
+                    <div className={cn(
+                      "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider shrink-0 border h-fit mt-0.5",
+                      getStatusColor(user.status).replace('bg-', 'bg-').replace('text-', 'text-').includes('green')
+                        ? "bg-green-50 text-green-700 border-green-100"
+                        : user.status === 'suspended'
+                          ? "bg-red-50 text-red-700 border-red-100"
+                          : "bg-yellow-50 text-yellow-700 border-yellow-100"
+                    )}>
+                      {user.status}
+                    </div>
+                  </div>
+
+                  {/* Role & Verification Badge */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border shadow-sm",
+                      user.role === 'student' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'
+                    )}>
+                      {user.role === 'student' ? <Briefcase size={10} /> : <Building size={10} />}
+                      {user.role}
+                    </span>
+                    {user.role === 'company' && user.verified && (
+                      <span className="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1 shadow-sm">
+                        <CheckCircle size={10} fill="currentColor" className="text-white" />
+                        Verified
                       </span>
+                    )}
+                  </div>
+
+                  {/* Info Grid - Rich Data */}
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                    <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Contact</p>
+                      <p className="text-[11px] font-bold text-gray-700 truncate">{user.phone || 'N/A'}</p>
+                    </div>
+                    <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Joined</p>
+                      <p className="text-[11px] font-bold text-gray-700 truncate">{formatDate(user.createdAt)}</p>
+                    </div>
+                    {user.role === 'student' ? (
+                      <>
+                        <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Dept</p>
+                          <p className="text-[11px] font-bold text-gray-700 truncate">{user.department || '-'}</p>
+                        </div>
+                        <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Apps</p>
+                          <p className="text-[11px] font-black text-primary truncate">{user.applications || 0}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors col-span-2">
+                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Posts Activity</p>
+                          <p className="text-[11px] font-black text-gray-700 flex items-center gap-2">
+                            <span className="text-primary font-black uppercase text-[10px] bg-primary/5 px-1.5 py-0.5 rounded-md border border-primary/10">
+                              {user.internshipsPosted || 0} Total Listings
+                            </span>
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Actions Area */}
+                  <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
+                    <button
+                      onClick={() => setSelectedUser(user)}
+                      className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest flex items-center gap-1"
+                    >
+                      <Eye size={12} /> View Registry
+                    </button>
+                    <div className="flex items-center gap-1">
+                      {user.status === 'active' ? (
+                        <button
+                          onClick={() => handleAction(user._id, 'suspend')}
+                          className="p-1.5 text-orange-400 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-all"
+                          title="Suspend"
+                        >
+                          <Ban size={15} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleAction(user._id, 'activate')}
+                          className="p-1.5 text-emerald-400 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-all"
+                          title="Activate"
+                        >
+                          <CheckCircle size={15} />
+                        </button>
+                      )}
                       <button
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => handleAction(user._id, 'delete')}
+                        className="p-1.5 text-red-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all"
+                        title="Delete Permanently"
                       >
-                        <span className="sr-only">Next</span>
-                        <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                        <Trash2 size={15} />
                       </button>
-                    </nav>
+                    </div>
                   </div>
                 </div>
               </div>
-            )}
-          </>
+            </div>
+          )).concat(totalPages > 1 ? [] : []) // Ghost cards or spacer could go here
         ) : (
-          <div className="p-12 text-center text-gray-500">No users found.</div>
+          <div className="col-span-full py-20 text-center space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 text-gray-300 flex items-center justify-center mx-auto">
+              <UsersIcon size={32} />
+            </div>
+            <div>
+              <p className="text-sm font-black text-gray-900 uppercase tracking-widest leading-none">Registry Empty</p>
+              <p className="text-xs text-gray-400 font-bold mt-2">No users found matching your search parameters.</p>
+            </div>
+            <button
+              onClick={() => { setFilterRole('all'); setFilterStatus('all'); setSearchQuery(''); }}
+              className="text-[10px] font-black text-primary border border-primary/20 px-4 py-2 rounded-xl uppercase tracking-widest hover:bg-primary/5 transition-colors"
+            >
+              Reset Filters
+            </button>
+          </div>
         )}
       </div>
 
+      {/* Pagination Controls */}
+      {totalPages > 1 && !loading && (
+        <div className="mt-8 flex items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl text-xs font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            <ChevronRight size={16} className="rotate-180" />
+            Previous
+          </button>
+
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="text-xs font-black text-gray-900 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200">
+              {currentPage} / {totalPages}
+            </span>
+          </div>
+
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="flex items-center gap-2 px-4 py-2 border border-blue-100 bg-blue-50 text-blue-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm"
+          >
+            Next
+            <ChevronRight size={16} />
+          </button>
+        </div>
+      )}
+
       {/* User Details Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">User Details</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col max-h-[90vh]">
+            <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between bg-white shrink-0">
+              <div>
+                <h2 className="text-[17px] font-black text-gray-900 leading-none">User Registry Detail</h2>
+                <p className="text-[11px] font-bold text-gray-400 mt-1.5 uppercase tracking-widest">Profile & Activity Overview</p>
+              </div>
               <button
                 onClick={() => setSelectedUser(null)}
-                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                className="text-gray-400 hover:text-gray-900 p-2 rounded-xl hover:bg-gray-100 transition-all"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-2xl shrink-0">
+            <div className="p-6 overflow-y-auto space-y-8 scrollbar-hide">
+              {/* Profile Header Block */}
+              <div className="flex items-center gap-5">
+                <div className="w-20 h-20 rounded-2xl bg-gray-50 border-2 border-gray-100 flex items-center justify-center text-gray-300 font-black text-3xl shrink-0 group hover:border-primary/20 transition-colors">
                   {selectedUser.name.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">{selectedUser.name}</h3>
-                  <p className="text-sm text-gray-500">{selectedUser.email}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold inline-flex items-center gap-1 ${getRoleColor(selectedUser.role)}`}>
+                <div className="min-w-0">
+                  <h3 className="text-xl font-black text-gray-900 mb-1 truncate">{selectedUser.name}</h3>
+                  <p className="text-xs font-bold text-gray-500 mb-3 truncate">{selectedUser.email}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm flex items-center gap-1.5",
+                      selectedUser.role === 'student' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-purple-50 text-purple-600 border-purple-100'
+                    )}>
                       {selectedUser.role}
-                      {selectedUser.role === 'company' && selectedUser.verified && <CheckCircle size={10} />}
+                      {selectedUser.role === 'company' && selectedUser.verified && <CheckCircle size={10} fill="currentColor" className="text-white" />}
                     </span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getStatusColor(selectedUser.status)}`}>
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm",
+                      selectedUser.status === 'active' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
+                    )}>
                       {selectedUser.status}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Contact</label>
-                  <p className="text-gray-900">{selectedUser.phone || 'N/A'}</p>
+              {/* Data Grid Section */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Primary Contact</span>
+                  <p className="text-sm font-black text-gray-900">{selectedUser.phone || 'Registry Missing'}</p>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Joined Date</label>
-                  <p className="text-gray-900">{formatDate(selectedUser.createdAt)}</p>
+                <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                  <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Registry Entry</span>
+                  <p className="text-sm font-black text-gray-900">{formatDate(selectedUser.createdAt)}</p>
                 </div>
-                {selectedUser.role === 'student' && (
+
+                {selectedUser.role === 'student' ? (
                   <>
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Department</label>
-                      <p className="text-gray-900">{selectedUser.department || 'N/A'}</p>
+                    <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                      <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Academic Dept</span>
+                      <p className="text-sm font-black text-gray-900 truncate">{selectedUser.department || 'General'}</p>
                     </div>
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Applications</label>
-                      <p className="text-gray-900 font-medium">{selectedUser.applications || 0}</p>
+                    <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                      <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">App Count</span>
+                      <p className="text-sm font-black text-primary">{selectedUser.applications || 0} Submissions</p>
                     </div>
                   </>
-                )}
-                {selectedUser.role === 'company' && (
+                ) : (
                   <>
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Company Name</label>
-                      <p className="text-gray-900">{selectedUser.companyName || 'N/A'}</p>
+                    <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100 col-span-2">
+                      <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Company Affiliation</span>
+                      <p className="text-sm font-black text-gray-900">{selectedUser.companyName || 'Corporate Entity'}</p>
                     </div>
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1">Internships Posted</label>
-                      <p className="text-gray-900 font-medium">{selectedUser.internshipsPosted || 0}</p>
+                    <div className="bg-gray-50/50 p-3 rounded-2xl border border-gray-100 col-span-2">
+                      <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Posting History</span>
+                      <p className="text-sm font-black text-primary">{selectedUser.internshipsPosted || 0} Active Internships</p>
                     </div>
                   </>
                 )}
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">User ID</label>
-                <code className="text-xs text-gray-600 bg-white px-2 py-1 rounded border border-gray-200 block w-full truncate">
+              {/* Unique Identifier Area */}
+              <div className="bg-gray-900 rounded-2xl p-4 shadow-xl shadow-gray-200/50 ring-1 ring-white/10">
+                <span className="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Internal Registry ID</span>
+                <code className="text-[11px] font-mono text-gray-200 break-all leading-relaxed">
                   {selectedUser._id}
                 </code>
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+            <div className="px-6 py-5 bg-white border-t border-gray-50 flex justify-end gap-3 shrink-0">
               <button
                 onClick={() => setSelectedUser(null)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-white transition-colors"
+                className="px-6 py-2.5 border border-gray-100 text-[11px] font-black uppercase tracking-widest text-gray-500 rounded-xl hover:bg-gray-50 transition-all"
               >
-                Close
+                Close View
               </button>
               {selectedUser.status === 'active' ? (
                 <button
                   onClick={() => {
                     handleAction(selectedUser._id, 'suspend');
-                    setSelectedUser(null); // Optional: close modal on action? Maybe keep open. Let's close for now.
+                    setSelectedUser(null);
                   }}
-                  className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 transition-colors"
+                  className="px-6 py-2.5 bg-orange-50 text-orange-600 border border-orange-100 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-100 transition-all shadow-sm shadow-orange-100"
                 >
-                  Suspend User
+                  Suspend Entry
                 </button>
               ) : (
                 <button
@@ -600,9 +686,9 @@ function ManageUsersContent() {
                     handleAction(selectedUser._id, 'activate');
                     setSelectedUser(null);
                   }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+                  className="px-6 py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-100 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-100 transition-all shadow-sm shadow-emerald-100"
                 >
-                  Activate User
+                  Activate Entry
                 </button>
               )}
             </div>
