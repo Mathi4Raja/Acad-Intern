@@ -15,7 +15,8 @@ export const getPublicSettings = async (req: Request, res: Response, next: NextF
             'maxFileSize',
             'maxMessageSize',
             'allowResumeUpload',
-            'contactEmail'
+            'contactEmail',
+            'maintenanceMode'
         ];
 
         const settings = await SystemSetting.find({ key: { $in: publicKeys } });
@@ -34,7 +35,7 @@ export const getPublicSettings = async (req: Request, res: Response, next: NextF
             // Convert numeric values
             if (setting.key === 'maxFileSize' || setting.key === 'maxMessageSize') {
                 settingsMap[setting.key] = Number(setting.value);
-            } else if (setting.key === 'allowRegistration' || setting.key === 'allowResumeUpload') {
+            } else if (setting.key === 'allowRegistration' || setting.key === 'allowResumeUpload' || setting.key === 'maintenanceMode') {
                 settingsMap[setting.key] = setting.value === true || setting.value === 'true';
             } else {
                 settingsMap[setting.key] = setting.value;

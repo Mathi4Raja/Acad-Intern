@@ -39,6 +39,18 @@ const resetPasswordSchema = z.object({
 // @access  Public
 export const signup = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
+        // Check if registration is allowed
+        const registrationSetting = await SystemSetting.findOne({ key: 'allowRegistration' });
+        const isRegistrationAllowed = registrationSetting ? (registrationSetting.value === true || registrationSetting.value === 'true') : true;
+
+        if (!isRegistrationAllowed) {
+            res.status(403).json({
+                success: false,
+                message: 'New user registration is currently closed by the administrator.'
+            });
+            return;
+        }
+
         const validatedData = signupSchema.parse(req.body);
         const { name, email, password, role } = validatedData;
 
@@ -175,6 +187,18 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
         let isNewUser = false;
 
         if (!user) {
+            // Check if registration is allowed for new users
+            const registrationSetting = await SystemSetting.findOne({ key: 'allowRegistration' });
+            const isRegistrationAllowed = registrationSetting ? (registrationSetting.value === true || registrationSetting.value === 'true') : true;
+
+            if (!isRegistrationAllowed) {
+                res.status(403).json({
+                    success: false,
+                    message: 'New user registration is currently closed by the administrator.'
+                });
+                return;
+            }
+
             // Create new student user (Google OAuth is only for students)
             isNewUser = true;
             user = await User.create({

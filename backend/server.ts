@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -23,6 +23,7 @@ import uploadRoutes from './routes/upload';
 import messageRoutes from './routes/messages';
 import analyticsRoutes from './routes/analytics';
 import settingsRoutes from './routes/settings';
+import maintenanceMiddleware from './middleware/maintenanceMiddleware';
 import { initializeSocket } from './utils/socketHandler';
 
 // Initialize Express app
@@ -59,6 +60,7 @@ const limiter = rateLimit({
 app.set('trust proxy', 1);
 
 // Apply middleware
+app.use(maintenanceMiddleware);
 app.use(helmet());
 app.use(cors({
     origin: (origin, callback) => {

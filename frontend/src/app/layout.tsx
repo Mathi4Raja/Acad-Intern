@@ -6,6 +6,7 @@ import { SocketProvider } from "@/lib/SocketContext";
 import { SettingsProvider } from "@/lib/SettingsContext";
 import { AlertProvider } from "@/components/ui/AlertProvider";
 import { Toaster } from 'react-hot-toast';
+import MaintenanceGuard from "@/components/MaintenanceGuard";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-geist-sans",
@@ -64,7 +65,9 @@ export default function RootLayout({
             <SocketProvider>
               <AlertProvider>
                 <Toaster position="top-right" />
-                {children}
+                <MaintenanceGuard>
+                  {children}
+                </MaintenanceGuard>
               </AlertProvider>
             </SocketProvider>
           </AuthProvider>

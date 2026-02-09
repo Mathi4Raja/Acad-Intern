@@ -55,7 +55,16 @@ export default function LoginPage() {
       await googleLogin(response.credential);
       // Redirect handled in AuthContext
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Google sign-in failed. Please try again.');
+      const status = err.response?.status;
+      const message = err.response?.data?.message;
+
+      if (status === 403) {
+        setError(message || 'Registration is currently closed. If you already have an account, please login with your email and password.');
+      } else if (status === 401 && message?.includes('Google Sign-In')) {
+        setError(message); // Pass through the specific backend message about Google vs Email
+      } else {
+        setError(message || 'Google sign-in failed. Please try again.');
+      }
       setIsGoogleLoading(false);
     }
   };

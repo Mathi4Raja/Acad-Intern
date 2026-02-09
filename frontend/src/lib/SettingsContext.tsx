@@ -11,6 +11,7 @@ interface PublicSettings {
     maxFileSize: number;
     maxMessageSize: number;
     allowResumeUpload: boolean;
+    maintenanceMode: boolean;
 }
 
 interface SettingsContextType {
