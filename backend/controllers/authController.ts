@@ -497,7 +497,8 @@ This link will expire in ${expiryMinutes} minutes.
                 to: user.email,
                 subject: 'Password Reset Request - AcadIntern',
                 text: message,
-                html: html
+                html: html,
+                type: 'password_reset'
             });
 
             res.status(200).json({
@@ -648,7 +649,8 @@ If you did not make this change, please contact our support team immediately.
                 to: user.email,
                 subject: 'Password Changed Successfully - AcadIntern',
                 text: message,
-                html: html
+                html: html,
+                type: 'password_reset'
             });
         } catch (emailError) {
             // Don't fail the password reset if confirmation email fails

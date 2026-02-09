@@ -1,52 +1,109 @@
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+import SystemSetting from '../models/SystemSetting';
 
 interface EmailOptions {
     to: string;
     subject: string;
     text: string;
     html: string;
+    type?: 'password_reset' | 'general';
 }
 
 /**
- * Send email using nodemailer or external service
- * For production, replace this with Resend, SendGrid, or other email service
+ * Send email using Resend or SMTP (Gmail)
  */
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
-    // If Resend API Key is present, prioritize sending real email
+    const type = options.type || 'general';
+    const isTest = process.env.NODE_ENV === 'test';
+
+    // 0. Mock Mode (Strictly for automated tests)
+    if (isTest) {
+        console.log(`[TEST MODE] Mocking email dispatch to: ${options.to}`);
+        return;
+    }
+
+    // Fetch settings from DB
+    const settings = await SystemSetting.find({
+        key: { $in: ['emailFrom', 'emailFromName', 'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass'] }
+    });
+
+    const settingsMap: Record<string, string> = {};
+    settings.forEach(s => { settingsMap[s.key] = s.value; });
+
+    const fromAddress = settingsMap.emailFrom || process.env.FROM_EMAIL || 'onboarding@resend.dev';
+    const fromName = settingsMap.emailFromName || '';
+    const fromEmail = fromName ? `${fromName} <${fromAddress}>` : fromAddress;
+
+    const smtpConfig = {
+        host: settingsMap.smtpHost,
+        port: parseInt(settingsMap.smtpPort),
+        user: settingsMap.smtpUser,
+        pass: settingsMap.smtpPass
+    };
+
+    let success = false;
+    let lastError: any = null;
+
+    // 1. Try Resend (Primary for all emails)
     if (process.env.RESEND_API_KEY) {
         try {
             const { Resend } = require('resend');
             const resend = new Resend(process.env.RESEND_API_KEY);
-
-            await resend.emails.send({
-                from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
+            const resendResult = await resend.emails.send({
+                from: fromEmail,
                 to: options.to,
                 subject: options.subject,
                 text: options.text,
                 html: options.html
             });
-            console.log(`Email sent successfully via Resend to ${options.to}`);
-            return;
-        } catch (error) {
-            console.error('Error sending email via Resend:', error);
-            // If sending fails, fall back to console logging below
+
+            if (resendResult.error) {
+                console.error('Resend error, attempting SMTP fallback:', resendResult.error);
+                lastError = resendResult.error;
+            } else {
+                console.log(`Email sent via Resend to ${options.to} (${type})`);
+                success = true;
+            }
+        } catch (error: any) {
+            lastError = error;
+            console.error('Resend service failure, attempting SMTP fallback:', error.message || error);
         }
     }
 
-    // For development/testing (or fallback) - log the email
-    if (process.env.NODE_ENV === 'development' || !process.env.RESEND_API_KEY) {
-        console.log('\n=================================');
-        console.log('📧 EMAIL SIMULATION (DEV MODE)');
-        console.log('=================================');
-        console.log(`To: ${options.to}`);
-        console.log(`Subject: ${options.subject}`);
-        console.log(`\nText Content:\n${options.text}`);
-        console.log('\n=================================\n');
+    // 2. Try SMTP (Gmail) - Final Global Fallback
+    if (!success && smtpConfig.host && smtpConfig.user && smtpConfig.pass) {
+        try {
+            const transporter = nodemailer.createTransport({
+                host: smtpConfig.host,
+                port: smtpConfig.port,
+                secure: smtpConfig.port === 465,
+                auth: {
+                    user: smtpConfig.user,
+                    pass: smtpConfig.pass
+                }
+            });
 
-        if (process.env.NODE_ENV !== 'development') {
-            console.log('Email simulated (no API key configured or sending failed)');
+            await transporter.sendMail({
+                from: fromEmail,
+                to: options.to,
+                subject: options.subject,
+                text: options.text,
+                html: options.html
+            });
+            console.log(`Email sent via SMTP (Fallback) to ${options.to} (${type})`);
+            success = true;
+        } catch (error: any) {
+            lastError = error;
+            console.error('SMTP (Fallback) failure:', error.message || error);
         }
-        return;
+    }
+
+    // 3. Status Handling (Non-test environments)
+    if (!success) {
+        const errorMsg = lastError?.message || lastError || 'Email failed to send through all available providers';
+        console.error(`CRITICAL: ${errorMsg}`);
+        throw new Error(errorMsg);
     }
 };
 

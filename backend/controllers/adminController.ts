@@ -871,7 +871,7 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
 
 // Helper to determine group based on key prefix or name
 const getGroupForKey = (key: string): string => {
-    if (key.startsWith('email') || key.includes('Email')) return 'email';
+    if (key.startsWith('email') || key.includes('Email') || key.includes('smtp')) return 'email';
     if (key.startsWith('security') || key.includes('Password') || key.includes('login')) return 'security';
     if (key.startsWith('site') || key.includes('maintenance')) return 'general';
     if (key.startsWith('company')) return 'companies';

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { Settings, Bell, Shield, Database, Mail, Users, Building2, Save, AlertCircle, CheckCircle, RotateCcw, AlertTriangle, FileText, Clock, IndianRupee, Activity } from 'lucide-react'
+import { Settings, Bell, Shield, Database, Mail, Users, Building2, Save, AlertCircle, CheckCircle, RotateCcw, AlertTriangle, FileText, Clock, IndianRupee, Activity, Key } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { adminApi } from '@/lib/api'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -16,9 +16,13 @@ interface SettingsData {
   contactEmail: string;
   maintenanceMode: boolean;
   allowRegistration: boolean;
-  emailProvider: string;
+  // Email Configuration
+  smtpHost: string;
+  smtpPort: string;
+  smtpUser: string;
+  smtpPass: string;
   emailFrom: string;
-  emailApiKey: string;
+  emailFromName: string;
   emailNotifications: boolean;
   applicationNotifications: boolean;
   reminderNotifications: boolean;
@@ -51,9 +55,12 @@ const defaultSettings: SettingsData = {
   allowRegistration: true,
 
   // Email Settings
-  emailProvider: 'resend',
+  smtpHost: 'smtp.gmail.com',
+  smtpPort: '465',
+  smtpUser: '',
+  smtpPass: '',
   emailFrom: 'noreply@acadintern.com',
-  emailApiKey: '',
+  emailFromName: 'AcadIntern',
 
   // Notification Settings
   emailNotifications: true,
@@ -351,15 +358,20 @@ function AdminSettingsContent() {
                             <p className="text-[12px] text-red-600/70 font-bold">Killswitch for all non-admin traffic</p>
                           </div>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings.maintenanceMode}
-                            onChange={(e) => setSettings({ ...settings, maintenanceMode: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-red-200/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
-                        </label>
+                        <div className="flex items-center gap-3">
+                          <span className={cn("text-[10px] font-black uppercase tracking-widest transition-colors", settings.maintenanceMode ? "text-red-600" : "text-gray-400")}>
+                            {settings.maintenanceMode ? "ON" : "OFF"}
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={settings.maintenanceMode}
+                              onChange={(e) => setSettings({ ...settings, maintenanceMode: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-red-200/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                          </label>
+                        </div>
                       </div>
 
                       <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex items-center justify-between group hover:border-gray-200 transition-colors">
@@ -372,15 +384,20 @@ function AdminSettingsContent() {
                             <p className="text-[12px] text-gray-500 font-bold">Lock or unlock new user onboarding</p>
                           </div>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings.allowRegistration}
-                            onChange={(e) => setSettings({ ...settings, allowRegistration: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
+                        <div className="flex items-center gap-3">
+                          <span className={cn("text-[10px] font-black uppercase tracking-widest transition-colors", settings.allowRegistration ? "text-primary" : "text-gray-400")}>
+                            {settings.allowRegistration ? "ON" : "OFF"}
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={settings.allowRegistration}
+                              onChange={(e) => setSettings({ ...settings, allowRegistration: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -391,60 +408,181 @@ function AdminSettingsContent() {
               {activeTab === 'email' && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
-                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Mailing Infrastructure</h2>
-                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Dispatch flows</p>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight tracking-tight uppercase group flex items-center gap-2">
+                      Mailing Infrastructure
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    </h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2">
+                      <Activity size={12} className="text-primary" />
+                      Production Routing & Automated Fallbacks
+                    </p>
                   </header>
 
-                  <div className="grid gap-6 max-w-xl">
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Dispatch Provider</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {['resend', 'sendgrid', 'smtp'].map((p) => (
-                          <button
-                            key={p}
-                            onClick={() => setSettings({ ...settings, emailProvider: p })}
-                            className={cn(
-                              "px-3 py-2 rounded-xl border-2 text-[11px] font-black transition-all",
-                              settings.emailProvider === p
-                                ? "border-primary bg-primary/5 text-primary shadow-sm"
-                                : "border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200"
-                            )}
-                          >
-                            {p.toUpperCase()}
-                          </button>
-                        ))}
+                  <div className="grid gap-6">
+                    <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100/50 space-y-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle size={14} className="text-emerald-500" />
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Global Sender Profile</span>
                       </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Verified Sender Identity</label>
-                      <input
-                        type="email"
-                        value={settings.emailFrom}
-                        onChange={(e) => setSettings({ ...settings, emailFrom: e.target.value })}
-                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
-                        placeholder="noreply@domain.com"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-between">
-                        Infrastructure Auth Key
-                        <span className="text-[9px] text-primary bg-primary/10 px-2 py-0.5 rounded italic font-black uppercase tracking-wider">Secure Storage</span>
-                      </label>
-                      <div className="relative group">
-                        <input
-                          type="password"
-                          value={settings.emailApiKey}
-                          onChange={(e) => setSettings({ ...settings, emailApiKey: e.target.value })}
-                          placeholder="API_KEY_PROTECTED"
-                          className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono text-xs font-bold text-gray-900"
-                        />
-                        <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none opacity-50">
-                          <Shield size={14} className="text-gray-400" />
+                      <div className="grid md:grid-cols-2 gap-6 max-w-2xl">
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                            <Users size={12} />
+                            Sender Name
+                          </label>
+                          <input
+                            type="text"
+                            value={settings.emailFromName}
+                            onChange={(e) => setSettings({ ...settings, emailFromName: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-white border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px] shadow-sm"
+                            placeholder="AcadIntern"
+                          />
+                          <p className="text-[10px] text-gray-400 font-bold mt-1 italic">Display name for all dispatches</p>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                            <Mail size={12} />
+                            Verified Sender Identity
+                          </label>
+                          <input
+                            type="email"
+                            value={settings.emailFrom}
+                            onChange={(e) => setSettings({ ...settings, emailFrom: e.target.value })}
+                            className="w-full px-3.5 py-2.5 bg-white border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px] shadow-sm"
+                            placeholder="noreply@domain.com"
+                          />
+                          <p className="text-[10px] text-gray-400 font-bold mt-1 italic">Email address used as sender</p>
                         </div>
                       </div>
                     </div>
+
+                    <div className="grid lg:grid-cols-2 gap-6">
+                      {/* SMTP - Final Fallback Logic */}
+                      <div className="space-y-4 relative group">
+                        <div className="bg-white p-5 rounded-3xl border border-gray-100 transition-all hover:border-amber-500/20 hover:shadow-xl hover:shadow-amber-500/5">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-amber-100/30 flex items-center justify-center text-amber-600 border border-amber-100 shadow-sm transition-transform group-hover:scale-110">
+                                <Database size={20} />
+                              </div>
+                              <div>
+                                <h3 className="text-[14px] font-black text-gray-900">Gmail SMTP</h3>
+                                <div className="flex items-center gap-1.5">
+                                  <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                  <p className="text-[10px] text-amber-600 font-extrabold uppercase tracking-widest">Universal Fallback</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="bg-amber-50/50 p-3 rounded-2xl border border-amber-100/50 mb-2">
+                              <div className="flex gap-2">
+                                <AlertTriangle size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                                <p className="text-[11px] text-amber-700 font-bold leading-relaxed italic">
+                                  Emergency failover provider. Used automatically if the primary engine (Resend) is unavailable.
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">SMTP Host</label>
+                                <input
+                                  type="text"
+                                  value={settings.smtpHost}
+                                  onChange={(e) => setSettings({ ...settings, smtpHost: e.target.value })}
+                                  placeholder="smtp.gmail.com"
+                                  className="w-full px-4 py-2 bg-gray-50/50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-bold text-gray-900 text-[12px]"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Port</label>
+                                <input
+                                  type="text"
+                                  value={settings.smtpPort}
+                                  onChange={(e) => setSettings({ ...settings, smtpPort: e.target.value })}
+                                  placeholder="465"
+                                  className="w-full px-4 py-2 bg-gray-50/50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-bold text-gray-900 text-[12px]"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Gmail / User</label>
+                                <input
+                                  type="text"
+                                  value={settings.smtpUser}
+                                  onChange={(e) => setSettings({ ...settings, smtpUser: e.target.value })}
+                                  placeholder="user@gmail.com"
+                                  className="w-full px-4 py-2 bg-gray-50/50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-bold text-gray-900 text-[12px]"
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center justify-between">
+                                  App Password
+                                  <Shield size={12} className="text-gray-300" />
+                                </label>
+                                <input
+                                  type="password"
+                                  value={settings.smtpPass}
+                                  onChange={(e) => setSettings({ ...settings, smtpPass: e.target.value })}
+                                  placeholder="xxxx xxxx xxxx xxxx"
+                                  className="w-full px-4 py-2 bg-gray-50/50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-mono text-[11px] font-bold text-gray-900"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Resend - Primary Logic */}
+                      <div className="space-y-4 relative group">
+                        <div className="bg-white p-5 rounded-3xl border border-gray-100 transition-all hover:border-orange-500/20 hover:shadow-xl hover:shadow-orange-500/5">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-2xl bg-orange-100/30 flex items-center justify-center text-orange-600 border border-orange-100 shadow-sm transition-transform group-hover:scale-110">
+                                <Activity size={20} />
+                              </div>
+                              <div>
+                                <h3 className="text-[14px] font-black text-gray-900">Resend</h3>
+                                <div className="flex items-center gap-1.5">
+                                  <div className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+                                  <p className="text-[10px] text-orange-600 font-extrabold uppercase tracking-widest">Primary Dispatch</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[9px] bg-orange-50 text-orange-600/70 px-2 py-1 rounded-lg font-black uppercase tracking-widest border border-orange-100">ENV Secure</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="bg-orange-50/50 p-3 rounded-2xl border border-orange-100/50 mb-2">
+                              <div className="flex gap-2">
+                                <CheckCircle size={14} className="text-orange-600 shrink-0 mt-0.5" />
+                                <p className="text-[11px] text-orange-700 font-bold leading-relaxed italic">
+                                  Core engine for all system dispatches. High-speed delivery via specialized API.
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100 border-dashed flex items-center justify-center gap-2">
+                              <Shield size={14} className="text-gray-400" />
+                              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">System Enforced Configuration</span>
+                            </div>
+
+                            <p className="text-[10px] text-gray-400 font-bold text-center leading-relaxed">
+                              Credentials updated via server environment variables for maximum security.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               )}
