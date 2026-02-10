@@ -307,7 +307,7 @@ export default function CompanyDashboard() {
             )}
             <div className="p-4 border-t border-gray-100 bg-gray-50/50">
               <Link
-                href="/company/internships/new"
+                href="/company/post-internship"
                 className="w-full flex items-center justify-center gap-2 text-primary border border-primary/20 bg-white py-2.5 rounded-xl text-sm font-medium hover:bg-primary/5 transition-colors shadow-sm"
               >
                 <Plus size={16} />

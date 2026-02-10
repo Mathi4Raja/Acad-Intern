@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { Search, Filter, Mail, Phone, Globe, MapPin, Calendar, CheckCircle, XCircle, Shield, Building, Briefcase, Eye, Ban, Trash2, Loader2, Building2, X, Users, Activity } from 'lucide-react'
+import { Search, Filter, Mail, Phone, Globe, MapPin, Calendar, CheckCircle, XCircle, Shield, Building, Briefcase, Eye, Ban, Trash2, Loader2, Building2, X, Users, Activity, FileText, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import api from '@/lib/api'
 import { StatCard } from '@/components/analytics/StatCard'
@@ -27,6 +27,7 @@ interface Company {
   verified: boolean
   status: 'active' | 'pending' | 'suspended'
   createdAt: string
+  phone?: string
 }
 
 function ManageCompaniesContent() {
@@ -432,10 +433,15 @@ function ManageCompaniesContent() {
               <div className="space-y-4 flex-1">
                 {/* HR Contact Subtext */}
                 <div className="bg-gray-50/50 rounded-xl px-3 py-2 border border-gray-100 flex items-center justify-between">
-                  <p className="text-[11px] font-bold text-gray-500 truncate flex items-center gap-1.5">
-                    <Users size={12} strokeWidth={2.5} />
-                    {company.userId?.name || 'Admin User'} • {company.userId?.email}
-                  </p>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[11px] font-bold text-gray-500 truncate flex items-center gap-1.5">
+                      <Users size={12} strokeWidth={2.5} />
+                      {company.userId?.name || 'Admin User'} • {company.userId?.email}
+                    </p>
+                    <p className="text-[10px] font-bold text-gray-400 truncate flex items-center gap-1.5 pl-0.5">
+                      <Phone size={10} strokeWidth={2.5} /> {company.phone || 'N/A'}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Status Grid - Rich Data */}
@@ -543,7 +549,7 @@ function ManageCompaniesContent() {
       {
         selectedCompany && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-2xl shadow-2xl w-fit max-w-[95vw] sm:max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col h-auto max-h-[95vh]">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[95vw] sm:max-w-4xl overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col h-auto max-h-[95vh]">
               {/* Premium Header Pattern */}
               <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100 p-3 sm:px-4 sm:py-3.5 flex items-center justify-between overflow-hidden relative group/modal-header shrink-0">
                 <div className="absolute -right-16 -top-16 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover/modal-header:bg-primary/10 transition-colors duration-700" />
@@ -564,154 +570,175 @@ function ManageCompaniesContent() {
                 </button>
               </div>
 
-              <div className="p-3 sm:p-4 overflow-y-visible space-y-4 scrollbar-hide bg-gray-50/20 flex-1">
-                {/* Profile Header Block */}
-                <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
-                  <div className="w-14 h-14 rounded-[16px] bg-white border-2 border-gray-100 flex items-center justify-center text-gray-300 font-black text-xl shrink-0 group hover:border-primary/20 transition-all duration-300 overflow-hidden p-1 shadow-inner">
-                    {selectedCompany?.logo ? (
-                      <img src={selectedCompany?.logo} alt="" className="w-full h-full object-contain rounded-xl" />
-                    ) : (
-                      <Building2 size={28} />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-[17px] font-black text-gray-900 mb-0.5 truncate tracking-tight">{selectedCompany?.companyName}</h3>
-                    <p className="text-[11px] font-bold text-gray-400 mb-2 truncate flex items-center gap-1.5 leading-none">
-                      <Mail size={12} className="shrink-0" /> {selectedCompany?.userId?.email}
-                      {selectedCompany?.verified && <Shield size={12} className="text-blue-500 ml-1" fill="currentColor" />}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={cn(
-                        "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border shadow-sm flex items-center gap-1.5",
-                        (selectedCompany?.userId?.status || selectedCompany?.status) === 'active' ? 'bg-green-50 text-green-600 border-green-100' :
-                          (selectedCompany?.userId?.status || selectedCompany?.status) === 'suspended' ? 'bg-red-50 text-red-600 border-red-100' :
-                            'bg-yellow-50 text-yellow-600 border-yellow-100'
-                      )}>
-                        <div className={cn("w-1.5 h-1.5 rounded-full", (selectedCompany?.userId?.status || selectedCompany?.status) === 'active' ? 'bg-green-500' : (selectedCompany?.userId?.status || selectedCompany?.status) === 'suspended' ? 'bg-red-500' : 'bg-yellow-500')} />
-                        {selectedCompany?.userId?.status || selectedCompany?.status}
-                      </span>
-                      {selectedCompany?.verified && (
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 border border-blue-100 shadow-sm flex items-center gap-1">
-                          <Shield size={10} fill="currentColor" /> Verified Partner
-                        </span>
-                      )}
+              <div className="p-3 sm:p-5 overflow-y-auto md:overflow-hidden bg-gray-50/30 flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5 md:h-full">
+                  {/* Main Content Column (Left - 2/3) */}
+                  <div className="md:col-span-2 flex flex-col gap-3 md:gap-4 md:h-full">
+                    {/* Profile Header Block */}
+                    <div className="flex items-start gap-3 md:gap-4 bg-white p-3 md:p-4 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30 shrink-0">
+                      <div className="w-10 h-10 md:w-16 md:h-16 rounded-[12px] md:rounded-[16px] bg-white border-2 border-gray-100 flex items-center justify-center text-gray-300 font-black text-xl shrink-0 group hover:border-primary/20 transition-all duration-300 overflow-hidden p-1 shadow-inner">
+                        {selectedCompany?.logo ? (
+                          <img src={selectedCompany?.logo} alt="" className="w-full h-full object-contain rounded-xl" />
+                        ) : (
+                          <Building2 size={20} className="md:w-[28px] md:h-[28px]" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 pt-0 md:pt-1">
+                        <h3 className="text-[15px] md:text-lg font-black text-gray-900 mb-0.5 md:mb-1 line-clamp-2 leading-tight tracking-tight">{selectedCompany?.companyName}</h3>
+                        <p className="text-[10px] md:text-[11px] font-bold text-gray-400 mb-1.5 md:mb-3 truncate flex items-center gap-1.5 leading-none">
+                          <Mail size={12} className="shrink-0" /> {selectedCompany?.userId?.email}
+                          {selectedCompany?.verified && <Shield size={12} className="text-blue-500 ml-1" fill="currentColor" />}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
+                          <span className={cn(
+                            "px-1.5 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest border shadow-sm flex items-center gap-1.5",
+                            (selectedCompany?.userId?.status || selectedCompany?.status) === 'active' ? 'bg-green-50 text-green-600 border-green-100' :
+                              (selectedCompany?.userId?.status || selectedCompany?.status) === 'suspended' ? 'bg-red-50 text-red-600 border-red-100' :
+                                'bg-yellow-50 text-yellow-600 border-yellow-100'
+                          )}>
+                            <div className={cn("w-1.5 h-1.5 rounded-full", (selectedCompany?.userId?.status || selectedCompany?.status) === 'active' ? 'bg-green-500' : (selectedCompany?.userId?.status || selectedCompany?.status) === 'suspended' ? 'bg-red-500' : 'bg-yellow-500')} />
+                            {selectedCompany?.userId?.status || selectedCompany?.status}
+                          </span>
+                          {selectedCompany?.verified && (
+                            <span className="px-1.5 py-0.5 md:px-2.5 md:py-1 rounded-lg text-[9px] md:text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 border border-blue-100 shadow-sm flex items-center gap-1">
+                              <Shield size={10} fill="currentColor" /> Verified Partner
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* About Section */}
+                    <div className="bg-white p-3 md:p-5 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm shadow-gray-100/30 md:flex-1 md:min-h-0 flex flex-col">
+                      <h4 className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 md:mb-3 flex items-center gap-2 shrink-0">
+                        <FileText size={12} /> About Organization
+                      </h4>
+                      <p className="text-[11px] md:text-[12px] text-gray-600 leading-relaxed font-medium md:overflow-y-auto md:pr-2 md:scrollbar-thin md:scrollbar-thumb-gray-200 line-clamp-4 md:line-clamp-none">
+                        {selectedCompany?.description || "No description provided."}
+                      </p>
                     </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
-                    <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Corporate ID (CIN/Tax)</span>
-                    <p className="text-[13px] font-black text-gray-900 font-mono tracking-tight">{selectedCompany?.cin || 'N/A'}</p>
-                  </div>
-                  <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
-                    <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Registration Date</span>
-                    <div className="flex items-center gap-2">
-                      <Calendar size={14} className="text-gray-400" />
-                      <p className="text-[13px] font-black text-gray-900 leading-none">{formatDate(selectedCompany?.createdAt)}</p>
+                  {/* Sidebar Column (Right - 1/3) */}
+                  <div className="space-y-2 md:space-y-3">
+                    <div className="bg-white p-3 md:p-3.5 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30 grid grid-cols-2 md:block gap-3 md:gap-0 md:space-y-4">
+                      {/* HR Contact */}
+                      <div>
+                        <span className="block text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 md:mb-1.5">Phone Number</span>
+                        <p className="text-[10px] font-bold text-gray-400 truncate flex items-center gap-1.5 pl-0.5">
+                          <Phone size={10} strokeWidth={2.5} /> {selectedCompany?.phone || 'N/A'}
+                        </p>
+                      </div>
+
+                      <div className="md:hidden">
+                        <span className="block text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Status</span>
+                        <p className={cn("text-[10px] font-black uppercase", (selectedCompany?.userId?.status || selectedCompany?.status) === 'active' ? 'text-green-600' : 'text-red-500')}>
+                          {selectedCompany?.userId?.status || selectedCompany?.status}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className="block text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 md:mb-1.5">Corporate ID</span>
+                        <p className="text-[11px] md:text-[12px] font-black text-gray-900 font-mono tracking-tighttruncate">{selectedCompany?.cin || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="block text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 md:mb-1.5">Since</span>
+                        <div className="flex items-center gap-2">
+                          <Calendar size={12} className="text-gray-400" />
+                          <p className="text-[11px] md:text-[12px] font-black text-gray-900 leading-none">{formatDate(selectedCompany?.createdAt)}</p>
+                        </div>
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <h4 className="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 md:mb-1.5">Website</h4>
+                        {selectedCompany?.website ? (
+                          <a href={selectedCompany?.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-primary hover:underline hover:text-primary/80 transition-all group/link w-fit">
+                            <Globe size={12} className="text-primary shrink-0" />
+                            <span className="text-[10px] md:text-[11px] font-bold truncate max-w-[200px] md:max-w-[150px]">{selectedCompany?.website.replace(/^https?:\/\//, '')}</span>
+                          </a>
+                        ) : (
+                          <p className="text-[10px] md:text-[11px] font-bold text-gray-400 italic">No Website</p>
+                        )}
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <h4 className="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 md:mb-1.5">Manager</h4>
+                        <div className="flex items-center gap-2">
+                          <User size={12} className="text-gray-400" />
+                          <span className="text-[10px] md:text-[11px] font-bold text-gray-900 truncate">{selectedCompany?.userId?.name}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Unique Identifier Area - Compact Sidebar */}
+                    <div className="bg-gray-900 rounded-xl p-2.5 md:p-3 shadow-md border border-gray-800 relative overflow-hidden group">
+                      <div className="absolute right-0 top-0 p-2 opacity-[0.05] group-hover:opacity-10 transition-opacity">
+                        <Building2 size={32} className="text-white" />
+                      </div>
+                      <span className="block text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1 md:mb-1.5">Internal UUID</span>
+                      <code className="text-[9px] md:text-[10px] font-mono text-gray-400 break-all leading-relaxed relative z-10 block">
+                        {selectedCompany?._id}
+                      </code>
                     </div>
                   </div>
-                </div>
-
-                {/* About Section */}
-                {selectedCompany?.description && (
-                  <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm shadow-gray-100/30">
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5">About Organization</h4>
-                    <p className="text-[11px] text-gray-600 leading-relaxed font-semibold">
-                      {selectedCompany?.description}
-                    </p>
-                  </div>
-                )}
-
-                {/* Supplemental Info */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Digital Presence</h4>
-                    {selectedCompany?.website ? (
-                      <a href={selectedCompany?.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-2 py-1.5 bg-gray-50/50 rounded-xl border border-gray-100 hover:border-primary/30 hover:bg-white transition-all group/link">
-                        <Globe size={14} className="text-gray-400 group-hover/link:text-primary transition-colors" />
-                        <span className="text-[11px] font-bold text-gray-600 group-hover/link:text-primary transition-colors truncate">{selectedCompany?.website}</span>
-                      </a>
-                    ) : (
-                      <p className="text-[11px] font-bold text-gray-400 italic px-2">No Website Registered</p>
-                    )}
-                  </div>
-                  <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30">
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Authorized Manager</h4>
-                    <div className="flex items-center gap-3 px-2 py-1.5">
-                      <Users size={14} className="text-gray-400" />
-                      <span className="text-[11px] font-bold text-gray-900 truncate">{selectedCompany?.userId?.name}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Unique Identifier Area */}
-                <div className="bg-gray-900 rounded-2xl p-4 shadow-xl shadow-gray-200/50 ring-1 ring-white/10 relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 p-4 opacity-[0.05] group-hover:opacity-10 transition-opacity">
-                    <Building2 size={64} className="text-white" />
-                  </div>
-                  <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Internal UUID Reference</span>
-                  <code className="text-[13px] font-mono text-gray-300 break-all leading-relaxed relative z-10">
-                    {selectedCompany?._id}
-                  </code>
                 </div>
               </div>
 
-              <div className="px-4 py-2.5 bg-white border-t border-gray-100 flex justify-end gap-2 shrink-0">
+              <div className="px-3 py-2.5 sm:px-4 bg-white border-t border-gray-100 flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2 shrink-0">
                 <button
                   onClick={() => setSelectedCompany(null)}
-                  className="px-6 py-2 bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-500 rounded-xl hover:bg-gray-100 hover:text-gray-900 transition-all border border-gray-100"
+                  className="w-full sm:w-auto px-4 py-2 bg-gray-50 text-[10px] sm:text-[10px] font-black uppercase tracking-widest text-gray-500 rounded-xl hover:bg-gray-100 hover:text-gray-900 transition-all border border-gray-100 order-3 sm:order-1"
                 >
                   Close View
                 </button>
 
-                {(selectedCompany?.userId?.status || selectedCompany?.status) !== 'suspended' ? (
-                  <button
-                    onClick={() => {
-                      if (selectedCompany?._id) {
-                        handleAction(selectedCompany._id, 'suspend');
-                      }
-                    }}
-                    className="px-6 py-2.5 bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-600 transition-all shadow-lg shadow-orange-200 flex items-center gap-2"
-                  >
-                    <Ban size={14} /> Suspend
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      if (selectedCompany?._id) {
-                        handleAction(selectedCompany._id, 'activate');
-                      }
-                    }}
-                    className="px-6 py-2.5 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200 flex items-center gap-2"
-                  >
-                    <CheckCircle size={14} /> Restore
-                  </button>
-                )}
+                <div className="flex gap-2 w-full sm:w-auto order-1 sm:order-2">
+                  {(selectedCompany?.userId?.status || selectedCompany?.status) !== 'suspended' ? (
+                    <button
+                      onClick={() => {
+                        if (selectedCompany?._id) {
+                          handleAction(selectedCompany._id, 'suspend');
+                        }
+                      }}
+                      className="flex-1 sm:flex-none px-4 py-2.5 bg-orange-500 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-600 transition-all shadow-lg shadow-orange-200 flex items-center justify-center gap-1.5"
+                    >
+                      <Ban size={12} className="sm:w-[14px] sm:h-[14px]" /> Suspend
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (selectedCompany?._id) {
+                          handleAction(selectedCompany._id, 'activate');
+                        }
+                      }}
+                      className="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-500 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-1.5"
+                    >
+                      <CheckCircle size={12} className="sm:w-[14px] sm:h-[14px]" /> Restore
+                    </button>
+                  )}
 
-                {!selectedCompany?.verified ? (
-                  <button
-                    onClick={() => {
-                      if (selectedCompany?._id) {
-                        handleAction(selectedCompany._id, 'verify');
-                      }
-                    }}
-                    className="px-6 py-2.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2"
-                  >
-                    <Shield size={14} /> Verify Entity
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      if (selectedCompany?._id) {
-                        handleAction(selectedCompany._id, 'unverify');
-                      }
-                    }}
-                    className="px-6 py-2.5 bg-gray-100 text-gray-600 border border-gray-200 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-200 transition-all shadow-sm flex items-center gap-2"
-                  >
-                    <XCircle size={14} /> Revoke
-                  </button>
-                )}
+                  {!selectedCompany?.verified ? (
+                    <button
+                      onClick={() => {
+                        if (selectedCompany?._id) {
+                          handleAction(selectedCompany._id, 'verify');
+                        }
+                      }}
+                      className="flex-1 sm:flex-none px-4 py-2.5 bg-blue-600 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-1.5"
+                    >
+                      <Shield size={12} className="sm:w-[14px] sm:h-[14px]" /> Verify
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (selectedCompany?._id) {
+                          handleAction(selectedCompany._id, 'unverify');
+                        }
+                      }}
+                      className="flex-1 sm:flex-none px-4 py-2.5 bg-gray-100 text-gray-600 border border-gray-200 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-gray-200 transition-all shadow-sm flex items-center justify-center gap-1.5"
+                    >
+                      <XCircle size={12} className="sm:w-[14px] sm:h-[14px]" /> Revoke
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

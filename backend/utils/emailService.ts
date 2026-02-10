@@ -29,13 +29,33 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
             $in: [
                 'emailFrom', 'emailFromName', 'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass',
                 'emailNotifications', 'welcomeEmail', 'shortlistedEmail', 'rejectedEmail',
-                'interviewScheduledEmail', 'messageAlertEmail', 'reminderEmail'
+                'interviewScheduledEmail', 'messageAlertEmail', 'reminderEmail',
+                'siteName'
             ]
         }
     });
 
     const settingsMap: Record<string, any> = {};
     settings.forEach(s => { settingsMap[s.key] = s.value; });
+
+    const siteName = settingsMap.siteName || 'AcadIntern';
+    const currentYear = new Date().getFullYear().toString();
+
+    // Replace placeholders in HTML and Text
+    let finalHtml = options.html
+        .replace(/{{SITE_NAME}}/g, siteName)
+        .replace(/{{CURRENT_YEAR}}/g, currentYear)
+        .replace(/AcadIntern/gi, siteName); // Case-insensitive fallback
+
+    let finalText = options.text
+        .replace(/{{SITE_NAME}}/g, siteName)
+        .replace(/{{CURRENT_YEAR}}/g, currentYear)
+        .replace(/AcadIntern/gi, siteName);
+
+    let finalSubject = options.subject
+        .replace(/{{SITE_NAME}}/g, siteName)
+        .replace(/{{CURRENT_YEAR}}/g, currentYear)
+        .replace(/AcadIntern/gi, siteName);
 
     // Granular Type-based Checks
     const typeConfigs: Record<string, string> = {
@@ -75,9 +95,9 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
             const resendResult = await resend.emails.send({
                 from: fromEmail,
                 to: options.to,
-                subject: options.subject,
-                text: options.text,
-                html: options.html
+                subject: finalSubject,
+                text: finalText,
+                html: finalHtml
             });
 
             if (resendResult.error) {
@@ -109,9 +129,9 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
             await transporter.sendMail({
                 from: fromEmail,
                 to: options.to,
-                subject: options.subject,
-                text: options.text,
-                html: options.html
+                subject: finalSubject,
+                text: finalText,
+                html: finalHtml
             });
             console.log(`Email sent via SMTP (Fallback) to ${options.to} (${type})`);
             success = true;

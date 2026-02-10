@@ -7,6 +7,11 @@ import { useAuth } from '@/lib/AuthContext'
 
 interface CompanyProfile {
   _id: string;
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+  };
   companyName: string;
   website?: string;
   description?: string;
@@ -62,6 +67,7 @@ export default function CompanyProfilePage() {
 
   const [profile, setProfile] = useState<CompanyProfile | null>(null)
   const [formData, setFormData] = useState({
+    name: '',
     companyName: '',
     email: '',
     phone: '',
@@ -113,24 +119,26 @@ export default function CompanyProfilePage() {
       setIsLoading(true)
       const response = await api.get('/companies/me')
       if (response.data.success && response.data.data) {
-        setProfile(response.data.data)
+        const p = response.data.data
+        setProfile(p)
         setFormData({
-          companyName: response.data.data.companyName || '',
-          email: response.data.data.email || '',
-          phone: response.data.data.phone || '',
-          website: response.data.data.website || '',
-          location: response.data.data.location || '',
-          industry: response.data.data.industry || '',
-          companySize: response.data.data.companySize || '',
-          founded: response.data.data.founded || '',
-          description: response.data.data.description || '',
-          about: response.data.data.about || '',
-          benefits: response.data.data.benefits || '',
-          cin: response.data.data.cin || '',
+          name: p.userId?.name || '',
+          companyName: p.companyName || '',
+          email: p.userId?.email || '',
+          phone: p.phone || '',
+          website: p.website || '',
+          location: p.location || '',
+          industry: p.industry || '',
+          companySize: p.companySize || '',
+          founded: p.founded || '',
+          description: p.description || '',
+          about: p.about || '',
+          benefits: p.benefits || '',
+          cin: p.cin || '',
           socialLinks: {
-            linkedin: response.data.data.socialLinks?.linkedin || '',
-            twitter: response.data.data.socialLinks?.twitter || '',
-            instagram: response.data.data.socialLinks?.instagram || ''
+            linkedin: p.socialLinks?.linkedin || '',
+            twitter: p.socialLinks?.twitter || '',
+            instagram: p.socialLinks?.instagram || ''
           }
         })
       }
@@ -291,8 +299,9 @@ export default function CompanyProfilePage() {
     // Reset form data to profile values
     if (profile) {
       setFormData({
+        name: profile.userId?.name || '',
         companyName: profile.companyName || '',
-        email: '',
+        email: profile.userId?.email || '',
         phone: profile.phone || '',
         website: profile.website || '',
         location: profile.location || '',
@@ -597,6 +606,21 @@ export default function CompanyProfilePage() {
         </h2>
 
         <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Contact Person</label>
+            {isEditing ? (
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            ) : (
+              <p className="text-xs sm:text-sm text-gray-900 font-semibold">{formData.name || '-'}</p>
+            )}
+          </div>
+
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Company Name</label>
             {isEditing ? (

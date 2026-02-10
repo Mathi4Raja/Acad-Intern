@@ -88,7 +88,7 @@ export const startScheduler = async () => {
                     await sendEmail({
                         to: user.email,
                         subject: 'Action Required: You have pending applications',
-                        text: `Hi ${company.companyName}, you have ${data.count} applications that have been pending for more than 5 days. Please review them on AcadIntern.`,
+                        text: `Hi ${company.companyName}, you have ${data.count} applications that have been pending for more than 5 days. Please review them on {{SITE_NAME}}.`,
                         html: `
 <p>Hi ${company.companyName},</p>
 <p>You have <strong>${data.count}</strong> applications that have been pending for more than 5 days. High-quality candidates appreciate timely feedback!</p>

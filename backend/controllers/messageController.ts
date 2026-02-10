@@ -411,7 +411,7 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
             </div>
             <div class="content">
                 <p>Hi ${receiver.name},</p>
-                <p>You have new messages waiting for you on AcadIntern.</p>
+                <p>You have new messages waiting for you on {{SITE_NAME}}.</p>
                 
                 <div class="alert-box">
                     <div class="alert-text">3+ New Messages</div>
@@ -424,7 +424,7 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
                 </div>
             </div>
             <div class="footer">
-                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+                <p>&copy; {{CURRENT_YEAR}} {{SITE_NAME}}. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -435,8 +435,8 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
                 try {
                     await sendEmail({
                         to: receiver.email,
-                        subject: 'You have new unread messages on AcadIntern',
-                        text: `Hi ${receiver.name}, you have 3 unread messages on AcadIntern. Visit ${messagesUrl} to view them.`,
+                        subject: 'You have new unread messages on {{SITE_NAME}}',
+                        text: `Hi ${receiver.name}, you have 3 unread messages on {{SITE_NAME}}. Visit ${messagesUrl} to view them.`,
                         html: alertHtml,
                         type: 'message_alert'
                     });

@@ -14,7 +14,9 @@ import {
     Building,
     CheckCircle,
     Loader2,
-    Check
+    Check,
+    Briefcase,
+    Users
 } from 'lucide-react'
 import api from '@/lib/api'
 import { useAlert } from '@/components/ui/AlertProvider'
@@ -30,6 +32,9 @@ interface InternshipDetail {
         website?: string
         description?: string
         verified: boolean
+        industry?: string
+        companySize?: string
+        location?: string
     }
     skillsRequired: string[]
     durationWeeks: number
@@ -41,6 +46,8 @@ interface InternshipDetail {
     location?: string
     deadline?: string
     hasApplied?: boolean
+    requirements?: string
+    responsibilities?: string
 }
 
 export default function InternshipDetailPage() {
@@ -204,7 +211,12 @@ export default function InternshipDetailPage() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Location</p>
-                                    <p className="font-medium text-gray-900 leading-tight">{getModeLabel(internship.mode)}</p>
+                                    <p className="font-medium text-gray-900 leading-tight">
+                                        {getModeLabel(internship.mode)}
+                                        {internship.mode !== 'remote' && internship.location && (
+                                            <span className="text-gray-500 font-normal ml-1">({internship.location})</span>
+                                        )}
+                                    </p>
                                 </div>
                             </div>
 
@@ -243,9 +255,27 @@ export default function InternshipDetailPage() {
                     {/* Description */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
                         <h2 className="text-base font-bold text-gray-900 mb-2">About the internship</h2>
-                        <div className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
+                        <div className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed mb-6">
                             {internship.description}
                         </div>
+
+                        {internship.responsibilities && (
+                            <div className="mb-6">
+                                <h3 className="text-sm font-bold text-gray-900 mb-2">Responsibilities</h3>
+                                <div className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
+                                    {internship.responsibilities}
+                                </div>
+                            </div>
+                        )}
+
+                        {internship.requirements && (
+                            <div>
+                                <h3 className="text-sm font-bold text-gray-900 mb-2">Requirements</h3>
+                                <div className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
+                                    {internship.requirements}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Skills */}
@@ -330,7 +360,7 @@ export default function InternshipDetailPage() {
                     {/* Company Info */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                         <h3 className="text-sm font-bold text-gray-900 mb-3">About Company</h3>
-                        <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg font-bold text-gray-600">
                                 {internship.companyId.companyName.charAt(0)}
                             </div>
@@ -349,8 +379,33 @@ export default function InternshipDetailPage() {
                                 )}
                             </div>
                         </div>
+
+                        <div className="grid grid-cols-1 gap-2.5 mb-4 border-y border-gray-50 py-3">
+                            {internship.companyId.industry && (
+                                <div className="flex items-center gap-2 text-[11px]">
+                                    <Briefcase size={12} className="text-gray-400" />
+                                    <span className="text-gray-500 font-medium">Industry:</span>
+                                    <span className="text-gray-900 font-semibold">{internship.companyId.industry}</span>
+                                </div>
+                            )}
+                            {internship.companyId.companySize && (
+                                <div className="flex items-center gap-2 text-[11px]">
+                                    <Users size={12} className="text-gray-400" />
+                                    <span className="text-gray-500 font-medium">Size:</span>
+                                    <span className="text-gray-900 font-semibold">{internship.companyId.companySize} employees</span>
+                                </div>
+                            )}
+                            {internship.companyId.location && (
+                                <div className="flex items-center gap-2 text-[11px]">
+                                    <MapPin size={12} className="text-gray-400" />
+                                    <span className="text-gray-500 font-medium">Headquarters:</span>
+                                    <span className="text-gray-900 font-semibold">{internship.companyId.location}</span>
+                                </div>
+                            )}
+                        </div>
+
                         {internship.companyId.description && (
-                            <p className="text-xs text-gray-500 line-clamp-3 leading-relaxed">
+                            <p className="text-xs text-gray-500 line-clamp-4 leading-relaxed">
                                 {internship.companyId.description}
                             </p>
                         )}

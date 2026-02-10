@@ -6,6 +6,7 @@ import { verifyCin as verifyCompanyCin } from '../utils/mcaVerificationService';
 
 // Schema for profile update
 const companySchema = z.object({
+    name: z.string().min(2).optional(), // Contact Person Name
     companyName: z.string().min(2).optional(),
     website: z.string().url().optional().or(z.literal('')),
     description: z.string().optional(),
@@ -36,7 +37,7 @@ const verifyCinSchema = z.object({
 // @access  Private (Company)
 export const getMe = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const profile = await Company.findOne({ userId: req.user?._id });
+        const profile = await Company.findOne({ userId: req.user?._id }).populate('userId', 'name email');
 
         if (!profile) {
             res.status(404).json({
@@ -111,9 +112,17 @@ export const updateProfile = async (req: AuthRequest, res: Response, next: NextF
 
         await profile.save();
 
+        // Update User name if provided
+        if (validatedData.name) {
+            const User = require('../models/User').default;
+            await User.findByIdAndUpdate(req.user?._id, { name: validatedData.name });
+        }
+
+        const updatedProfile = await Company.findById(profile._id).populate('userId', 'name email');
+
         res.status(200).json({
             success: true,
-            data: profile
+            data: updatedProfile
         });
     } catch (error) {
         if (error instanceof z.ZodError) {

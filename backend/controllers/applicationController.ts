@@ -333,7 +333,7 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
                 </div>
             </div>
             <div class="footer">
-                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+                <p>&copy; {{CURRENT_YEAR}} {{SITE_NAME}}. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -405,14 +405,14 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
                     </div>
                 </div>
 
-                <p>Please check your messages on the AcadIntern platform for the specific date, time, and meeting link.</p>
+                <p>Please check your messages on the {{SITE_NAME}} platform for the specific date, time, and meeting link.</p>
                 
                 <div class="button-wrapper">
                     <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/student/applications" class="button">Go to Messages</a>
                 </div>
             </div>
             <div class="footer">
-                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+                <p>&copy; {{CURRENT_YEAR}} {{SITE_NAME}}. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -473,7 +473,7 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
                 </div>
             </div>
             <div class="footer">
-                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+                <p>&copy; {{CURRENT_YEAR}} {{SITE_NAME}}. All rights reserved.</p>
             </div>
         </div>
     </div>

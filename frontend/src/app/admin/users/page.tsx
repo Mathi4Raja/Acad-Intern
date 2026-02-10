@@ -431,10 +431,19 @@ function ManageUsersContent() {
 
                 {/* Identity Area */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-[17px] font-black text-gray-900 leading-tight group-hover:text-primary transition-colors truncate" title={user.name}>
-                    {user.name}
+                  <h3 className="text-[17px] font-black text-gray-900 leading-tight group-hover:text-primary transition-colors truncate" title={user.role === 'company' ? user.companyName : user.name}>
+                    {user.role === 'company' ? (user.companyName || user.name) : user.name}
                   </h3>
-                  <p className="text-[11px] font-bold text-gray-400 truncate mt-0.5">{user.email}</p>
+                  <div className="flex flex-col mt-0.5 gap-0.5">
+                    {user.role === 'company' && (
+                      <p className="text-[10px] font-bold text-gray-500 truncate flex items-center gap-1.5">
+                        <UserIcon size={10} strokeWidth={2.5} /> {user.name}
+                      </p>
+                    )}
+                    <p className="text-[11px] font-bold text-gray-400 truncate flex items-center gap-1.5">
+                      <Mail size={10} strokeWidth={2.5} /> {user.email}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Control Cluster */}
@@ -486,7 +495,14 @@ function ManageUsersContent() {
                 <div className="grid grid-cols-2 gap-2 mb-4">
                   <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
                     <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Contact</p>
-                    <p className="text-[11px] font-bold text-gray-700 truncate">{user.phone || 'N/A'}</p>
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-[10px] font-bold text-gray-700 truncate flex items-center gap-1.5">
+                        <Phone size={10} className="text-gray-400" /> {user.phone || 'N/A'}
+                      </p>
+                      <p className="text-[10px] font-bold text-gray-700 truncate flex items-center gap-1.5">
+                        <Mail size={10} className="text-gray-400" /> {user.email}
+                      </p>
+                    </div>
                   </div>
                   <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
                     <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Joined</p>

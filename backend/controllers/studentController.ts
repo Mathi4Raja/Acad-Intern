@@ -16,7 +16,8 @@ const profileSchema = z.object({
     linkedIn: z.string().url().optional().or(z.literal('')),
     github: z.string().url().optional().or(z.literal('')),
     profilePicture: z.string().url().optional().or(z.literal('')).nullable(),
-    bannerImage: z.string().url().optional().or(z.literal('')).nullable()
+    bannerImage: z.string().url().optional().or(z.literal('')).nullable(),
+    phone: z.string().optional()
 });
 
 // @desc    Get current student profile
@@ -80,6 +81,7 @@ export const updateProfile = async (req: AuthRequest, res: Response, next: NextF
         if (validatedData.github) profile.github = validatedData.github;
         if (validatedData.profilePicture !== undefined) profile.profilePicture = validatedData.profilePicture || undefined;
         if (validatedData.bannerImage !== undefined) profile.bannerImage = validatedData.bannerImage || undefined;
+        if (validatedData.phone) profile.phone = validatedData.phone;
 
         profile.calculateCompleteness();
         await profile.save();

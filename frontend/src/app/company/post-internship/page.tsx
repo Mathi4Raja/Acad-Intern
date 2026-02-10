@@ -72,7 +72,9 @@ export default function PostInternship() {
         mode: formData.mode,
         openings: parseInt(formData.positions),
         location: formData.location,
-        deadline: formData.deadline
+        deadline: formData.deadline,
+        requirements: formData.requirements,
+        responsibilities: formData.responsibilities
       }
 
       const response = await api.post('/internships', payload)

@@ -22,9 +22,13 @@ const signupSchema = z.object({
     password: z.string().min(4, 'Password must be at least 4 characters'),
     role: z.enum(['student', 'company', 'admin']),
     // Company specific fields
+    companyName: z.string().optional(),
     website: z.string().url('Invalid website URL').optional().or(z.literal('')),
     cin: z.string().optional(),
-    description: z.string().optional()
+    description: z.string().optional(),
+    // Student specific fields
+    department: z.string().optional(),
+    semester: z.string().optional().transform(val => val ? parseInt(val, 10) : undefined)
 });
 
 const loginSchema = z.object({
@@ -58,7 +62,7 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
         }
 
         const validatedData = signupSchema.parse(req.body);
-        const { name, email, password, role, website, cin, description } = validatedData;
+        const { name, email, password, role, companyName, website, cin, description, department, semester } = validatedData;
 
         // DYNAMIC SETTINGS: Password Complexity
         const passwordMinSetting = await SystemSetting.findOne({ key: 'passwordMinLength' });
@@ -108,11 +112,23 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
         });
 
         if (role === 'student') {
-            await StudentProfile.create({ userId: user._id });
+            await StudentProfile.create({
+                userId: user._id,
+                department: department || '',
+                semester: semester || null
+            });
         } else if (role === 'company') {
-            // Check for mandatory website if role is company
+            // Check for mandatory fields if role is company
+            if (!companyName || companyName.trim() === '') {
+                await User.findByIdAndDelete(user._id);
+                res.status(400).json({
+                    success: false,
+                    message: 'Company name is required'
+                });
+                return;
+            }
+
             if (!website || website.trim() === '') {
-                // Delete the user we just created to avoid orphaned record
                 await User.findByIdAndDelete(user._id);
                 res.status(400).json({
                     success: false,
@@ -124,7 +140,7 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
             try {
                 await Company.create({
                     userId: user._id,
-                    companyName: name,
+                    companyName: companyName,
                     website: website,
                     cin: cin || null,
                     description: description || ''
@@ -182,7 +198,7 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
         await createNotification({
             userId: user._id,
             type: 'general',
-            title: 'Welcome to AcadIntern',
+            title: 'Welcome to {{SITE_NAME}}',
             message: `Hi ${user.name}, welcome to the platform!`
         });
 
@@ -191,6 +207,8 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
             const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
             const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
 
+            // Template Selection based on Role
+            const isCompany = user.role === 'company';
             const verificationHtml = `
 <!DOCTYPE html>
 <html>
@@ -200,12 +218,12 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
         .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
         .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
-        .header { background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); padding: 48px 32px; text-align: center; color: #ffffff; }
+        .header { background: ${isCompany ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)' : 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)'}; padding: 48px 32px; text-align: center; color: #ffffff; }
         .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; }
         .content { padding: 40px 32px; }
         .content p { font-size: 15px; color: #4b5563; margin: 0 0 20px; }
         .button-wrapper { text-align: center; margin: 32px 0 8px; }
-        .button { display: inline-block; padding: 14px 32px; background-color: #4f46e5; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
+        .button { display: inline-block; padding: 14px 32px; background-color: ${isCompany ? '#059669' : '#4f46e5'}; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
         .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
     </style>
 </head>
@@ -213,19 +231,26 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
     <div class="wrapper">
         <div class="container">
             <div class="header">
-                <h1>Welcome to AcadIntern</h1>
+                <h1>${isCompany ? 'Partner Verification' : 'Welcome to {{SITE_NAME}}'}</h1>
             </div>
             <div class="content">
                 <p>Hi ${user.name},</p>
-                <p>We're thrilled to have you! AcadIntern is designed to connect you with high-impact internships and accelerate your career journey.</p>
-                <p>To get started and access all features of your account, please verify your email address by clicking the button below.</p>
+                ${isCompany
+                    ? `<p>We're excited to partner with you! {{SITE_NAME}} provides you with a direct line to top-tier student talent. To start posting internships and managing applications, please verify your corporate account.</p>`
+                    : `<p>We're thrilled to have you! {{SITE_NAME}} is designed to connect you with high-impact internships and accelerate your career journey.</p>`
+                }
+                <p>Please click the button below to verify your email address and get started.</p>
                 <div class="button-wrapper">
-                    <a href="${verificationUrl}" class="button">Verify Email & Get Started</a>
+                    <a href="${verificationUrl}" class="button">${isCompany ? 'Verify Corporate Account' : 'Verify Email & Get Started'}</a>
                 </div>
-                <p>This link will expire in ${expiryMinutes} minutes. If you didn't create an account, you can safely ignore this email.</p>
+                <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 24px;">
+                    Or copy and paste this link into your browser:<br>
+                    <a href="${verificationUrl}" style="color: ${isCompany ? '#059669' : '#4f46e5'}; word-break: break-all;">${verificationUrl}</a>
+                </p>
+                <p style="margin-top: 24px;">This link will expire in ${expiryMinutes} minutes. If you didn't create an account, you can safely ignore this email.</p>
             </div>
             <div class="footer">
-                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+                <p>&copy; {{CURRENT_YEAR}} {{SITE_NAME}}. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -236,8 +261,8 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
             try {
                 await sendEmail({
                     to: user.email,
-                    subject: `Welcome to AcadIntern! Confirm your email address`,
-                    text: `Welcome to AcadIntern, ${user.name}! Please verify your email to get started: ${verificationUrl}`,
+                    subject: `Welcome to {{SITE_NAME}}! Confirm your email address`,
+                    text: `Welcome to {{SITE_NAME}}, ${user.name}! Please verify your email to get started: ${verificationUrl}`,
                     html: verificationHtml,
                     type: 'email_verification'
                 });
@@ -246,12 +271,61 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
             }
         } else {
             // Send standard welcome email without verification link
+            const isCompany = user.role === 'company';
+            const dashboardUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
+            const welcomeHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
+        .header { background: ${isCompany ? 'linear-gradient(135deg, #059669 0%, #10b981 100%)' : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)'}; padding: 48px 32px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.025em; }
+        .content { padding: 40px 32px; }
+        .content p { font-size: 16px; color: #4b5563; margin: 0 0 24px; line-height: 1.6; }
+        .button-wrapper { text-align: center; margin: 32px 0; }
+        .button { display: inline-block; padding: 14px 36px; background-color: ${isCompany ? '#059669' : '#4f46e5'}; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; box-shadow: 0 4px 6px -1px rgba(${isCompany ? '5,150,105,0.2' : '79,70,229,0.2'}); }
+        .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #f3f4f6; background-color: #fafafa; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>${isCompany ? 'Welcome, Partner!' : 'Welcome to {{SITE_NAME}}!'}</h1>
+            </div>
+            <div class="content">
+                <p>Hi ${user.name},</p>
+                ${isCompany
+                    ? `<p>Your partner account is now active. {{SITE_NAME}} is the leading platform for connecting industry leaders with high-potential students. You're now ready to start building your talent pipeline.</p>
+                       <p>Post your first internship opportunity today to reach thousands of qualified candidates.</p>`
+                    : `<p>We're thrilled to have you! Your account is now active and ready to use. {{SITE_NAME}} is built to connect you with high-impact internships and accelerate your professional journey.</p>
+                       <p>You can start exploring curated opportunities and building your profile immediately.</p>`
+                }
+                <div class="button-wrapper">
+                    <a href="${dashboardUrl}${isCompany ? '/company/internships/new' : '/student/dashboard'}" class="button">${isCompany ? 'Post an Internship' : 'Explore Opportunities'}</a>
+                </div>
+                <p>If you have any questions, our team is here to help you every step of the way.</p>
+            </div>
+            <div class="footer">
+                <p>&copy; {{CURRENT_YEAR}} {{SITE_NAME}}. All rights reserved.</p>
+                <p>${isCompany ? 'Empowering future industry leaders.' : 'Connecting talent with opportunity.'}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+            `;
+
             try {
                 await sendEmail({
                     to: user.email,
-                    subject: `Welcome to AcadIntern!`,
-                    text: `Welcome to AcadIntern, ${user.name}! Your account is now active and ready to use.`,
-                    html: `<h1>Welcome to AcadIntern</h1><p>Hi ${user.name},</p><p>We're thrilled to have you! Your account is now active and you can start exploring internship opportunities immediately.</p>`,
+                    subject: `Welcome to {{SITE_NAME}}!`,
+                    text: `Welcome to {{SITE_NAME}}, ${user.name}! Your account is now active and ready to use. Log in at ${dashboardUrl} to get started.`,
+                    html: welcomeHtml,
                     type: 'welcome'
                 });
             } catch (emailError) {
@@ -737,14 +811,14 @@ This link will expire in ${expiryMinutes} minutes.
                 <h1>Password Reset</h1>
             </div>
             <div class="content">
-                <p>We received a request to reset the password for your AcadIntern account.</p>
+                <p>We received a request to reset the password for your {{SITE_NAME}} account.</p>
                 <div class="button-wrapper">
                     <a href="${resetUrl}" class="button">Reset Password</a>
                 </div>
                 <p>This link will expire in ${expiryMinutes} minutes. If you didn't request this, you can safely ignore this email.</p>
             </div>
             <div class="footer">
-                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+                <p>&copy; {{CURRENT_YEAR}} {{SITE_NAME}}. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -762,7 +836,7 @@ This link will expire in ${expiryMinutes} minutes.
         try {
             await sendEmail({
                 to: user.email,
-                subject: 'Password Reset Request - AcadIntern',
+                subject: 'Password Reset Request - {{SITE_NAME}}',
                 text: message,
                 html: html,
                 type: 'password_reset'
@@ -891,7 +965,7 @@ export const resetPassword = async (req: AuthRequest, res: Response, next: NextF
 
         // Send confirmation email
         const message = `
-This is a confirmation that the password for your AcadIntern account (${user.email}) has just been changed.
+This is a confirmation that the password for your {{SITE_NAME}} account (${user.email}) has just been changed.
 
 If you did not make this change, please contact our support team immediately.
         `;
@@ -913,10 +987,10 @@ If you did not make this change, please contact our support team immediately.
         <div class="alert">
             <p><strong>Your password has been changed.</strong></p>
         </div>
-        <p>This is a confirmation that the password for your AcadIntern account (<strong>${user.email}</strong>) has just been changed.</p>
+        <p>This is a confirmation that the password for your {{SITE_NAME}} account (<strong>${user.email}</strong>) has just been changed.</p>
         <p>If you did not make this change, please contact our support team immediately.</p>
         <div class="footer">
-            <p>This is an automated email from AcadIntern. Please do not reply to this email.</p>
+            <p>This is an automated email from {{SITE_NAME}}. Please do not reply to this email.</p>
         </div>
     </div>
 </body>
@@ -926,7 +1000,7 @@ If you did not make this change, please contact our support team immediately.
         try {
             await sendEmail({
                 to: user.email,
-                subject: 'Password Changed Successfully - AcadIntern',
+                subject: 'Password Changed Successfully - {{SITE_NAME}}',
                 text: message,
                 html: html,
                 type: 'password_reset'
@@ -1095,14 +1169,18 @@ export const resendVerification = async (req: Request, res: Response, next: Next
             </div>
             <div class="content">
                 <p>Hi ${user.name},</p>
-                <p>You requested a new verification link for your AcadIntern account. Please click the button below to confirm your identity and activate all features of your profile.</p>
+                <p>You requested a new verification link for your {{SITE_NAME}} account. Please click the button below to confirm your identity and activate all features of your profile.</p>
                 <div class="button-wrapper">
                     <a href="${verificationUrl}" class="button">Verify My Email</a>
                 </div>
-                <p>This link will expire in ${expiryMinutes} minutes. If you didn't request this, you can ignore this email.</p>
+                <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 24px;">
+                    Or copy and paste this link into your browser:<br>
+                    <a href="${verificationUrl}" style="color: #4f46e5; word-break: break-all;">${verificationUrl}</a>
+                </p>
+                <p style="margin-top: 24px;">This link will expire in ${expiryMinutes} minutes. If you didn't request this, you can ignore this email.</p>
             </div>
             <div class="footer">
-                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+                <p>&copy; {{CURRENT_YEAR}} {{SITE_NAME}}. All rights reserved.</p>
             </div>
         </div>
     </div>

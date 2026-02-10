@@ -160,12 +160,14 @@ export const getAllUsers = async (req: AuthRequest, res: Response, next: NextFun
                 const profile = await StudentProfile.findOne({ userId: user._id });
                 const applications = await Application.countDocuments({ studentId: user._id });
                 userObj.department = profile?.department || null;
+                userObj.phone = profile?.phone || null;
                 userObj.applications = applications;
             } else if (user.role === 'company') {
                 const company = await Company.findOne({ userId: user._id });
                 const internships = await Internship.countDocuments({ companyId: company?._id });
                 userObj.companyName = company?.companyName || null;
                 userObj.verified = company?.verified || false;
+                userObj.phone = company?.phone || null;
                 userObj.internshipsPosted = internships;
             }
             return userObj;
@@ -316,6 +318,7 @@ export const getAllCompanies = async (req: AuthRequest, res: Response, next: Nex
                 userId: company.user, // Re-attach user object from lookup
                 email: company.user?.email,
                 joinedDate: company.user?.createdAt,
+                phone: company.phone || company.user?.phone || null,
                 internshipsPosted: internships,
                 activeInternships,
                 totalApplications: applications

@@ -89,14 +89,17 @@ studentProfileSchema.index({ userId: 1 }, { unique: true });
 studentProfileSchema.methods.calculateCompleteness = function (): number {
     let score = 0;
 
-    if (this.department) score += 20;
-    if (this.semester) score += 20;
-    if (this.resumeUrl) score += 30;
-    if (this.skills && this.skills.length > 0) score += 20;
+    if (this.department) score += 15;
+    if (this.semester) score += 15;
+    if (this.resumeUrl) score += 25;
+    if (this.skills && this.skills.length > 0) score += 15;
     if (this.hoursRequired && this.hoursRequired > 0) score += 10;
+    if (this.phone) score += 10;
+    if (this.cgpa) score += 5;
+    if (this.bio) score += 5;
 
-    this.completenessScore = score;
-    return score;
+    this.completenessScore = Math.min(score, 100);
+    return this.completenessScore;
 };
 
 const StudentProfile: Model<IStudentProfileWithMethods> = mongoose.model<IStudentProfileWithMethods>('StudentProfile', studentProfileSchema);

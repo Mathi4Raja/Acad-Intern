@@ -11,6 +11,7 @@ interface StudentProfile {
   userId: string
   department?: string
   semester?: number | null
+  phone?: string
   skills: string[]
   bio?: string
   cgpa?: number | null
@@ -53,6 +54,7 @@ export default function StudentProfile() {
     userId: '',
     department: '',
     semester: null,
+    phone: '',
     skills: [],
     bio: '',
     cgpa: null,
@@ -145,6 +147,7 @@ export default function StudentProfile() {
           userId: data.userId,
           department: data.department || '',
           semester: data.semester || null,
+          phone: data.phone || '',
           skills: data.skills || [],
           bio: data.bio || '',
           cgpa: data.cgpa || null,
@@ -352,7 +355,7 @@ export default function StudentProfile() {
 
   const completionPercentage = () => {
     let completed = 0
-    const total = 8
+    const total = 9
 
     if (user?.name) completed++
     if (user?.email) completed++
@@ -362,6 +365,7 @@ export default function StudentProfile() {
     if (profile.bio) completed++
     if (skills.length > 0) completed++
     if (profile.resumeUrl) completed++
+    if (profile.phone) completed++
 
     return Math.round((completed / total) * 100)
   }
@@ -643,6 +647,17 @@ export default function StudentProfile() {
               value={user?.email || ''}
               disabled
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1 ml-1">Phone Number</label>
+            <input
+              type="tel"
+              value={profile.phone || ''}
+              onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+              disabled={!isEditing}
+              placeholder="+91 9876543210"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
             />
           </div>
         </div>

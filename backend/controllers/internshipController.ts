@@ -17,7 +17,9 @@ const internshipSchema = z.object({
     mode: z.enum(['remote', 'onsite', 'hybrid']),
     openings: z.number().min(1, 'Must have at least 1 opening'),
     location: z.string().optional(),
-    deadline: z.string().or(z.date()).optional()
+    deadline: z.string().or(z.date()).optional(),
+    requirements: z.string().optional(),
+    responsibilities: z.string().optional()
 });
 
 interface InternshipQuery {
@@ -187,7 +189,7 @@ export const getInternships = async (req: AuthRequest, res: Response, next: Next
 export const getInternship = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         const internship = await Internship.findById(req.params.id)
-            .populate('companyId', 'companyName website description verified userId');
+            .populate('companyId', 'companyName website description verified userId industry companySize location');
 
         if (!internship) {
             res.status(404).json({
