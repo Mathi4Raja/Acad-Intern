@@ -28,7 +28,9 @@ describe('Auth API', () => {
                     email: 'company@test.com',
                     password: 'Password123!',
                     name: 'Test Company User',
-                    role: 'company'
+                    role: 'company',
+                    companyName: 'Test Company',
+                    website: 'https://testcompany.com'
                 });
 
             expect(res.status).toBe(201);

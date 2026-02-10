@@ -33,8 +33,8 @@ describe('Notifications API', () => {
 
             expect(res.status).toBe(200);
             expect(res.body.success).toBe(true);
-            expect(res.body.data.items).toHaveLength(2);
-            expect(res.body.data.unreadCount).toBe(2);
+            expect(res.body.data.items).toHaveLength(3); // +1 for welcome notification
+            expect(res.body.data.unreadCount).toBe(3); // +1 for welcome notification
         });
 
         it('should return correct unread count', async () => {
@@ -61,7 +61,7 @@ describe('Notifications API', () => {
                 .get('/api/notifications')
                 .set('Cookie', user.cookie);
 
-            expect(res.body.data.unreadCount).toBe(1);
+            expect(res.body.data.unreadCount).toBe(2); // +1 for welcome notification
         });
 
         it('should only return own notifications', async () => {
@@ -89,8 +89,8 @@ describe('Notifications API', () => {
                 .get('/api/notifications')
                 .set('Cookie', user1.cookie);
 
-            expect(res.body.data.items).toHaveLength(1);
-            expect(res.body.data.items[0].title).toBe('For User 1');
+            expect(res.body.data.items).toHaveLength(2); // +1 for welcome notification
+            expect(res.body.data.items.find((n: any) => n.title === 'For User 1')).toBeDefined();
         });
     });
 
@@ -210,7 +210,7 @@ describe('Notifications API', () => {
                 userId: user2.id,
                 read: false
             });
-            expect(user2Unread).toBe(1);
+            expect(user2Unread).toBe(2); // +1 for welcome notification
         });
     });
 
