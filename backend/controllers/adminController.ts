@@ -8,6 +8,7 @@ import Application from '../models/Application';
 import Report from '../models/Report';
 import SystemSetting from '../models/SystemSetting';
 import { AuthRequest, IUser, ICompany, IInternship, IReport } from '../types';
+import { restartScheduler } from '../utils/scheduler';
 
 // Validation schemas
 const updateUserStatusSchema = z.object({
@@ -198,9 +199,17 @@ export const updateUserStatus = async (req: AuthRequest, res: Response, next: Ne
         }
 
         user.status = status;
+
+        // If an admin manually activates a user, we assume their identity is verified
+        if (status === 'active') {
+            user.isEmailVerified = true;
+            user.emailVerificationToken = undefined;
+            user.emailVerificationExpires = undefined;
+        }
+
         await user.save();
 
-        res.status(200).json({ success: true, message: `User ${status === 'active' ? 'activated' : 'updated'}`, data: user });
+        res.status(200).json({ success: true, message: `User ${status === 'active' ? 'activated and verified' : 'updated'}`, data: user });
     } catch (error) {
         if (error instanceof z.ZodError) {
             res.status(400).json({ success: false, message: 'Validation error', errors: error.errors });
@@ -553,9 +562,13 @@ export const getSystemSettings = async (req: AuthRequest, res: Response, next: N
 export const updateSystemSettings = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         const settings = req.body; // Expect key-value object
+        let shouldRestartScheduler = false;
 
         const updates = [];
         for (const [key, value] of Object.entries(settings)) {
+            if (key === 'timezone' || key === 'autoBackup' || key === 'backupFrequency') {
+                shouldRestartScheduler = true;
+            }
             updates.push(
                 SystemSetting.findOneAndUpdate(
                     { key },
@@ -571,6 +584,10 @@ export const updateSystemSettings = async (req: AuthRequest, res: Response, next
         }
 
         await Promise.all(updates);
+
+        if (shouldRestartScheduler) {
+            await restartScheduler();
+        }
 
         res.status(200).json({
             success: true,
@@ -769,11 +786,14 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
         }));
 
         // 7. Activity by Day of Week
+        const timezoneSetting = await SystemSetting.findOne({ key: 'timezone' });
+        const timezone = timezoneSetting?.value || 'Asia/Kolkata';
+
         const activityStats = await Application.aggregate([
             { $match: { createdAt: { $gte: startDate } } },
             {
                 $group: {
-                    _id: { $dayOfWeek: "$createdAt" }, // 1 (Sun) to 7 (Sat)
+                    _id: { $dayOfWeek: { date: "$createdAt", timezone: timezone } }, // Dynamic Timezone
                     count: { $sum: 1 }
                 }
             },
@@ -872,10 +892,10 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
 // Helper to determine group based on key prefix or name
 const getGroupForKey = (key: string): string => {
     if (key.startsWith('email') || key.includes('Email') || key.includes('smtp')) return 'email';
-    if (key.startsWith('security') || key.includes('Password') || key.includes('login')) return 'security';
+    if (key === 'timezone' || key.startsWith('security') || key.includes('Pass') || key.includes('login') || key.includes('Auth')) return 'security';
     if (key.startsWith('site') || key.includes('maintenance')) return 'general';
-    if (key.startsWith('company')) return 'companies';
-    if (key.startsWith('student')) return 'students';
+    if (key.startsWith('company') || key.includes('Internship') || key.includes('Approve')) return 'companies';
+    if (key.startsWith('student') || key.includes('Application')) return 'students';
     if (key.startsWith('maxFile') || key.startsWith('maxMessage') || key.includes('Upload')) return 'files';
     return 'other';
 };

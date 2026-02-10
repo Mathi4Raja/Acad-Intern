@@ -49,6 +49,27 @@ const userSchema = new Schema<IUser>({
     resetPasswordExpires: {
         type: Date,
         select: false
+    },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailVerificationToken: {
+        type: String,
+        select: false
+    },
+    emailVerificationExpires: {
+        type: Date,
+        select: false
+    },
+    loginAttempts: {
+        type: Number,
+        required: true,
+        default: 0
+    },
+    lockUntil: {
+        type: Date,
+        select: false
     }
 });
 
@@ -68,14 +89,15 @@ userSchema.methods.comparePassword = async function (candidatePassword: string):
 };
 
 // Method to generate JWT token
-userSchema.methods.generateAuthToken = function (): string {
+userSchema.methods.generateAuthToken = function (expiresIn: string = process.env.JWT_EXPIRE || '7d', authStartedAt: number = Date.now()): string {
     const payload = {
         id: this._id,
         role: this.role,
-        email: this.email
+        email: this.email,
+        authStartedAt // Track initial login for absolute timeout
     };
     const secret = process.env.JWT_SECRET as string;
-    const options: SignOptions = { expiresIn: '7d' };
+    const options: SignOptions = { expiresIn: expiresIn as any };
     return jwt.sign(payload, secret, options);
 };
 

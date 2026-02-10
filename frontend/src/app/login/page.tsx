@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
-import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle, ArrowLeft, CheckCircle } from 'lucide-react'
+import api from '@/lib/api'
 
 import { useAuth } from '@/lib/AuthContext'
 import { useSettings } from '@/lib/SettingsContext'
@@ -33,17 +34,44 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
+  const [resendEmail, setResendEmail] = useState('')
+  const [resendLoading, setResendLoading] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSuccessMessage('')
+    setResendEmail('')
     setIsLoading(true)
 
     try {
       await login(formData);
       // Redirect is handled in AuthContext
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      const resp = err.response?.data;
+      setError(resp?.message || 'Login failed. Please check your credentials.');
+
+      if (resp?.requiresVerification && resp?.email) {
+        setResendEmail(resp.email);
+      }
+
       setIsLoading(false);
+    }
+  }
+
+  const handleResend = async () => {
+    if (!resendEmail) return;
+    setResendLoading(true);
+    setSuccessMessage('');
+    try {
+      await api.post('/auth/resend-verification', { email: resendEmail });
+      setSuccessMessage('A new verification link has been sent to your email.');
+      setResendEmail('');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to resend verification link.');
+    } finally {
+      setResendLoading(false);
     }
   }
 
@@ -51,15 +79,20 @@ export default function LoginPage() {
   const handleGoogleCallback = async (response: { credential: string }) => {
     setIsGoogleLoading(true);
     setError('');
+    setSuccessMessage('');
     try {
       await googleLogin(response.credential);
       // Redirect handled in AuthContext
     } catch (err: any) {
       const status = err.response?.status;
-      const message = err.response?.data?.message;
+      const resp = err.response?.data;
+      const message = resp?.message;
 
       if (status === 403) {
-        setError(message || 'Registration is currently closed. If you already have an account, please login with your email and password.');
+        setError(message || 'Registration is currently closed.');
+        if (resp?.requiresVerification && resp?.email) {
+          setResendEmail(resp.email);
+        }
       } else if (status === 401 && message?.includes('Google Sign-In')) {
         setError(message); // Pass through the specific backend message about Google vs Email
       } else {
@@ -150,11 +183,36 @@ export default function LoginPage() {
         {/* Login Card */}
         <div className="bg-white rounded-xl shadow-lg p-5 border border-gray-100">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Success Message */}
+            {successMessage && (
+              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-2 rounded-lg flex items-center gap-2 text-xs animate-in fade-in slide-in-from-top-1">
+                <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{successMessage}</span>
+              </div>
+            )}
+
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg flex items-center gap-2 text-xs">
-                <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                <span>{error}</span>
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg space-y-2 animate-in fade-in slide-in-from-top-1">
+                <div className="flex items-center gap-2 text-xs">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{error}</span>
+                </div>
+                {resendEmail && (
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resendLoading}
+                    className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary/80 transition-colors disabled:opacity-50 pl-6"
+                  >
+                    {resendLoading ? (
+                      <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      <Mail size={12} />
+                    )}
+                    Resend Verification Link
+                  </button>
+                )}
               </div>
             )}
 

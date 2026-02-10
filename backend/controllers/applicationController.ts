@@ -4,7 +4,10 @@ import Application from '../models/Application';
 import Internship from '../models/Internship';
 import Company from '../models/Company';
 import Notification from '../models/Notification';
+import { createNotification } from '../utils/notificationService';
+import { sendEmail } from '../utils/emailService';
 import StudentProfile from '../models/StudentProfile';
+import SystemSetting from '../models/SystemSetting';
 import { AuthRequest, IInternship } from '../types';
 
 // Validation schemas
@@ -13,7 +16,7 @@ const applicationSchema = z.object({
 });
 
 const statusUpdateSchema = z.object({
-    status: z.enum(['shortlisted', 'rejected', 'accepted', 'assessment_completed'])
+    status: z.enum(['shortlisted', 'rejected', 'accepted', 'assessment_completed', 'interview_scheduled'])
 });
 
 // @desc    Apply to an internship
@@ -25,6 +28,58 @@ export const applyForInternship = async (req: AuthRequest, res: Response, next: 
 
         const internshipId = req.params.id;
         const studentId = req.user?._id;
+
+        // DYNAMIC SETTINGS: Application Volume Cap (Per Day)
+        const limitSetting = await SystemSetting.findOne({ key: 'maxApplicationsPerDay' });
+        const maxAppsPerDay = limitSetting?.value ? Number(limitSetting.value) : Infinity;
+
+        // DYNAMIC TIMEZONE: Get Start of Day
+        const timezoneSetting = await SystemSetting.findOne({ key: 'timezone' });
+        const timezone = timezoneSetting?.value || 'Asia/Kolkata';
+
+        // Use MongoDB to calculate start of day in the target timezone
+        // This avoids complex JS timezone math without libraries
+        const dateResult = await Application.aggregate([
+            {
+                $project: {
+                    startOfDay: {
+                        $dateTrunc: {
+                            date: new Date(),
+                            unit: "day",
+                            timezone: timezone
+                        }
+                    }
+                }
+            },
+            { $limit: 1 }
+        ]);
+
+        // Fallback if aggregation returns empty (e.g. no applications yet)
+        let startOfDay;
+        if (dateResult.length > 0) {
+            startOfDay = dateResult[0].startOfDay;
+        } else {
+            // Fallback to basic UTC/IST logic if collection empty
+            const now = new Date();
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const offset = timezone === 'Asia/Kolkata' ? 5.5 : 0; // Simple fallback
+            const localTime = new Date(utcTime + (offset * 3600000));
+            localTime.setHours(0, 0, 0, 0);
+            startOfDay = new Date(localTime.getTime() - (offset * 3600000));
+        }
+
+        const dailyAppCount = await Application.countDocuments({
+            studentId,
+            createdAt: { $gte: startOfDay }
+        });
+
+        if (dailyAppCount >= maxAppsPerDay) {
+            res.status(403).json({
+                success: false,
+                message: `You have reached your daily application limit (${maxAppsPerDay}). Please try again tomorrow.`
+            });
+            return;
+        }
 
         const internship = await Internship.findById(internshipId);
         if (!internship) {
@@ -64,7 +119,7 @@ export const applyForInternship = async (req: AuthRequest, res: Response, next: 
 
         const company = await Company.findById(internship.companyId);
         if (company) {
-            await Notification.create({
+            await createNotification({
                 userId: company.userId,
                 type: 'application',
                 title: 'New Application',
@@ -185,7 +240,8 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
         const applicationId = req.params.id;
 
         const application = await Application.findById(applicationId)
-            .populate('internshipId');
+            .populate('internshipId')
+            .populate('studentId', 'name email');
 
         if (!application) {
             res.status(404).json({
@@ -209,7 +265,7 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
         application.status = status;
         await application.save();
 
-        await Notification.create({
+        await createNotification({
             userId: application.studentId,
             type: 'status_update',
             title: 'Application Status Updated',
@@ -219,6 +275,225 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
                 status: status
             }
         });
+
+        // Send Shortlisted Email
+        if (status === 'shortlisted' && (application.studentId as any).email) {
+            const student = application.studentId as any;
+            const companyName = company.companyName;
+
+            const shortlistedHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
+        .header { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); padding: 48px 32px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; }
+        .content { padding: 40px 32px; }
+        .badge { display: inline-block; padding: 6px 14px; background: #dbeafe; color: #1e40af; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px; }
+        .content p { font-size: 15px; color: #4b5563; margin: 0 0 20px; }
+        .details-card { background: #f9fafb; border-radius: 12px; padding: 20px; margin: 24px 0; border: 1px solid #f3f4f6; }
+        .detail-row { margin-bottom: 8px; font-size: 14px; }
+        .detail-label { color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
+        .detail-value { color: #111827; font-weight: 700; }
+        .button-wrapper { text-align: center; margin: 32px 0 8px; }
+        .button { display: inline-block; padding: 14px 32px; background-color: #2563eb; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
+        .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Great News!</h1>
+            </div>
+            <div class="content">
+                <div class="badge">Shortlisted</div>
+                <p>Hi ${student.name},</p>
+                <p>You've been shortlisted for the internship at <strong>${companyName}</strong>. The hiring team was impressed with your application and wants to move forward.</p>
+                
+                <div class="details-card">
+                    <div class="detail-row">
+                        <div class="detail-label">Internship</div>
+                        <div class="detail-value">${internship.title}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Company</div>
+                        <div class="detail-value">${companyName}</div>
+                    </div>
+                </div>
+
+                <p>Keep an eye on your messages for next steps and interview details.</p>
+                
+                <div class="button-wrapper">
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/student/applications" class="button">View Application Status</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+            `;
+
+            try {
+                await sendEmail({
+                    to: student.email,
+                    subject: `Update on your application for ${internship.title}`,
+                    text: `Congratulations! You've been shortlisted for ${internship.title} at ${companyName}. Visit the platform for next steps.`,
+                    html: shortlistedHtml,
+                    type: 'shortlisted'
+                });
+            } catch (emailError) {
+                console.error('Shortlisted email failed to send:', emailError);
+                // Non-blocking
+            }
+        }
+
+        // Send Interview Scheduled Email
+        if (status === 'interview_scheduled' && (application.studentId as any).email) {
+            const student = application.studentId as any;
+            const companyName = company.companyName;
+
+            const interviewHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
+        .header { background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 48px 32px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; }
+        .content { padding: 40px 32px; }
+        .badge { display: inline-block; padding: 6px 14px; background: #dcfce7; color: #166534; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px; }
+        .content p { font-size: 15px; color: #4b5563; margin: 0 0 20px; }
+        .details-card { background: #f9fafb; border-radius: 12px; padding: 20px; margin: 24px 0; border: 1px solid #f3f4f6; }
+        .detail-row { margin-bottom: 8px; font-size: 14px; }
+        .detail-label { color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
+        .detail-value { color: #111827; font-weight: 700; }
+        .button-wrapper { text-align: center; margin: 32px 0 8px; }
+        .button { display: inline-block; padding: 14px 32px; background-color: #059669; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
+        .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Interview Scheduled!</h1>
+            </div>
+            <div class="content">
+                <div class="badge">Interview</div>
+                <p>Hi ${student.name},</p>
+                <p>Exciting news! Your interview for the <strong>${internship.title}</strong> role at <strong>${companyName}</strong> has been scheduled.</p>
+                
+                <div class="details-card">
+                    <div class="detail-row">
+                        <div class="detail-label">Position</div>
+                        <div class="detail-value">${internship.title}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Host Company</div>
+                        <div class="detail-value">${companyName}</div>
+                    </div>
+                </div>
+
+                <p>Please check your messages on the AcadIntern platform for the specific date, time, and meeting link.</p>
+                
+                <div class="button-wrapper">
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/student/applications" class="button">Go to Messages</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+            `;
+
+            try {
+                await sendEmail({
+                    to: student.email,
+                    subject: `Interview Scheduled: ${internship.title} at ${companyName}`,
+                    text: `Great news! Your interview for ${internship.title} at ${companyName} has been scheduled. Please visit the platform to view details.`,
+                    html: interviewHtml,
+                    type: 'interview_scheduled'
+                });
+            } catch (emailError) {
+                console.error('Interview email failed to send:', emailError);
+            }
+        }
+
+        // Send Rejected Email
+        if (status === 'rejected' && (application.studentId as any).email) {
+            const student = application.studentId as any;
+            const companyName = company.companyName;
+
+            const rejectedHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
+        .header { background: #ffffff; padding: 48px 32px 32px; text-align: center; border-bottom: 1px solid #f3f4f6; }
+        .header h1 { margin: 0; font-size: 20px; font-weight: 800; color: #111827; letter-spacing: -0.025em; }
+        .content { padding: 40px 32px; }
+        .badge { display: inline-block; padding: 6px 14px; background: #f3f4f6; color: #6b7280; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px; }
+        .content p { font-size: 15px; color: #4b5563; margin: 0 0 20px; }
+        .button-wrapper { text-align: center; margin: 32px 0 8px; }
+        .button { display: inline-block; padding: 14px 32px; border: 2px solid #e5e7eb; color: #374151 !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
+        .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Application Update</h1>
+            </div>
+            <div class="content">
+                <div class="badge">Update</div>
+                <p>Hi ${student.name},</p>
+                <p>Thank you for your interest in the <strong>${internship.title}</strong> role at <strong>${companyName}</strong>.</p>
+                <p>The team has decided to move forward with other candidates at this time. We appreciate the effort you put into your application and wish you the best in your search.</p>
+                <div class="button-wrapper">
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/student/dashboard" class="button">Explore Other Roles</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+            `;
+
+            try {
+                await sendEmail({
+                    to: student.email,
+                    subject: `Update on your application for ${internship.title}`,
+                    text: `Thank you for your interest in ${internship.title} at ${companyName}. The team has decided to move forward with other candidates. Visit the platform to explore other opportunities.`,
+                    html: rejectedHtml,
+                    type: 'rejected'
+                });
+            } catch (emailError) {
+                console.error('Rejection email failed to send:', emailError);
+                // Non-blocking
+            }
+        }
 
         res.status(200).json({
             success: true,

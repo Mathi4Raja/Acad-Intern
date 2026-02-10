@@ -5,7 +5,7 @@ import { Document, Types } from 'mongoose';
 export type UserRole = 'student' | 'company' | 'admin';
 
 // Application status enum
-export type ApplicationStatus = 'pending' | 'reviewed' | 'shortlisted' | 'interview_scheduled' | 'assessment_completed' | 'rejected' | 'accepted';
+export type ApplicationStatus = 'pending' | 'reviewed' | 'shortlisted' | 'interview_scheduled' | 'assessment_completed' | 'rejected' | 'accepted' | 'expired';
 
 // Report status enum
 export type ReportStatus = 'open' | 'under_review' | 'resolved' | 'dismissed';
@@ -28,8 +28,13 @@ export interface IUser extends Document {
     googleId?: string;
     resetPasswordToken?: string;
     resetPasswordExpires?: Date;
+    isEmailVerified: boolean;
+    emailVerificationToken?: string;
+    emailVerificationExpires?: Date;
+    loginAttempts: number;
+    lockUntil?: Date;
     comparePassword(candidatePassword: string): Promise<boolean>;
-    generateAuthToken(): string;
+    generateAuthToken(expiresIn?: string, authStartedAt?: number): string;
 }
 
 // Student profile interface
@@ -92,7 +97,7 @@ export interface IInternship extends Document {
     mode: InternshipMode;
     openings: number;
     createdAt: Date;
-    status: 'active' | 'inactive' | 'completed' | 'in_progress' | 'rejected';
+    status: 'active' | 'inactive' | 'completed' | 'in_progress' | 'rejected' | 'expired';
     location?: string;
     deadline?: Date;
     views: number;

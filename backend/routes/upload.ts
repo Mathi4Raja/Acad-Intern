@@ -61,10 +61,11 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
 
         // DYNAMIC SETTINGS CHECK
         const settings = await SystemSetting.find({
-            key: { $in: ['maxFileSize', 'allowResumeUpload'] }
+            key: { $in: ['maxFileSize', 'maxResumeSize', 'allowResumeUpload'] }
         });
 
         const maxFileSizeSetting = settings.find(s => s.key === 'maxFileSize');
+        const maxResumeSizeSetting = settings.find(s => s.key === 'maxResumeSize');
         const allowResumeSetting = settings.find(s => s.key === 'allowResumeUpload');
 
         // Get metadata
@@ -82,14 +83,26 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
             }
         }
 
-        // 2. Check File Size
-        // Default to 10MB if not set
-        const maxSizeBytes = maxFileSizeSetting ? (Number(maxFileSizeSetting.value) * 1024 * 1024) : 10 * 1024 * 1024;
+        // 2. Check File Size (Granular)
+        let maxSizeBytes;
+        let limitLabel;
+
+        if (type === 'resume') {
+            // Priority: maxResumeSize -> maxFileSize -> Default 10MB
+            const limit = maxResumeSizeSetting?.value || maxFileSizeSetting?.value || 10;
+            maxSizeBytes = Number(limit) * 1024 * 1024;
+            limitLabel = `${limit}MB (Resume Limit)`;
+        } else {
+            // Priority: maxFileSize -> Default 10MB
+            const limit = maxFileSizeSetting?.value || 10;
+            maxSizeBytes = Number(limit) * 1024 * 1024;
+            limitLabel = `${limit}MB (General File Limit)`;
+        }
 
         if (req.file.size > maxSizeBytes) {
             res.status(400).json({
                 success: false,
-                message: `File too large. Maximum size is ${maxFileSizeSetting?.value || 10}MB`
+                message: `File too large. Maximum size is ${limitLabel}`
             });
             return;
         }

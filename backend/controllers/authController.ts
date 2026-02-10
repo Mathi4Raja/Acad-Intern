@@ -1,4 +1,4 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User';
@@ -7,18 +7,24 @@ import Company from '../models/Company';
 import Application from '../models/Application';
 import Message from '../models/Message';
 import Notification from '../models/Notification';
+import { createNotification } from '../utils/notificationService';
 import Internship from '../models/Internship';
 import SystemSetting from '../models/SystemSetting';
 import { AuthRequest } from '../types';
 import { sendEmail, generateResetToken, hashToken } from '../utils/emailService';
+import crypto from 'crypto';
 
 
 // Validation schemas
 const signupSchema = z.object({
     name: z.string().min(2, 'Name must be at least 2 characters'),
     email: z.string().email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
-    role: z.enum(['student', 'company', 'admin'])
+    password: z.string().min(4, 'Password must be at least 4 characters'),
+    role: z.enum(['student', 'company', 'admin']),
+    // Company specific fields
+    website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+    cin: z.string().optional(),
+    description: z.string().optional()
 });
 
 const loginSchema = z.object({
@@ -31,7 +37,7 @@ const forgotPasswordSchema = z.object({
 });
 
 const resetPasswordSchema = z.object({
-    password: z.string().min(6, 'Password must be at least 6 characters')
+    password: z.string().min(4, 'Password must be at least 4 characters')
 });
 
 // @desc    Register new user
@@ -52,7 +58,19 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
         }
 
         const validatedData = signupSchema.parse(req.body);
-        const { name, email, password, role } = validatedData;
+        const { name, email, password, role, website, cin, description } = validatedData;
+
+        // DYNAMIC SETTINGS: Password Complexity
+        const passwordMinSetting = await SystemSetting.findOne({ key: 'passwordMinLength' });
+        const minLength = passwordMinSetting ? Number(passwordMinSetting.value) : 8; // Default 8 as per UI
+
+        if (password.length < minLength) {
+            res.status(400).json({
+                success: false,
+                message: `Password is too short. It must be at least ${minLength} characters long to meet platform security standards.`
+            });
+            return;
+        }
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -63,23 +81,68 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
             return;
         }
 
+        // DYNAMIC SETTINGS: Email Verification & Expiry
+        const verificationSetting = await SystemSetting.findOne({ key: 'requireEmailVerification' });
+        const requireVerification = verificationSetting ? (verificationSetting.value === true || verificationSetting.value === 'true') : true;
+
+        const expirySetting = await SystemSetting.findOne({ key: 'passwordResetExpiry' });
+        const expiryMinutes = expirySetting ? Number(expirySetting.value) : 60;
+
+        // Generate verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationExpires = new Date(Date.now() + expiryMinutes * 60 * 1000);
+
+        // DYNAMIC SETTINGS: Auto-Approve Companies
+        const autoApproveSetting = await SystemSetting.findOne({ key: 'autoApproveCompanies' });
+        const isAutoApprove = autoApproveSetting ? (autoApproveSetting.value === true || autoApproveSetting.value === 'true') : true;
+
         const user = await User.create({
             name,
             email,
             password_hash: password,
-            role
+            role,
+            status: (role === 'company' && !isAutoApprove) ? 'pending' : 'active',
+            emailVerificationToken: requireVerification ? verificationToken : undefined,
+            emailVerificationExpires: requireVerification ? verificationExpires : undefined,
+            isEmailVerified: !requireVerification
         });
 
         if (role === 'student') {
             await StudentProfile.create({ userId: user._id });
         } else if (role === 'company') {
-            await Company.create({
-                userId: user._id,
-                companyName: name
-            });
+            // Check for mandatory website if role is company
+            if (!website || website.trim() === '') {
+                // Delete the user we just created to avoid orphaned record
+                await User.findByIdAndDelete(user._id);
+                res.status(400).json({
+                    success: false,
+                    message: 'Website is required for company registration'
+                });
+                return;
+            }
+
+            try {
+                await Company.create({
+                    userId: user._id,
+                    companyName: name,
+                    website: website,
+                    cin: cin || null,
+                    description: description || ''
+                });
+            } catch (error) {
+                // If company profile creation fails, delete user to maintain consistency
+                await User.findByIdAndDelete(user._id);
+                throw error;
+            }
         }
 
-        const token = user.generateAuthToken();
+        // DYNAMIC SETTINGS: Session Duration (Minutes)
+        const sessionSetting = await SystemSetting.findOne({ key: 'sessionTimeout' });
+        const sessionMinutes = Number(sessionSetting?.value || 10080); // Default 7 days (10080 min)
+        const cookieMaxAge = sessionMinutes * 60 * 1000;
+
+        const authStartedAt = Date.now();
+        const token = user.generateAuthToken(`${sessionMinutes}m`, authStartedAt);
 
         // Detect if request is from dev tunnels (HTTPS origin)
         const origin = req.headers.origin || '';
@@ -90,7 +153,7 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
             httpOnly: true,
             secure: isSecureContext,
             sameSite: isSecureContext ? 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: cookieMaxAge
         });
 
         // Accessible cookie for Socket.io client-side authentication
@@ -98,7 +161,7 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
             httpOnly: false,
             secure: isSecureContext,
             sameSite: isSecureContext ? 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: cookieMaxAge
         });
 
         res.status(201).json({
@@ -114,6 +177,87 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
                 token
             }
         });
+
+        // Create welcome notification for user
+        await createNotification({
+            userId: user._id,
+            type: 'general',
+            title: 'Welcome to AcadIntern',
+            message: `Hi ${user.name}, welcome to the platform!`
+        });
+
+        // Send Verification or Welcome Email
+        if (requireVerification) {
+            const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
+            const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
+
+            const verificationHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
+        .header { background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); padding: 48px 32px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; }
+        .content { padding: 40px 32px; }
+        .content p { font-size: 15px; color: #4b5563; margin: 0 0 20px; }
+        .button-wrapper { text-align: center; margin: 32px 0 8px; }
+        .button { display: inline-block; padding: 14px 32px; background-color: #4f46e5; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
+        .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Welcome to AcadIntern</h1>
+            </div>
+            <div class="content">
+                <p>Hi ${user.name},</p>
+                <p>We're thrilled to have you! AcadIntern is designed to connect you with high-impact internships and accelerate your career journey.</p>
+                <p>To get started and access all features of your account, please verify your email address by clicking the button below.</p>
+                <div class="button-wrapper">
+                    <a href="${verificationUrl}" class="button">Verify Email & Get Started</a>
+                </div>
+                <p>This link will expire in ${expiryMinutes} minutes. If you didn't create an account, you can safely ignore this email.</p>
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+        `;
+
+            try {
+                await sendEmail({
+                    to: user.email,
+                    subject: `Welcome to AcadIntern! Confirm your email address`,
+                    text: `Welcome to AcadIntern, ${user.name}! Please verify your email to get started: ${verificationUrl}`,
+                    html: verificationHtml,
+                    type: 'email_verification'
+                });
+            } catch (emailError) {
+                console.error('Verification email failed to send:', emailError);
+            }
+        } else {
+            // Send standard welcome email without verification link
+            try {
+                await sendEmail({
+                    to: user.email,
+                    subject: `Welcome to AcadIntern!`,
+                    text: `Welcome to AcadIntern, ${user.name}! Your account is now active and ready to use.`,
+                    html: `<h1>Welcome to AcadIntern</h1><p>Hi ${user.name},</p><p>We're thrilled to have you! Your account is now active and you can start exploring internship opportunities immediately.</p>`,
+                    type: 'welcome'
+                });
+            } catch (emailError) {
+                console.error('Welcome email failed to send:', emailError);
+            }
+        }
     } catch (error) {
         if (error instanceof z.ZodError) {
             res.status(400).json({
@@ -123,6 +267,49 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
             });
             return;
         }
+        next(error);
+    }
+};
+
+// @desc    Verify email address
+// @route   GET /api/auth/verify-email
+// @access  Public
+export const verifyEmail = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { token } = req.query;
+
+        if (!token) {
+            res.status(400).json({
+                success: false,
+                message: 'Verification token is required'
+            });
+            return;
+        }
+
+        const user = await User.findOne({
+            emailVerificationToken: token,
+            emailVerificationExpires: { $gt: new Date() }
+        }).select('+emailVerificationToken +emailVerificationExpires');
+
+        if (!user) {
+            res.status(400).json({
+                success: false,
+                message: 'Invalid or expired verification token'
+            });
+            return;
+        }
+
+        user.isEmailVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpires = undefined;
+        user.status = 'active';
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Email verified successfully. Your account is now active.'
+        });
+    } catch (error) {
         next(error);
     }
 };
@@ -218,7 +405,13 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
             await user.save();
         }
 
-        const token = user.generateAuthToken();
+        // DYNAMIC SETTINGS: Session Duration (Minutes)
+        const sessionSetting = await SystemSetting.findOne({ key: 'sessionTimeout' });
+        const sessionMinutes = Number(sessionSetting?.value || 10080); // Default 7 days (10080 min)
+        const cookieMaxAge = sessionMinutes * 60 * 1000;
+
+        const authStartedAt = Date.now();
+        const token = user.generateAuthToken(`${sessionMinutes}m`, authStartedAt);
 
         // Detect secure context
         const origin = req.headers.origin || '';
@@ -229,7 +422,7 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
             httpOnly: true,
             secure: isSecureContext,
             sameSite: isSecureContext ? 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: cookieMaxAge
         });
 
         // Accessible cookie for Socket.io client-side authentication
@@ -237,7 +430,7 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
             httpOnly: false,
             secure: isSecureContext,
             sameSite: isSecureContext ? 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: cookieMaxAge
         });
 
         res.status(isNewUser ? 201 : 200).json({
@@ -267,11 +460,28 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
         const validatedData = loginSchema.parse(req.body);
         const { email, password } = validatedData;
 
-        const user = await User.findOne({ email }).select('+password_hash');
+        // FETCH DYNAMIC SECURITY SETTINGS
+        const settings = await SystemSetting.find({
+            key: { $in: ['requireEmailVerification', 'maxLoginAttempts', 'sessionTimeout'] }
+        });
+
+        const requireVerification = settings.find(s => s.key === 'requireEmailVerification')?.value === true || settings.find(s => s.key === 'requireEmailVerification')?.value === 'true';
+        const maxAttempts = Number(settings.find(s => s.key === 'maxLoginAttempts')?.value || 5);
+        const sessionMinutes = Number(settings.find(s => s.key === 'sessionTimeout')?.value || 10080); // Default 7 days in minutes
+        const cookieMaxAge = sessionMinutes * 60 * 1000;
+
+        const user = await User.findOne({ email }).select('+password_hash +loginAttempts +lockUntil');
         if (!user) {
-            res.status(401).json({
+            res.status(401).json({ success: false, message: 'Invalid credentials' });
+            return;
+        }
+
+        // 1. CHECK ACCOUNT LOCK STATUS
+        if (user.lockUntil && user.lockUntil > new Date()) {
+            const remainingMinutes = Math.ceil((user.lockUntil.getTime() - Date.now()) / 60000);
+            res.status(423).json({
                 success: false,
-                message: 'Invalid credentials'
+                message: `Account is temporarily locked due to repeated failed attempts. Try again in ${remainingMinutes} minutes.`
             });
             return;
         }
@@ -286,7 +496,23 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
         }
 
         const isMatch = await user.comparePassword(password);
+
+        // 2. HANDLE INCORRECT PASSWORD (Account Locking Logic)
         if (!isMatch) {
+            user.loginAttempts += 1;
+
+            if (user.loginAttempts >= maxAttempts) {
+                user.lockUntil = new Date(Date.now() + 30 * 60 * 1000); // Lock for 30 minutes
+                user.loginAttempts = 0; // Reset attempts after locking
+                await user.save();
+                res.status(423).json({
+                    success: false,
+                    message: `Account locked due to ${maxAttempts} failed attempts. Please try again in 30 minutes.`
+                });
+                return;
+            }
+
+            await user.save();
             res.status(401).json({
                 success: false,
                 message: 'Invalid credentials'
@@ -294,7 +520,38 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
             return;
         }
 
-        const token = user.generateAuthToken();
+        // 3. ENFORCE ACCOUNT STATUS (Active/Suspended/Pending)
+        if (user.status !== 'active' && user.role !== 'admin') {
+            const statusMessages: Record<string, string> = {
+                'suspended': 'Your account has been suspended by the administrator. Please contact support.',
+                'pending': 'Your account is currently pending approval. You will receive an email once it is activated.'
+            };
+
+            res.status(403).json({
+                success: false,
+                message: statusMessages[user.status] || 'Your account is not active. Please contact support.'
+            });
+            return;
+        }
+
+        // 4. ENFORCE EMAIL VERIFICATION
+        if (requireVerification && !user.isEmailVerified && user.role !== 'admin') {
+            res.status(403).json({
+                success: false,
+                message: 'Email verification is required to access the platform. Please check your inbox for the verification link.',
+                requiresVerification: true,
+                email: user.email // Provide email for resend functionality
+            });
+            return;
+        }
+
+        // SUCCESSFUL LOGIN - RESET ATTEMPTS
+        user.loginAttempts = 0;
+        user.lockUntil = undefined;
+        await user.save();
+
+        const authStartedAt = Date.now();
+        const token = user.generateAuthToken(`${sessionMinutes}m`, authStartedAt);
 
         // Detect if request is from dev tunnels (HTTPS origin)
         const origin = req.headers.origin || '';
@@ -305,7 +562,7 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
             httpOnly: true,
             secure: isSecureContext,
             sameSite: isSecureContext ? 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: cookieMaxAge
         });
 
         // Accessible cookie for Socket.io client-side authentication
@@ -313,7 +570,7 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
             httpOnly: false,
             secure: isSecureContext,
             sameSite: isSecureContext ? 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: cookieMaxAge
         });
 
         res.status(200).json({
@@ -430,7 +687,7 @@ export const forgotPassword = async (req: AuthRequest, res: Response, next: Next
         // Get dynamic expiration from settings (default 60 minutes)
         let expiryMinutes = 60;
         try {
-            const expirySetting = await SystemSetting.findOne({ key: 'security.passwordResetExpiry' });
+            const expirySetting = await SystemSetting.findOne({ key: 'passwordResetExpiry' });
             if (expirySetting && expirySetting.value) {
                 expiryMinutes = Number(expirySetting.value);
             }
@@ -459,39 +716,49 @@ This link will expire in ${expiryMinutes} minutes.
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .button { 
-            display: inline-block; 
-            padding: 12px 24px; 
-            background-color: #4F46E5; 
-            color: white; 
-            text-decoration: none; 
-            border-radius: 6px; 
-            margin: 20px 0;
-        }
-        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
+        .header { background: #ffffff; padding: 40px 32px 24px; text-align: center; border-bottom: 1px solid #f3f4f6; }
+        .header h1 { margin: 0; font-size: 20px; font-weight: 800; color: #111827; letter-spacing: -0.025em; }
+        .content { padding: 40px 32px; }
+        .content p { font-size: 15px; color: #4b5563; margin: 0 0 20px; }
+        .button-wrapper { text-align: center; margin: 32px 0 32px; }
+        .button { display: inline-block; padding: 14px 32px; background-color: #4f46e5; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
+        .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Password Reset Request</h2>
-        <p>You are receiving this email because you (or someone else) has requested to reset your password.</p>
-        <p>Please click on the button below to reset your password:</p>
-        <a href="${resetUrl}" class="button">Reset Password</a>
-        <p>Or copy and paste this link into your browser:</p>
-        <p><a href="${resetUrl}">${resetUrl}</a></p>
-        <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
-        <p><strong>This link will expire in ${expiryMinutes} minutes.</strong></p>
-        <div class="footer">
-            <p>This is an automated email from AcadIntern. Please do not reply to this email.</p>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Password Reset</h1>
+            </div>
+            <div class="content">
+                <p>We received a request to reset the password for your AcadIntern account.</p>
+                <div class="button-wrapper">
+                    <a href="${resetUrl}" class="button">Reset Password</a>
+                </div>
+                <p>This link will expire in ${expiryMinutes} minutes. If you didn't request this, you can safely ignore this email.</p>
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+            </div>
         </div>
     </div>
 </body>
 </html>
         `;
 
+        // Create notification for user (Password Reset Request)
+        await createNotification({
+            userId: user._id,
+            type: 'general',
+            title: 'Security Alert',
+            message: 'A password reset was requested for your account.'
+        });
         try {
             await sendEmail({
                 to: user.email,
@@ -600,6 +867,18 @@ export const resetPassword = async (req: AuthRequest, res: Response, next: NextF
             res.status(400).json({
                 success: false,
                 message: 'Invalid or expired reset token'
+            });
+            return;
+        }
+
+        // DYNAMIC SETTINGS: Password Complexity
+        const passwordMinSetting = await SystemSetting.findOne({ key: 'passwordMinLength' });
+        const minLength = passwordMinSetting ? Number(passwordMinSetting.value) : 6;
+
+        if (password.length < minLength) {
+            res.status(400).json({
+                success: false,
+                message: `Password must be at least ${minLength} characters long as per company security policy.`
             });
             return;
         }
@@ -748,6 +1027,98 @@ export const deleteAccount = async (req: AuthRequest, res: Response, next: NextF
             success: true,
             message: 'Account deleted successfully'
         });
+    } catch (error) {
+        next(error);
+    }
+};
+// @desc    Resend verification email
+// @route   POST /api/auth/resend-verification
+// @access  Public
+export const resendVerification = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            res.status(400).json({ success: false, message: 'Email is required' });
+            return;
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            // Privacy: Don't reveal if user doesn't exist, but we can be helpful for unverified users
+            res.status(200).json({ success: true, message: 'If an account exists with that email and requires verification, a new link has been sent.' });
+            return;
+        }
+
+        if (user.isEmailVerified) {
+            res.status(400).json({ success: false, message: 'Email is already verified. Please login.' });
+            return;
+        }
+
+        // Generate new token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const expiryMinutes = 60; // 1 hour for resend
+        const verificationExpires = new Date(Date.now() + expiryMinutes * 60 * 1000);
+
+        user.emailVerificationToken = verificationToken;
+        user.emailVerificationExpires = verificationExpires;
+        await user.save();
+
+        const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
+        const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
+
+        // Reuse the premium template from signup (simplified for resend)
+        const verificationHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
+        .header { background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); padding: 48px 32px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; }
+        .content { padding: 40px 32px; }
+        .content p { font-size: 15px; color: #4b5563; margin: 0 0 20px; }
+        .button-wrapper { text-align: center; margin: 32px 0 8px; }
+        .button { display: inline-block; padding: 14px 32px; background-color: #4f46e5; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
+        .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Email Verification</h1>
+            </div>
+            <div class="content">
+                <p>Hi ${user.name},</p>
+                <p>You requested a new verification link for your AcadIntern account. Please click the button below to confirm your identity and activate all features of your profile.</p>
+                <div class="button-wrapper">
+                    <a href="${verificationUrl}" class="button">Verify My Email</a>
+                </div>
+                <p>This link will expire in ${expiryMinutes} minutes. If you didn't request this, you can ignore this email.</p>
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+        `;
+
+        await sendEmail({
+            to: user.email,
+            subject: `Action Required: Verify your email address`,
+            text: `Please verify your email to access your account: ${verificationUrl}`,
+            html: verificationHtml,
+            type: 'email_verification'
+        });
+
+        res.status(200).json({ success: true, message: 'Verification link has been sent to your email.' });
     } catch (error) {
         next(error);
     }

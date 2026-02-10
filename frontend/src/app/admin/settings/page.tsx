@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { Settings, Bell, Shield, Database, Mail, Users, Building2, Save, AlertCircle, CheckCircle, RotateCcw, AlertTriangle, FileText, Clock, IndianRupee, Activity, Key } from 'lucide-react'
+import { Settings, Bell, Shield, Database, Mail, Users, Building2, Save, AlertCircle, CheckCircle, RotateCcw, AlertTriangle, FileText, Clock, IndianRupee, Activity, Key, Lock, ShieldAlert, RefreshCcw, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { adminApi } from '@/lib/api'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -23,19 +23,21 @@ interface SettingsData {
   smtpPass: string;
   emailFrom: string;
   emailFromName: string;
-  emailNotifications: boolean;
-  applicationNotifications: boolean;
-  reminderNotifications: boolean;
-  marketingEmails: boolean;
-  requireEmailVerification: boolean;
+  welcomeEmail: boolean;
+  shortlistedEmail: boolean;
+  rejectedEmail: boolean;
+  interviewScheduledEmail: boolean;
+  messageAlertEmail: boolean;
+  reminderEmail: boolean;
   passwordResetExpiry: number;
   passwordMinLength: number;
   sessionTimeout: number;
   maxLoginAttempts: number;
+  timezone: string;
   autoApproveCompanies: boolean;
   requireCompanyVerification: boolean;
-  maxInternshipsPerCompany: number;
-  maxApplicationsPerStudent: number;
+  maxActiveInternshipListings: number;
+  maxApplicationsPerDay: number;
   allowResumeUpload: boolean;
   maxResumeSize: number;
   maxFileSize: number;
@@ -63,12 +65,15 @@ const defaultSettings: SettingsData = {
   emailFromName: 'AcadIntern',
 
   // Notification Settings
-  emailNotifications: true,
-  applicationNotifications: true,
-  reminderNotifications: true,
-  marketingEmails: false,
+  welcomeEmail: true,
+  shortlistedEmail: true,
+  rejectedEmail: true,
+  interviewScheduledEmail: true,
+  messageAlertEmail: true,
+  reminderEmail: true,
 
   // Security Settings
+  timezone: 'Asia/Kolkata',
   requireEmailVerification: true,
   passwordResetExpiry: 60,
   passwordMinLength: 8,
@@ -78,10 +83,10 @@ const defaultSettings: SettingsData = {
   // Company Settings
   autoApproveCompanies: false,
   requireCompanyVerification: true,
-  maxInternshipsPerCompany: 10,
+  maxActiveInternshipListings: 10,
 
   // Student Settings
-  maxApplicationsPerStudent: 20,
+  maxApplicationsPerDay: 30,
   allowResumeUpload: true,
   maxResumeSize: 2,
   maxFileSize: 5,
@@ -285,8 +290,8 @@ function AdminSettingsContent() {
           </div>
 
           {/* Settings Canvas */}
-          <div className="lg:col-span-9 space-y-5">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-7 min-h-[550px] relative transition-all duration-500">
+          <div className="lg:col-span-9 space-y-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 min-h-[480px] relative transition-all duration-500">
 
               {/* Tab Title Decor */}
               <div className="absolute top-0 right-0 p-6 opacity-[0.02] pointer-events-none">
@@ -298,13 +303,13 @@ function AdminSettingsContent() {
 
               {/* General Settings */}
               {activeTab === 'general' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
                     <h2 className="text-[17px] font-black text-gray-900 leading-tight">Global Identity</h2>
                     <p className="text-[12px] text-gray-500 font-bold">Define how the platform presents itself</p>
                   </header>
 
-                  <div className="grid gap-5">
+                  <div className="grid gap-4">
                     <div className="space-y-1.5">
                       <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
                         <FileText size={12} className="text-primary" />
@@ -314,7 +319,7 @@ function AdminSettingsContent() {
                         type="text"
                         value={settings.siteName}
                         onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
-                        className="w-full max-w-md px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-[14px] text-gray-900"
+                        className="w-full max-w-md px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-[13px] text-gray-900"
                         placeholder="e.g. AcadIntern"
                       />
                     </div>
@@ -327,7 +332,7 @@ function AdminSettingsContent() {
                         value={settings.siteDescription}
                         onChange={(e) => setSettings({ ...settings, siteDescription: e.target.value })}
                         rows={3}
-                        className="w-full max-w-xl px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-[14px] text-gray-900"
+                        className="w-full max-w-xl px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-[13px] text-gray-900"
                         placeholder="What is this platform about?"
                       />
                     </div>
@@ -340,7 +345,7 @@ function AdminSettingsContent() {
                         type="email"
                         value={settings.contactEmail}
                         onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })}
-                        className="w-full max-w-md px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-[14px] text-gray-900"
+                        className="w-full max-w-md px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-[13px] text-gray-900"
                       />
                     </div>
                   </div>
@@ -348,14 +353,14 @@ function AdminSettingsContent() {
                   <div className="pt-8 mt-8 border-t border-gray-50">
                     <h3 className="text-[13px] font-black text-red-600 uppercase tracking-[2px] mb-4">Critical Overrides</h3>
                     <div className="grid gap-4">
-                      <div className="bg-red-50/30 border border-red-100 rounded-2xl p-5 flex items-center justify-between group hover:bg-red-50 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm border border-red-200">
-                            <AlertTriangle size={20} />
+                      <div className="bg-red-50/30 border border-red-100 rounded-2xl p-3.5 flex items-center justify-between group hover:bg-red-50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shadow-sm border border-red-200">
+                            <AlertTriangle size={18} />
                           </div>
                           <div>
-                            <p className="text-[14px] font-black text-red-900">Maintenance Mode</p>
-                            <p className="text-[12px] text-red-600/70 font-bold">Killswitch for all non-admin traffic</p>
+                            <p className="text-[13px] font-black text-red-900">Maintenance Mode</p>
+                            <p className="text-[11px] text-red-600/70 font-bold">Killswitch for all non-admin traffic</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -374,14 +379,14 @@ function AdminSettingsContent() {
                         </div>
                       </div>
 
-                      <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex items-center justify-between group hover:border-gray-200 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 shadow-sm border border-gray-200">
-                            <Users size={20} />
+                      <div className="bg-gray-50 border border-gray-100 rounded-2xl p-3.5 flex items-center justify-between group hover:border-gray-200 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 shadow-sm border border-gray-200">
+                            <Users size={18} />
                           </div>
                           <div>
-                            <p className="text-[14px] font-black text-gray-900">Registration Status</p>
-                            <p className="text-[12px] text-gray-500 font-bold">Lock or unlock new user onboarding</p>
+                            <p className="text-[13px] font-black text-gray-900">Registration Status</p>
+                            <p className="text-[11px] text-gray-500 font-bold">Lock or unlock new user onboarding</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -406,7 +411,7 @@ function AdminSettingsContent() {
 
               {/* Email Settings */}
               {activeTab === 'email' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
                     <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight tracking-tight uppercase group flex items-center gap-2">
                       Mailing Infrastructure
@@ -418,13 +423,13 @@ function AdminSettingsContent() {
                     </p>
                   </header>
 
-                  <div className="grid gap-6">
+                  <div className="grid gap-4">
                     <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100/50 space-y-4">
                       <div className="flex items-center gap-2 mb-2">
                         <CheckCircle size={14} className="text-emerald-500" />
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Global Sender Profile</span>
                       </div>
-                      <div className="grid md:grid-cols-2 gap-6 max-w-2xl">
+                      <div className="grid md:grid-cols-2 gap-4 max-w-2xl">
                         <div className="space-y-2">
                           <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
                             <Users size={12} />
@@ -456,14 +461,14 @@ function AdminSettingsContent() {
                       </div>
                     </div>
 
-                    <div className="grid lg:grid-cols-2 gap-6">
+                    <div className="grid lg:grid-cols-2 gap-4">
                       {/* SMTP - Final Fallback Logic */}
                       <div className="space-y-4 relative group">
-                        <div className="bg-white p-5 rounded-3xl border border-gray-100 transition-all hover:border-amber-500/20 hover:shadow-xl hover:shadow-amber-500/5">
+                        <div className="bg-white p-4 rounded-3xl border border-gray-100 transition-all hover:border-amber-500/20 hover:shadow-xl hover:shadow-amber-500/5">
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-2xl bg-amber-100/30 flex items-center justify-center text-amber-600 border border-amber-100 shadow-sm transition-transform group-hover:scale-110">
-                                <Database size={20} />
+                              <div className="w-9 h-9 rounded-xl bg-amber-100/30 flex items-center justify-center text-amber-600 border border-amber-100 shadow-sm transition-transform group-hover:scale-110">
+                                <Database size={18} />
                               </div>
                               <div>
                                 <h3 className="text-[14px] font-black text-gray-900">Gmail SMTP</h3>
@@ -541,11 +546,11 @@ function AdminSettingsContent() {
 
                       {/* Resend - Primary Logic */}
                       <div className="space-y-4 relative group">
-                        <div className="bg-white p-5 rounded-3xl border border-gray-100 transition-all hover:border-orange-500/20 hover:shadow-xl hover:shadow-orange-500/5">
+                        <div className="bg-white p-4 rounded-3xl border border-gray-100 transition-all hover:border-orange-500/20 hover:shadow-xl hover:shadow-orange-500/5">
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-2xl bg-orange-100/30 flex items-center justify-center text-orange-600 border border-orange-100 shadow-sm transition-transform group-hover:scale-110">
-                                <Activity size={20} />
+                              <div className="w-9 h-9 rounded-xl bg-orange-100/30 flex items-center justify-center text-orange-600 border border-orange-100 shadow-sm transition-transform group-hover:scale-110">
+                                <Activity size={18} />
                               </div>
                               <div>
                                 <h3 className="text-[14px] font-black text-gray-900">Resend</h3>
@@ -589,38 +594,56 @@ function AdminSettingsContent() {
 
               {/* Notification Settings */}
               {activeTab === 'notifications' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
                     <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Notifications</h2>
                     <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Delivery Settings</p>
                   </header>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
-                      { key: 'emailNotifications', label: 'Mailing Engine', desc: 'System dispatches', icon: Mail },
-                      { key: 'applicationNotifications', label: 'Flow Intelligence', desc: 'Status change alerts', icon: RotateCcw },
-                      { key: 'reminderNotifications', label: 'Smart Reminders', desc: 'Review auto-followups', icon: Clock },
-                      { key: 'marketingEmails', label: 'Lifecycle Comms', desc: 'Engagement workflows', icon: Users }
+                      { key: 'welcomeEmail', label: 'Welcome & Verification', desc: 'Onboarding & account activation', icon: Users, color: 'text-orange-600', bg: 'bg-orange-50' },
+                      { key: 'shortlistedEmail', label: 'Shortlisted Status', desc: 'Positive recruitment updates', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                      { key: 'rejectedEmail', label: 'Rejected Status', desc: 'Outcome notifications', icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-50' },
+                      { key: 'interviewScheduledEmail', label: 'Interview Scheduled', desc: 'Meeting invites & details', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
+                      { key: 'messageAlertEmail', label: 'Message Alerts', desc: '3+ unread message warnings', icon: Bell, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                      { key: 'reminderEmail', label: 'System Reminders', desc: 'Stale apps & closing soon', icon: Activity, color: 'text-cyan-600', bg: 'bg-cyan-50' }
                     ].map((item) => (
-                      <div key={item.key} className="p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between group hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all">
+                      <div key={item.key} className="p-3.5 bg-white border border-gray-100 rounded-2xl flex items-center justify-between group hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-primary/5 group-hover:text-primary transition-all border border-gray-50">
+                          <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-sm border border-transparent group-hover:border-white", item.bg, item.color)}>
                             <item.icon size={18} />
                           </div>
                           <div>
                             <p className="text-[13px] font-black text-gray-900 leading-tight">{item.label}</p>
-                            <p className="text-[11px] text-gray-500 font-bold mt-0.5">{item.desc}</p>
+                            <p className="text-[11px] text-gray-500 font-bold mt-0.5 opacity-80">{item.desc}</p>
                           </div>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={settings[item.key as keyof typeof settings] as boolean}
-                            onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })}
-                            className="sr-only peer"
-                          />
-                          <div className="w-9 h-5 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
+                        <div className="flex items-center gap-3">
+                          <span className={cn(
+                            "text-[10px] font-black uppercase tracking-widest transition-colors",
+                            settings[item.key as keyof SettingsData] ? item.color : "text-gray-300"
+                          )}>
+                            {settings[item.key as keyof SettingsData] ? "ON" : "OFF"}
+                          </span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={settings[item.key as keyof SettingsData] as boolean}
+                              onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className={cn(
+                              "w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all",
+                              item.key === 'welcomeEmail' ? "peer-checked:bg-orange-600" :
+                                item.key === 'shortlistedEmail' ? "peer-checked:bg-emerald-600" :
+                                  item.key === 'rejectedEmail' ? "peer-checked:bg-red-500" :
+                                    item.key === 'interviewScheduledEmail' ? "peer-checked:bg-blue-600" :
+                                      item.key === 'messageAlertEmail' ? "peer-checked:bg-indigo-600" :
+                                        "peer-checked:bg-cyan-600"
+                            )}></div>
+                          </label>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -629,20 +652,20 @@ function AdminSettingsContent() {
 
               {/* Security Settings */}
               {activeTab === 'security' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
                     <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Infrastructure Guard</h2>
                     <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Access & Hardening</p>
                   </header>
 
-                  <div className="bg-primary/5 border border-primary/10 rounded-2xl p-5 flex items-center justify-between group">
+                  <div className="bg-primary/5 border border-primary/10 rounded-2xl p-3.5 flex items-center justify-between group">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                        <Shield size={22} />
+                      <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                        <Shield size={18} />
                       </div>
                       <div>
-                        <p className="text-[14px] font-black text-gray-900 leading-tight">Enforced Email Verification</p>
-                        <p className="text-[12px] text-primary font-bold">Mandatory identity check</p>
+                        <p className="text-[13px] font-black text-gray-900 leading-tight">Enforced Email Verification</p>
+                        <p className="text-[11px] text-primary font-bold">Mandatory identity check</p>
                       </div>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -652,25 +675,54 @@ function AdminSettingsContent() {
                         onChange={(e) => setSettings({ ...settings, requireEmailVerification: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-5.5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2.5px] after:left-[3px] after:bg-white after:rounded-full after:h-4.5 after:w-4.5 after:transition-all peer-checked:bg-primary"></div>
+                      <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                     </label>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-between group hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm">
+                        <Clock size={18} />
+                      </div>
+                      <div>
+                        <p className="text-[13px] font-black text-gray-900 leading-tight">System Timezone</p>
+                        <p className="text-[11px] text-gray-500 font-bold">Global scheduling reference</p>
+                      </div>
+                    </div>
+                    <select
+                      value={settings.timezone || 'Asia/Kolkata'}
+                      onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
+                      className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-[11px] font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none cursor-pointer"
+                    >
+                      <option value="UTC">UTC (Universal)</option>
+                      <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                      <option value="America/New_York">America/New_York (EST)</option>
+                      <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
+                      <option value="Europe/London">Europe/London (GMT)</option>
+                      <option value="Europe/Paris">Europe/Paris (CET)</option>
+                      <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                      <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
-                      { key: 'passwordMinLength', label: 'Complexity Min.', unit: 'CHARS' },
-                      { key: 'maxLoginAttempts', label: 'Threshold', unit: 'LOGINS' },
-                      { key: 'sessionTimeout', label: 'Persistence', unit: 'HOURS' },
-                      { key: 'passwordResetExpiry', label: 'Recovery', unit: 'MINS' }
+                      { key: 'passwordMinLength', label: 'Min. Password Length', unit: 'CHARS', icon: Lock },
+                      { key: 'maxLoginAttempts', label: 'Max Login Attempts', unit: 'LOGINS', icon: ShieldAlert },
+                      { key: 'sessionTimeout', label: 'Session Duration', unit: 'MINS', icon: Clock },
+                      { key: 'passwordResetExpiry', label: 'Reset Link Expiry', unit: 'MINS', icon: RefreshCcw }
                     ].map((f) => (
                       <div key={f.key} className="space-y-1.5">
-                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">{f.label}</label>
+                        <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                          <f.icon size={12} className="text-primary" />
+                          {f.label}
+                        </label>
                         <div className="relative">
                           <input
                             type="number"
                             value={settings[f.key as keyof typeof settings] as number}
                             onChange={(e) => setSettings({ ...settings, [f.key]: parseInt(e.target.value) })}
-                            className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
+                            className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                           />
                           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400">{f.unit}</span>
                         </div>
@@ -682,23 +734,23 @@ function AdminSettingsContent() {
 
               {/* Company & Student Logic Abstraction into Cards */}
               {['companies', 'students'].includes(activeTab) && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
                     <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">{activeTab === 'companies' ? 'Enterprise Operations' : 'Talent Ecosystem'}</h2>
                     <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Interaction Policies</p>
                   </header>
 
-                  <div className="grid gap-5">
+                  <div className="grid gap-4">
                     {activeTab === 'companies' ? (
                       <>
-                        <div className="p-4 bg-emerald-50/30 border border-emerald-100 rounded-2xl flex items-center justify-between">
+                        <div className="p-3.5 bg-emerald-50/30 border border-emerald-100 rounded-2xl flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 border border-emerald-200 shadow-sm">
                               <CheckCircle size={18} />
                             </div>
                             <div>
-                              <p className="text-[13px] font-black text-emerald-900 leading-tight">Zero-Touch Onboarding</p>
-                              <p className="text-[11px] text-emerald-600 font-bold tracking-tight">Auto-verify new company profiles</p>
+                              <p className="text-[13px] font-black text-emerald-900 leading-tight">Auto-Approve Companies</p>
+                              <p className="text-[11px] text-emerald-600 font-bold tracking-tight">Zero-touch company onboarding</p>
                             </div>
                           </div>
                           <label className="relative inline-flex items-center cursor-pointer">
@@ -711,26 +763,46 @@ function AdminSettingsContent() {
                             <div className="w-9 h-5 bg-emerald-200/50 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
                           </label>
                         </div>
-                        <div className="max-w-xs space-y-1.5">
-                          <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Listing Volume Cap</label>
+                        <div className="p-3.5 bg-blue-50/30 border border-blue-100 rounded-2xl flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm">
+                              <ShieldCheck size={18} />
+                            </div>
+                            <div>
+                              <p className="text-[13px] font-black text-blue-900 leading-tight">Enforced Company Verification</p>
+                              <p className="text-[11px] text-blue-600 font-bold tracking-tight">Only verified companies can post</p>
+                            </div>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={settings.requireCompanyVerification}
+                              onChange={(e) => setSettings({ ...settings, requireCompanyVerification: e.target.checked })}
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-blue-200/50 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                          </label>
+                        </div>
+                        <div className="max-w-xs space-y-1">
+                          <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Max Active Internship Listings</label>
                           <input
                             type="number"
-                            value={settings.maxInternshipsPerCompany}
-                            onChange={(e) => setSettings({ ...settings, maxInternshipsPerCompany: parseInt(e.target.value) })}
-                            className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
+                            value={settings.maxActiveInternshipListings}
+                            onChange={(e) => setSettings({ ...settings, maxActiveInternshipListings: parseInt(e.target.value) })}
+                            className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                           />
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="p-4 bg-indigo-50/30 border border-indigo-100 rounded-2xl flex items-center justify-between">
+                        <div className="p-3.5 bg-indigo-50/30 border border-indigo-100 rounded-2xl flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 border border-indigo-200 shadow-sm">
                               <FileText size={18} />
                             </div>
                             <div>
-                              <p className="text-[13px] font-black text-indigo-900 leading-tight">Lifecycle Assets</p>
-                              <p className="text-[11px] text-indigo-600 font-bold tracking-widest">Enable Resume/CV repository</p>
+                              <p className="text-[13px] font-black text-indigo-900 leading-tight">Resume Upload Support</p>
+                              <p className="text-[11px] text-indigo-600 font-bold tracking-widest">Enable student CV/Resume repository</p>
                             </div>
                           </div>
                           <label className="relative inline-flex items-center cursor-pointer">
@@ -743,13 +815,13 @@ function AdminSettingsContent() {
                             <div className="w-9 h-5 bg-indigo-200/50 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-500"></div>
                           </label>
                         </div>
-                        <div className="max-w-xs space-y-1.5">
-                          <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Concurrent Applications Cap</label>
+                        <div className="max-w-xs space-y-1">
+                          <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Max Application Limit (Per Day)</label>
                           <input
                             type="number"
-                            value={settings.maxApplicationsPerStudent}
-                            onChange={(e) => setSettings({ ...settings, maxApplicationsPerStudent: parseInt(e.target.value) })}
-                            className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
+                            value={settings.maxApplicationsPerDay}
+                            onChange={(e) => setSettings({ ...settings, maxApplicationsPerDay: parseInt(e.target.value) })}
+                            className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                           />
                         </div>
                       </>
@@ -760,7 +832,7 @@ function AdminSettingsContent() {
 
               {/* Files Management */}
               {activeTab === 'files' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
                     <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Asset Policy</h2>
                     <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Quotas & Limitations</p>
@@ -768,18 +840,18 @@ function AdminSettingsContent() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {[
-                      { key: 'maxResumeSize', label: 'Resume Rep.' },
-                      { key: 'maxFileSize', label: 'Standard Assets' },
-                      { key: 'maxMessageSize', label: 'Chat Payloads' }
+                      { key: 'maxResumeSize', label: 'Resume Repository' },
+                      { key: 'maxFileSize', label: 'Global File Limit' },
+                      { key: 'maxMessageSize', label: 'Message Attachments' }
                     ].map((f) => (
-                      <div key={f.key} className="p-5 bg-gray-50 border border-gray-100 rounded-2xl group hover:border-primary/20 transition-all">
+                      <div key={f.key} className="p-4 bg-gray-50 border border-gray-100 rounded-2xl group hover:border-primary/20 transition-all">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">{f.label}</label>
                         <div className="flex items-end gap-1.5">
                           <input
                             type="number"
                             value={settings[f.key as keyof typeof settings] as number}
                             onChange={(e) => setSettings({ ...settings, [f.key]: parseInt(e.target.value) })}
-                            className="bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 w-full text-lg font-black text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
+                            className="bg-white border border-gray-200 rounded-lg px-2 py-1.5 w-full text-lg font-black text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
                           />
                           <span className="text-[12px] font-black text-gray-400 mb-2">MB</span>
                         </div>
@@ -794,23 +866,23 @@ function AdminSettingsContent() {
 
               {/* Database & Infrastructure */}
               {activeTab === 'database' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
                     <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Infrastructure Persistence</h2>
                     <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Snapshots & Recovery</p>
                   </header>
 
-                  <div className="bg-orange-50/50 border border-orange-100 rounded-2xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-5">
+                  <div className="bg-orange-50/50 border border-orange-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-5">
                     <div className="flex items-center gap-3.5">
-                      <div className="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-orange-600 border border-orange-200 shadow-sm transition-transform group-hover:scale-105">
-                        <Database size={24} />
+                      <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 border border-orange-200 shadow-sm transition-transform group-hover:scale-105">
+                        <Database size={20} />
                       </div>
                       <div>
-                        <p className="text-[15px] font-black text-orange-900">Automated Recovery Cycle</p>
-                        <p className="text-[12px] text-orange-700 font-bold opacity-70 tracking-tight">High-frequency snapshots</p>
+                        <p className="text-[14px] font-black text-orange-900">Automated Recovery Cycle</p>
+                        <p className="text-[11px] text-orange-700 font-bold opacity-70 tracking-tight">High-frequency snapshots</p>
                       </div>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer scale-105">
+                    <label className="relative inline-flex items-center cursor-pointer scale-100">
                       <input
                         type="checkbox"
                         checked={settings.autoBackup}
@@ -821,27 +893,27 @@ function AdminSettingsContent() {
                     </label>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="space-y-1.5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-1">
                       <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Cycle Frequency</label>
                       <select
                         value={settings.backupFrequency}
                         onChange={(e) => setSettings({ ...settings, backupFrequency: e.target.value })}
-                        className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
+                        className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                       >
                         <option value="hourly">Every Hour</option>
                         <option value="daily">Daily Snapshot</option>
                         <option value="weekly">Weekly Routine</option>
                       </select>
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Snapshot Retention</label>
                       <div className="relative">
                         <input
                           type="number"
                           value={settings.retentionDays}
                           onChange={(e) => setSettings({ ...settings, retentionDays: parseInt(e.target.value) })}
-                          className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[14px]"
+                          className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400">DAYS</span>
                       </div>

@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import Message from '../models/Message';
 import Application from '../models/Application';
 import Notification from '../models/Notification';
+import { createNotification } from './notificationService';
 import User from '../models/User';
 import Company from '../models/Company';
 
@@ -322,7 +323,7 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
 
                 // Create notification for receiver
                 const user = await User.findById(socket.userId);
-                await Notification.create({
+                await createNotification({
                     userId: receiverId,
                     type: 'general',
                     title: 'New Message',
@@ -330,8 +331,7 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
                     payload: {
                         applicationId,
                         messageId: message._id
-                    },
-                    read: false
+                    }
                 });
 
                 // Emit notification to receiver if online

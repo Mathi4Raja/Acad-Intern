@@ -4,6 +4,7 @@ import Internship from '../models/Internship';
 import Company from '../models/Company';
 import StudentProfile from '../models/StudentProfile';
 import Application from '../models/Application';
+import SystemSetting from '../models/SystemSetting';
 import { AuthRequest } from '../types';
 
 // Validation schemas
@@ -235,6 +236,33 @@ export const createInternship = async (req: AuthRequest, res: Response, next: Ne
             res.status(404).json({
                 success: false,
                 message: 'Company profile not found. Please complete your profile first.'
+            });
+            return;
+        }
+
+        // DYNAMIC SETTINGS: Require Company Verification
+        const verificationSetting = await SystemSetting.findOne({ key: 'requireCompanyVerification' });
+        const requireVerification = verificationSetting?.value === true || verificationSetting?.value === 'true';
+
+        if (requireVerification && !company.verified) {
+            res.status(403).json({
+                success: false,
+                message: 'Your company account must be verified by an administrator before you can post internships.'
+            });
+            return;
+        }
+
+        // DYNAMIC SETTINGS: Max Active Internship Listings
+        const maxListingsSetting = await SystemSetting.findOne({ key: 'maxActiveInternshipListings' });
+        // If setting is missing, allow unlimited listings (Infinity)
+        const maxListings = maxListingsSetting?.value ? Number(maxListingsSetting.value) : Infinity;
+
+        const currentCount = await Internship.countDocuments({ companyId: company._id, status: 'active' });
+
+        if (currentCount >= maxListings) {
+            res.status(403).json({
+                success: false,
+                message: `You have reached the maximum limit of ${maxListings} active internship listings.`
             });
             return;
         }

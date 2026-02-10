@@ -237,11 +237,15 @@ async function seedAdminData() {
             { key: 'siteDescription', value: 'Student internship platform', group: 'general' },
             { key: 'maintenanceMode', value: 'false', group: 'general' },
             { key: 'requireEmailVerification', value: 'true', group: 'security' },
-            { key: 'passwordResetExpiry', value: '60', group: 'security' },
-            { key: 'passwordMinLength', value: '8', group: 'security' },
-            { key: 'emailProvider', value: 'resend', group: 'email' },
+            { key: 'allowResumeUpload', value: 'true', group: 'students' },
+            { key: 'maxApplicationsPerDay', value: '30', group: 'students' },
+            { key: 'timezone', value: 'Asia/Kolkata', group: 'security' },
+            { key: 'maxResumeSize', value: '5', group: 'files' },
             { key: 'autoBackup', value: 'true', group: 'database' },
-            { key: 'backupFrequency', value: 'daily', group: 'database' }
+            { key: 'backupFrequency', value: 'daily', group: 'database' },
+            { key: 'autoApproveCompanies', value: 'true', group: 'enterprise' },
+            { key: 'requireCompanyVerification', value: 'true', group: 'enterprise' },
+            { key: 'maxActiveInternshipListings', value: '20', group: 'enterprise' }
         ];
 
         for (const setting of defaultSettings) {

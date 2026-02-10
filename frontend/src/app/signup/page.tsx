@@ -42,6 +42,7 @@ export default function SignupPage() {
     semester: '',
     companyName: '',
     website: '',
+    cin: '',
     description: ''
   })
 
@@ -79,6 +80,9 @@ export default function SignupPage() {
         payload.semester = formData.semester;
       } else if (selectedRole === 'company') {
         payload.companyName = formData.companyName;
+        payload.website = formData.website;
+        payload.cin = formData.cin;
+        payload.description = formData.description;
       }
 
       await signup(payload);
@@ -449,13 +453,25 @@ export default function SignupPage() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Website (Optional)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Website</label>
                         <input
                           type="url"
+                          required
                           value={formData.website}
                           onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                           className="block w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-sm bg-gray-50/50 focus:bg-white"
                           placeholder="https://example.com"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">CIN (Optional)</label>
+                        <input
+                          type="text"
+                          value={formData.cin}
+                          onChange={(e) => setFormData({ ...formData, cin: e.target.value })}
+                          className="block w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-sm bg-gray-50/50 focus:bg-white"
+                          placeholder="Corporate Identity Number"
                         />
                       </div>
 

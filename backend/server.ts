@@ -25,6 +25,7 @@ import analyticsRoutes from './routes/analytics';
 import settingsRoutes from './routes/settings';
 import maintenanceMiddleware from './middleware/maintenanceMiddleware';
 import { initializeSocket } from './utils/socketHandler';
+import { startScheduler } from './utils/scheduler';
 
 // Initialize Express app
 const app = express();
@@ -150,6 +151,8 @@ if (process.env.NODE_ENV !== 'test') {
                 console.warn('⚠️ Keep-alive ping skipped: RENDER_EXTERNAL_URL, BACKEND_URL, or NEXT_PUBLIC_SOCKET_URL not set');
             }
         }
+        // Start background scheduler
+        startScheduler();
     });
 }
 

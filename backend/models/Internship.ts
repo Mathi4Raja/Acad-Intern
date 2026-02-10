@@ -51,7 +51,7 @@ const internshipSchema = new Schema<IInternship>({
     },
     status: {
         type: String,
-        enum: ['active', 'inactive', 'completed', 'in_progress', 'rejected'],
+        enum: ['active', 'inactive', 'completed', 'in_progress', 'rejected', 'expired'],
         default: 'active'
     },
     location: {

@@ -3,11 +3,14 @@ import { z } from 'zod';
 import Message from '../models/Message';
 import Application from '../models/Application';
 import Notification from '../models/Notification';
+import { createNotification } from '../utils/notificationService';
 import SystemSetting from '../models/SystemSetting';
 import ConversationPreference from '../models/ConversationPreference';
 import { AuthRequest } from '../types';
 import { uploadToR2 } from '../utils/r2Storage';
 import { activeUsers } from '../utils/socketHandler';
+import User from '../models/User';
+import { sendEmail } from '../utils/emailService';
 
 // @desc    Get all conversations for a user (grouped by application)
 // @route   GET /api/messages/conversations
@@ -356,7 +359,7 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
 
         if (!isMuted) {
             // Create notification for receiver
-            await Notification.create({
+            await createNotification({
                 userId: receiverId,
                 type: 'general',
                 title: 'New Message',
@@ -364,9 +367,83 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
                 payload: {
                     applicationId,
                     messageId: message._id
-                },
-                read: false
+                }
             });
+        }
+
+        // Message Count Alert (Send email when they have exactly 3 unread messages)
+        const unreadCount = await Message.countDocuments({
+            receiverId: receiverId,
+            status: { $ne: 'seen' }
+        });
+
+        if (unreadCount === 3) {
+            const receiver = await User.findById(receiverId);
+            if (receiver && receiver.email) {
+                const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
+                const messagesUrl = `${frontendUrl}/messages`;
+
+                const alertHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
+        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
+        .header { background: #ffffff; padding: 40px 32px 24px; text-align: center; border-bottom: 1px solid #f3f4f6; }
+        .header h1 { margin: 0; font-size: 20px; font-weight: 800; color: #111827; letter-spacing: -0.025em; }
+        .content { padding: 40px 32px; }
+        .content p { font-size: 15px; color: #4b5563; margin: 0 0 20px; }
+        .alert-box { background: #eff6ff; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0; border: 1px solid #dbeafe; }
+        .alert-text { color: #1e40af; font-weight: 700; font-size: 18px; }
+        .button-wrapper { text-align: center; margin: 32px 0 8px; }
+        .button { display: inline-block; padding: 14px 32px; background-color: #111827; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
+        .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Unread Messages</h1>
+            </div>
+            <div class="content">
+                <p>Hi ${receiver.name},</p>
+                <p>You have new messages waiting for you on AcadIntern.</p>
+                
+                <div class="alert-box">
+                    <div class="alert-text">3+ New Messages</div>
+                </div>
+
+                <p>Don't miss out on important updates or questions from your connections.</p>
+                
+                <div class="button-wrapper">
+                    <a href="${messagesUrl}" class="button">View Messages</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 AcadIntern. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+                `;
+
+                try {
+                    await sendEmail({
+                        to: receiver.email,
+                        subject: 'You have new unread messages on AcadIntern',
+                        text: `Hi ${receiver.name}, you have 3 unread messages on AcadIntern. Visit ${messagesUrl} to view them.`,
+                        html: alertHtml,
+                        type: 'message_alert'
+                    });
+                } catch (emailError) {
+                    console.error('Message alert email failed to send:', emailError);
+                }
+            }
         }
 
         res.status(201).json({

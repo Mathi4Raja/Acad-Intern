@@ -7,7 +7,7 @@ interface EmailOptions {
     subject: string;
     text: string;
     html: string;
-    type?: 'password_reset' | 'general';
+    type?: 'password_reset' | 'general' | 'welcome' | 'shortlisted' | 'rejected' | 'email_verification' | 'interview_scheduled' | 'message_alert';
 }
 
 /**
@@ -25,11 +25,33 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
 
     // Fetch settings from DB
     const settings = await SystemSetting.find({
-        key: { $in: ['emailFrom', 'emailFromName', 'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass'] }
+        key: {
+            $in: [
+                'emailFrom', 'emailFromName', 'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass',
+                'emailNotifications', 'welcomeEmail', 'shortlistedEmail', 'rejectedEmail',
+                'interviewScheduledEmail', 'messageAlertEmail', 'reminderEmail'
+            ]
+        }
     });
 
-    const settingsMap: Record<string, string> = {};
+    const settingsMap: Record<string, any> = {};
     settings.forEach(s => { settingsMap[s.key] = s.value; });
+
+    // Granular Type-based Checks
+    const typeConfigs: Record<string, string> = {
+        'welcome': 'welcomeEmail',
+        'shortlisted': 'shortlistedEmail',
+        'rejected': 'rejectedEmail',
+        'interview_scheduled': 'interviewScheduledEmail',
+        'message_alert': 'messageAlertEmail',
+        'general': 'reminderEmail' // Used for stale app & closing soon
+    };
+
+    const settingKey = typeConfigs[type];
+    if (settingKey && settingsMap[settingKey] === false) {
+        console.log(`[SUBSYSTEM] ${type} email suppressed by granular setting: ${settingKey} (To: ${options.to})`);
+        return;
+    }
 
     const fromAddress = settingsMap.emailFrom || process.env.FROM_EMAIL || 'onboarding@resend.dev';
     const fromName = settingsMap.emailFromName || '';
