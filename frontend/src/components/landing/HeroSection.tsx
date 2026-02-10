@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export function HeroSection() {
+    const router = useRouter();
     const heroRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -97,31 +98,32 @@ export function HeroSection() {
 
 
 
-                    {/* CTA Buttons */}
                     <div
-                        className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mb-8 md:mb-14 animate-fade-up opacity-0"
+                        className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4 mb-4 md:mb-14 animate-fade-up opacity-0"
                         style={{ animationDelay: "0.5s", animationFillMode: "forwards" }}
                     >
-                        <Link href="/internships">
-                            <Button
-                                size="lg"
-                                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-sm md:text-base h-11 md:h-13 px-6 md:px-8 btn-glow shadow-lg shadow-primary/20"
-                            >
-                                Find Your Internship
-                                <svg className="ml-2 w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                </svg>
-                            </Button>
-                        </Link>
-                        <Link href="/signup">
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                className="w-full sm:w-auto text-sm md:text-base h-11 md:h-13 px-6 md:px-8 border-2 border-primary/20 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300"
-                            >
-                                For Companies
-                            </Button>
-                        </Link>
+                        <Button
+                            size="lg"
+                            onClick={() => {
+                                setTimeout(() => router.push('/internships'), 250);
+                            }}
+                            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-sm md:text-base h-11 md:h-13 px-6 md:px-8 btn-glow shadow-lg shadow-primary/20 hover:scale-105 active:scale-90 transition-all duration-300 ease-out cursor-pointer"
+                        >
+                            Find Your Internship
+                            <svg className="ml-2 w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => {
+                                setTimeout(() => router.push('/signup'), 250);
+                            }}
+                            className="w-full sm:w-auto text-sm md:text-base h-11 md:h-13 px-6 md:px-8 border-2 border-primary/20 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-300 active:scale-90 ease-out cursor-pointer"
+                        >
+                            For Companies
+                        </Button>
                     </div>
 
                     {/* Stats */}

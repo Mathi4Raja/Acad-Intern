@@ -93,7 +93,7 @@ export function DashboardLayout({
                     )}
 
                     {/* Main Content */}
-                    <main className={`lg:ml-56 pt-11 sm:pt-12 ${disableContentPadding ? '' : ''}`}>
+                    <main className={`lg:ml-56 pt-11 sm:pt-12 min-h-screen ${disableContentPadding ? '' : ''}`}>
                         {children}
                     </main>
                 </>
@@ -120,7 +120,7 @@ export function DashboardLayout({
                     {/* Main Content */}
                     <main className={disableContentPadding
                         ? "absolute inset-0 top-11 sm:top-12 lg:left-64 overflow-hidden flex flex-col bg-white"
-                        : "mt-11 sm:mt-12 lg:ml-64"
+                        : "pt-11 sm:pt-12 lg:ml-64 min-h-screen"
                     }>
                         {children}
                     </main>

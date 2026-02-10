@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 
 export function CTASection() {
+    const router = useRouter();
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -37,17 +38,21 @@ export function CTASection() {
                     Join thousands of students already building their careers. Start today — it&apos;s free!
                 </p>
 
-                {/* Email Form */}
-                <form className="flex flex-col sm:flex-row gap-2 md:gap-4 max-w-lg mx-auto mb-4 md:mb-8 reveal" style={{ transitionDelay: "200ms" }}>
-                    <Input
-                        type="email"
-                        placeholder="Enter your email"
-                        className="flex-grow bg-white/15 border-white/25 text-white placeholder:text-white/60 h-11 md:h-13 px-4 md:px-6 text-sm md:text-base rounded-lg md:rounded-xl focus:border-white/50 focus:bg-white/20 transition-all"
-                    />
-                    <Button type="submit" size="lg" className="h-11 md:h-13 px-6 md:px-8 rounded-lg md:rounded-xl bg-white text-primary hover:bg-white/95 font-semibold text-sm md:text-base shadow-xl">
+                {/* Action Button */}
+                <div className="flex justify-center mb-4 md:mb-8 reveal" style={{ transitionDelay: "200ms" }}>
+                    <Button
+                        size="lg"
+                        onClick={() => {
+                            // Smooth navigation with slight delay for click effect
+                            setTimeout(() => {
+                                router.push('/signup');
+                            }, 250);
+                        }}
+                        className="h-11 md:h-13 px-8 md:px-12 rounded-lg md:rounded-xl bg-white text-primary hover:bg-white/95 font-black text-sm md:text-lg shadow-2xl hover:scale-105 active:scale-90 transition-all duration-300 ease-out cursor-pointer shadow-white/10 border-none outline-none group"
+                    >
                         Get Started Free
                     </Button>
-                </form>
+                </div>
 
                 {/* Trust indicators */}
                 <div className="flex flex-wrap items-center justify-center gap-x-4 md:gap-x-8 gap-y-2 text-white/70 reveal" style={{ transitionDelay: "300ms" }}>

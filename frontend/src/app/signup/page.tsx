@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { Eye, EyeOff, Mail, Lock, User, Building2, GraduationCap, ArrowRight, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
+import { LegalModals } from '@/components/signup/LegalModals'
 
 type UserRole = 'student' | 'company' | null
 
@@ -32,6 +33,10 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [legalModal, setLegalModal] = useState<{ isOpen: boolean, type: 'terms' | 'privacy' }>({
+    isOpen: false,
+    type: 'terms'
+  })
 
   const [formData, setFormData] = useState({
     name: '',
@@ -550,20 +555,35 @@ export default function SignupPage() {
                 </div>
 
                 {/* Terms */}
-                <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                <label
+                  htmlFor="terms"
+                  className="flex items-center gap-3 p-3.5 bg-gray-50/80 backdrop-blur-sm rounded-xl border border-gray-100/50 hover:bg-gray-100/50 group transition-all cursor-pointer select-none"
+                >
                   <input
                     id="terms"
                     type="checkbox"
                     required
-                    className="h-4 w-4 mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-transform active:scale-95 shrink-0"
                   />
-                  <label htmlFor="terms" className="text-sm text-gray-600">
+                  <span className="text-[13px] leading-[1.4] text-gray-600 font-bold flex-1">
                     I agree to the{' '}
-                    <Link href="/terms" className="font-medium hover:underline text-blue-600">Terms of Service</Link>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegalModal({ isOpen: true, type: 'terms' }); }}
+                      className="text-blue-600 hover:underline transition-colors font-black"
+                    >
+                      Terms of Service
+                    </button>
                     {' '}and{' '}
-                    <Link href="/privacy" className="font-medium hover:underline text-blue-600">Privacy Policy</Link>
-                  </label>
-                </div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegalModal({ isOpen: true, type: 'privacy' }); }}
+                      className="text-blue-600 hover:underline transition-colors font-black"
+                    >
+                      Privacy Policy
+                    </button>
+                  </span>
+                </label>
 
                 {/* Submit Button */}
                 <button
@@ -596,6 +616,12 @@ export default function SignupPage() {
           )
         )}
       </div>
+
+      <LegalModals
+        isOpen={legalModal.isOpen}
+        type={legalModal.type}
+        onClose={() => setLegalModal({ ...legalModal, isOpen: false })}
+      />
     </div>
   )
 }
