@@ -16,9 +16,13 @@ interface NotificationOptions {
 export const createNotification = async (options: NotificationOptions): Promise<INotification | null> => {
     try {
         // Fetch relevant toggle from system settings
-        const settingKey = (options.type === 'status_update' || options.type === 'application')
-            ? 'applicationNotifications'
-            : null;
+        let settingKey: string | null = null;
+        
+        if (options.type === 'status_update' || options.type === 'application') {
+            settingKey = 'applicationNotifications';
+        } else if (options.type === 'general') {
+            settingKey = 'emailNotifications';
+        }
 
         if (settingKey) {
             const setting = await SystemSetting.findOne({ key: settingKey });

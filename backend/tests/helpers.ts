@@ -24,9 +24,18 @@ export async function createTestUser(
     const password = 'Test1234!';
     const name = `Test ${role.charAt(0).toUpperCase() + role.slice(1)}${suffix}`;
 
+    // Prepare signup payload
+    const signupPayload: any = { email, password, name, role };
+    
+    // Add company-specific required fields
+    if (role === 'company') {
+        signupPayload.companyName = `Test Company ${suffix}`;
+        signupPayload.website = `https://testcompany${suffix.toLowerCase().replace(/[^a-z0-9]/g, '') || 'default'}.com`;
+    }
+
     const signupRes = await request(app)
         .post('/api/auth/signup')
-        .send({ email, password, name, role });
+        .send(signupPayload);
 
     const cookie = signupRes.headers['set-cookie']?.[0] || '';
 

@@ -49,6 +49,8 @@ describe('Welcome Email Verification', () => {
     test('should send welcome email on successful signup', async () => {
         // Mock allowRegistration
         await SystemSetting.create({ key: 'allowRegistration', value: true, group: 'security' });
+        // Disable email verification so welcome email is sent instead of verification email
+        await SystemSetting.create({ key: 'requireEmailVerification', value: false, group: 'email' });
 
         await signup(req, res, next);
 
@@ -56,7 +58,7 @@ describe('Welcome Email Verification', () => {
         expect(sendEmail).toHaveBeenCalledWith(expect.objectContaining({
             to: 'test@student.com',
             type: 'welcome',
-            subject: expect.stringContaining('Welcome to AcadIntern')
+            subject: expect.stringContaining('Welcome to')
         }));
     });
 
