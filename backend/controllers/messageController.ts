@@ -381,7 +381,8 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
             const receiver = await User.findById(receiverId);
             if (receiver && receiver.email) {
                 const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
-                const messagesUrl = `${frontendUrl}/messages`;
+                const rolePath = receiver.role === 'company' ? 'company' : 'student';
+                const messagesUrl = `${frontendUrl}/${rolePath}/messages`;
 
                 const alertHtml = `
 <!DOCTYPE html>

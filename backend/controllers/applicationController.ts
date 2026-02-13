@@ -16,7 +16,12 @@ const applicationSchema = z.object({
 });
 
 const statusUpdateSchema = z.object({
-    status: z.enum(['shortlisted', 'rejected', 'accepted', 'assessment_completed', 'interview_scheduled'])
+    status: z.enum(['shortlisted', 'rejected', 'accepted', 'assessment_completed', 'interview_scheduled']),
+    interviewDetails: z.object({
+        date: z.string().transform(str => new Date(str)),
+        time: z.string(),
+        meetingLink: z.string().url('Invalid meeting link URL')
+    }).optional()
 });
 
 // @desc    Apply to an internship
@@ -236,7 +241,7 @@ export const getInternshipApplications = async (req: AuthRequest, res: Response,
 // @access  Private (Company)
 export const updateApplicationStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { status } = statusUpdateSchema.parse(req.body);
+        const { status, interviewDetails } = statusUpdateSchema.parse(req.body);
         const applicationId = req.params.id;
 
         const application = await Application.findById(applicationId)
@@ -263,6 +268,9 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
         }
 
         application.status = status;
+        if (status === 'interview_scheduled' && interviewDetails) {
+            application.interviewDetails = interviewDetails;
+        }
         await application.save();
 
         await createNotification({
@@ -271,8 +279,10 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
             title: 'Application Status Updated',
             message: `Your application status for ${internship.title} was updated to ${status}`,
             payload: {
+                applicationId: application._id,
                 internshipId: internship._id,
-                status: status
+                status: status,
+                interviewDetails: status === 'interview_scheduled' ? application.interviewDetails : undefined
             }
         });
 
@@ -359,6 +369,12 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
         if (status === 'interview_scheduled' && (application.studentId as any).email) {
             const student = application.studentId as any;
             const companyName = company.companyName;
+            const details = application.interviewDetails;
+
+            // Format for Calendar Link (basic Google Calendar URL format)
+            // https://www.google.com/calendar/render?action=TEMPLATE&text=Interview&dates=20231231T120000Z/20231231T130000Z&details=Link&location=Meet
+            const dateStr = details?.date ? new Date(details.date).toISOString().replace(/-|:|\.\d+/g, '') : '';
+            const calendarLink = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Interview: ' + internship.title)}&dates=${dateStr}/${dateStr}&details=${encodeURIComponent('Interview for ' + internship.title + ' at ' + companyName + '\n\nMeeting Link: ' + (details?.meetingLink || ''))}&location=${encodeURIComponent(details?.meetingLink || 'Google Meet')}`;
 
             const interviewHtml = `
 <!DOCTYPE html>
@@ -379,7 +395,8 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
         .detail-label { color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
         .detail-value { color: #111827; font-weight: 700; }
         .button-wrapper { text-align: center; margin: 32px 0 8px; }
-        .button { display: inline-block; padding: 14px 32px; background-color: #059669; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
+        .button { display: inline-block; padding: 14px 32px; background-color: #059669; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; margin: 0 5px; }
+        .button.secondary { background-color: #ffffff; color: #059669 !important; border: 2px solid #059669; }
         .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
     </style>
 </head>
@@ -390,25 +407,34 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
                 <h1>Interview Scheduled!</h1>
             </div>
             <div class="content">
-                <div class="badge">Interview</div>
+                <div class="badge">Interview Details</div>
                 <p>Hi ${student.name},</p>
                 <p>Exciting news! Your interview for the <strong>${internship.title}</strong> role at <strong>${companyName}</strong> has been scheduled.</p>
                 
                 <div class="details-card">
                     <div class="detail-row">
+                        <div class="detail-label">Date</div>
+                        <div class="detail-value">${details?.date ? new Date(details.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'TBD'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Time</div>
+                        <div class="detail-value">${details?.time || 'TBD'}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">Meeting Link</div>
+                        <div class="detail-value"><a href="${details?.meetingLink || '#'}" style="color: #059669; text-decoration: none; font-weight: 800;">${details?.meetingLink || 'Join Interview'}</a></div>
+                    </div>
+                    <div class="detail-row" style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 12px;">
                         <div class="detail-label">Position</div>
                         <div class="detail-value">${internship.title}</div>
                     </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Host Company</div>
-                        <div class="detail-value">${companyName}</div>
-                    </div>
                 </div>
 
-                <p>Please check your messages on the {{SITE_NAME}} platform for the specific date, time, and meeting link.</p>
+                <p>Please ensure you're on time. You can join directly using the button below or add the event to your calendar.</p>
                 
                 <div class="button-wrapper">
-                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/student/applications" class="button">Go to Messages</a>
+                    <a href="${details?.meetingLink || '#'}" class="button">Join Interview</a>
+                    <a href="${calendarLink}" class="button secondary">Add to Calendar</a>
                 </div>
             </div>
             <div class="footer">
@@ -424,7 +450,7 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
                 await sendEmail({
                     to: student.email,
                     subject: `Interview Scheduled: ${internship.title} at ${companyName}`,
-                    text: `Great news! Your interview for ${internship.title} at ${companyName} has been scheduled. Please visit the platform to view details.`,
+                    text: `Great news! Your interview for ${internship.title} at ${companyName} is on ${details?.date ? new Date(details.date).toLocaleDateString() : 'TBD'} at ${details?.time || 'TBD'}. Meeting Link: ${details?.meetingLink || 'N/A'}.`,
                     html: interviewHtml,
                     type: 'interview_scheduled'
                 });

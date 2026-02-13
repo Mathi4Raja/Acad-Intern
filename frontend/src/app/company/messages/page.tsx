@@ -2,26 +2,47 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
+import { useSearchParams } from 'next/navigation';
+import api from '@/lib/api';
 
 import ConversationList from '@/components/messages/ConversationList';
 import ChatInterface from '@/components/messages/ChatInterface';
 import { MessageCircle } from 'lucide-react';
 
-export default function CompanyMessagesPage() {
+function MessagesContent() {
     const { user } = useAuth();
+    const searchParams = useSearchParams();
+    const urlApplicationId = searchParams.get('applicationId');
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
     const [selectedConversation, setSelectedConversation] = useState<{
         applicationId: string;
         otherPartyName: string;
     } | null>(null);
 
-    const handleSelectConversation = (applicationId: string) => {
+    const handleSelectConversation = (applicationId: string, otherPartyName: string) => {
         setSelectedApplicationId(applicationId);
         setSelectedConversation({
             applicationId,
-            otherPartyName: 'Student' // This will be updated when we have the full conversation data
+            otherPartyName
         });
     };
+
+    useEffect(() => {
+        if (urlApplicationId && !selectedApplicationId) {
+            const fetchConversationDetails = async () => {
+                try {
+                    const response = await api.get(`/applications/${urlApplicationId}`);
+                    if (response.data.success) {
+                        const app = response.data.data;
+                        handleSelectConversation(urlApplicationId, app.studentId.name);
+                    }
+                } catch (error) {
+                    console.error('Failed to auto-select conversation:', error);
+                }
+            };
+            fetchConversationDetails();
+        }
+    }, [urlApplicationId]);
 
     if (!user) {
         return (
@@ -33,11 +54,7 @@ export default function CompanyMessagesPage() {
 
     return (
         <div className="h-full flex flex-col md:p-4 lg:p-6 lg:max-w-7xl lg:mx-auto w-full bg-gray-50 md:bg-transparent">
-            {/* Mobile Header */}
-            {/* Desktop Header - Removed */}{/* Mobile Header - Removed */}
-
             <div className="flex-1 bg-white md:rounded-2xl md:shadow-sm md:border md:border-gray-200 overflow-hidden flex min-h-0">
-                {/* Conversations List */}
                 <div className={`w-full md:w-80 lg:w-96 border-r border-gray-100 flex flex-col ${selectedConversation ? 'hidden md:flex' : 'flex'}`}>
                     <ConversationList
                         selectedApplicationId={selectedApplicationId}
@@ -47,7 +64,6 @@ export default function CompanyMessagesPage() {
                     />
                 </div>
 
-                {/* Chat Area */}
                 <div className={`flex-1 flex flex-col bg-gray-50/50 min-h-0 ${!selectedConversation ? 'hidden md:flex' : 'flex'}`}>
                     {selectedConversation ? (
                         <ChatInterface
@@ -75,5 +91,21 @@ export default function CompanyMessagesPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+import { Suspense } from 'react';
+
+export default function CompanyMessagesPage() {
+    return (
+        <Suspense fallback={
+            <div className="h-full flex flex-col md:p-4 lg:p-6 lg:max-w-7xl lg:mx-auto w-full bg-gray-50 md:bg-transparent">
+                <div className="flex-1 bg-white md:rounded-2xl flex items-center justify-center">
+                    <p className="text-gray-500 font-medium">Loading conversations...</p>
+                </div>
+            </div>
+        }>
+            <MessagesContent />
+        </Suspense>
     );
 }

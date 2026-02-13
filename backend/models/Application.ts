@@ -30,6 +30,11 @@ const applicationSchema = new Schema<IApplication>({
         type: String,
         trim: true,
         default: ''
+    },
+    interviewDetails: {
+        date: { type: Date },
+        time: { type: String },
+        meetingLink: { type: String }
     }
 }, {
     timestamps: true

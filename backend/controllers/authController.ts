@@ -195,10 +195,13 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
         });
 
         // Create welcome notification for user
+        const siteNameSetting = await SystemSetting.findOne({ key: 'siteName' });
+        const siteName = siteNameSetting ? String(siteNameSetting.value) : 'AcadIntern';
+
         await createNotification({
             userId: user._id,
             type: 'general',
-            title: 'Welcome to {{SITE_NAME}}',
+            title: `Welcome to ${siteName}`,
             message: `Hi ${user.name}, welcome to the platform!`
         });
 

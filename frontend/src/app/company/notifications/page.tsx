@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Bell, Check, CheckCheck, Trash2, Loader2, Users, Briefcase, MessageSquare, AlertCircle, Info } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { useAlert } from '@/components/ui/AlertProvider'
 
@@ -20,10 +21,29 @@ export default function CompanyNotificationsPage() {
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const { showAlert } = useAlert()
+    const router = useRouter()
 
     useEffect(() => {
         fetchNotifications()
     }, [])
+
+    const handleNotificationClick = async (notification: Notification) => {
+        // Mark as read if not already read
+        if (!notification.read) {
+            handleMarkAsRead(notification._id)
+        }
+
+        // Navigate based on type and payload
+        if (notification.type === 'application') {
+            router.push('/company/applications')
+        } else if (notification.type === 'general') {
+            if (notification.title === 'New Message' && notification.payload?.applicationId) {
+                router.push(`/company/messages?applicationId=${notification.payload.applicationId}`)
+            } else {
+                router.push('/company/dashboard')
+            }
+        }
+    }
 
     const fetchNotifications = async () => {
         try {
@@ -37,7 +57,8 @@ export default function CompanyNotificationsPage() {
         }
     }
 
-    const handleMarkAsRead = async (id: string) => {
+    const handleMarkAsRead = async (id: string, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation()
         try {
             await api.patch(`/notifications/${id}/read`)
             setNotifications(notifications.map(notif =>
@@ -60,7 +81,8 @@ export default function CompanyNotificationsPage() {
         }
     }
 
-    const handleDelete = (id: string) => {
+    const handleDelete = (id: string, e: React.MouseEvent) => {
+        e.stopPropagation()
         // For now, just remove from local state (no delete API exists yet)
         setNotifications(notifications.filter(notif => notif._id !== id))
     }
@@ -180,7 +202,8 @@ export default function CompanyNotificationsPage() {
                     filteredNotifications.map((notification) => (
                         <div
                             key={notification._id}
-                            className={`bg-white rounded-xl shadow-sm border p-4 hover:shadow-md transition-all ${notification.read ? 'border-gray-100' : 'border-primary/30 bg-primary/5'
+                            onClick={() => handleNotificationClick(notification)}
+                            className={`bg-white rounded-xl shadow-sm border p-4 hover:shadow-md transition-all cursor-pointer group active:scale-[0.99] ${notification.read ? 'border-gray-100 opacity-80' : 'border-primary/30 bg-primary/5'
                                 }`}
                         >
                             <div className="flex items-start gap-4">
@@ -202,7 +225,7 @@ export default function CompanyNotificationsPage() {
                                         <div className="flex gap-2">
                                             {!notification.read && (
                                                 <button
-                                                    onClick={() => handleMarkAsRead(notification._id)}
+                                                    onClick={(e) => handleMarkAsRead(notification._id, e)}
                                                     className="text-primary hover:bg-primary/10 p-1.5 rounded-lg transition-colors"
                                                     title="Mark as read"
                                                 >
@@ -210,7 +233,7 @@ export default function CompanyNotificationsPage() {
                                                 </button>
                                             )}
                                             <button
-                                                onClick={() => handleDelete(notification._id)}
+                                                onClick={(e) => handleDelete(notification._id, e)}
                                                 className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
                                                 title="Delete"
                                             >

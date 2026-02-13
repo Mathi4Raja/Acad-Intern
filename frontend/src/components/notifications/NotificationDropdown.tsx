@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils'
 import { NotificationItem } from './NotificationItem'
 import type { Notification } from './NotificationItem'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/AuthContext'
 
 interface NotificationDropdownProps {
     notifications: Notification[]
@@ -24,8 +26,28 @@ export function NotificationDropdown({
 }: NotificationDropdownProps) {
     const [isOpen, setIsOpen] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
+    const router = useRouter()
+    const { user } = useAuth()
 
     const unreadCount = notifications.filter(n => !n.read).length
+
+    const handleNotificationClick = (notification: Notification) => {
+        onMarkAsRead?.(notification.id)
+        setIsOpen(false)
+
+        const role = user?.role || 'student'
+        const payload = notification.payload
+
+        if (notification.type === 'application' || notification.type === 'status_update') {
+            router.push(`/${role}/applications`)
+        } else if (notification.type === 'general') {
+            if (notification.title === 'New Message' && payload?.applicationId) {
+                router.push(`/${role}/messages?applicationId=${payload.applicationId}`)
+            } else {
+                router.push(`/${role}/dashboard`)
+            }
+        }
+    }
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -93,10 +115,7 @@ export function NotificationDropdown({
                                         key={notification.id}
                                         notification={notification}
                                         onMarkAsRead={onMarkAsRead}
-                                        onClick={() => {
-                                            onMarkAsRead?.(notification.id)
-                                            setIsOpen(false)
-                                        }}
+                                        onClick={() => handleNotificationClick(notification)}
                                     />
                                 ))}
                             </div>

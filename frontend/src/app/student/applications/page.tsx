@@ -60,7 +60,8 @@ export default function ApplicationsPage() {
             location: app.internshipId?.location || 'Remote',
             stipend: `₹${app.internshipId?.stipend || 0}/mo`,
             duration: `${app.internshipId?.durationWeeks || 0} weeks`,
-            notes: app.notes || null
+            notes: app.notes || null,
+            interviewDetails: app.interviewDetails
           }))
           setApplications(formatted)
         }
@@ -79,6 +80,7 @@ export default function ApplicationsPage() {
     all: applications.length,
     pending: applications.filter(app => app.status === 'pending').length,
     shortlisted: applications.filter(app => app.status === 'shortlisted').length,
+    interview_scheduled: applications.filter(app => app.status === 'interview_scheduled').length,
     assessment_completed: applications.filter(app => app.status === 'assessment_completed').length,
     accepted: applications.filter(app => app.status === 'accepted').length,
     rejected: applications.filter(app => app.status === 'rejected').length,
@@ -110,6 +112,7 @@ export default function ApplicationsPage() {
   const statusLabels: Record<string, string> = {
     pending: 'Pending',
     shortlisted: 'Shortlisted',
+    interview_scheduled: 'Interview',
     assessment_completed: 'Assessment Done',
     accepted: 'Accepted',
     rejected: 'Rejected'
@@ -153,6 +156,7 @@ export default function ApplicationsPage() {
           { id: 'all', label: 'Total Applications', count: statusCounts.all, color: 'text-gray-900', border: 'border-primary', ring: 'ring-primary/20' },
           { id: 'pending', label: 'Pending', count: statusCounts.pending, color: 'text-yellow-600', border: 'border-yellow-500', ring: 'ring-yellow-100' },
           { id: 'shortlisted', label: 'Shortlisted', count: statusCounts.shortlisted, color: 'text-green-600', border: 'border-green-500', ring: 'ring-green-100' },
+          { id: 'interview_scheduled', label: 'Interview', count: statusCounts.interview_scheduled, color: 'text-indigo-600', border: 'border-indigo-500', ring: 'ring-indigo-100' },
           { id: 'assessment_completed', label: 'Assessment Done', count: statusCounts.assessment_completed, color: 'text-purple-600', border: 'border-purple-500', ring: 'ring-purple-100' },
           { id: 'accepted', label: 'Accepted', count: statusCounts.accepted, color: 'text-blue-600', border: 'border-blue-500', ring: 'ring-blue-100' },
           { id: 'rejected', label: 'Rejected', count: statusCounts.rejected, color: 'text-red-600', border: 'border-red-500', ring: 'ring-red-100' },

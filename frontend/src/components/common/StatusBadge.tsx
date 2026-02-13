@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { CheckCircle, Clock, XCircle, AlertCircle } from 'lucide-react'
+import { CheckCircle, Clock, XCircle, AlertCircle, Calendar } from 'lucide-react'
 import { ApplicationStatus } from '@/types'
 
 interface StatusBadgeProps {
@@ -21,6 +21,11 @@ const StatusBadge = memo(({ status, className = '', showIcon = true }: StatusBad
             icon: CheckCircle,
             style: 'bg-green-50 text-green-700 border-green-200',
             label: 'Shortlisted'
+        },
+        interview_scheduled: {
+            icon: Calendar,
+            style: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+            label: 'Interview'
         },
         assessment_completed: {
             icon: CheckCircle,

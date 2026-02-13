@@ -32,8 +32,8 @@ interface Internship {
   applicants: number
   createdAt: string
   deadline: string
-  skills: string[]
-
+  skillsRequired?: string[]
+  skills?: string[] // Legacy support
 }
 
 function ManageInternshipsContent() {
@@ -593,9 +593,9 @@ function ManageInternshipsContent() {
                   </div>
 
                   <div className="bg-white p-3 rounded-3xl border border-gray-100 shadow-sm shadow-gray-100/30">
-                    <h4 className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2 px-0.5">Required Expertise</h4>
+                    <h4 className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2 px-0.5">Skills Required</h4>
                     <div className="flex flex-wrap gap-1.5">
-                      {selectedInternship?.skills?.map((skill, i) => (
+                      {(selectedInternship?.skillsRequired || selectedInternship?.skills || []).map((skill, i) => (
                         <span key={i} className="px-2.5 py-1 bg-gray-50/50 border border-gray-100 text-[9px] font-black text-gray-600 rounded-xl hover:bg-white transition-colors">
                           {skill}
                         </span>

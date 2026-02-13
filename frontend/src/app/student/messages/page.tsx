@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
+import api from '@/lib/api';
 
 import ConversationList from '@/components/messages/ConversationList';
 import ChatInterface from '@/components/messages/ChatInterface';
@@ -17,21 +18,33 @@ function MessagesContent() {
         otherPartyName: string;
     } | null>(null);
 
-    const handleSelectConversation = (applicationId: string) => {
+    const handleSelectConversation = (applicationId: string, otherPartyName: string) => {
         setSelectedApplicationId(applicationId);
         // This will be populated by the conversation data
         // For now, we'll set it and the ChatInterface will handle the details
         setSelectedConversation({
             applicationId,
-            otherPartyName: 'Company' // This will be updated when we have the full conversation data
+            otherPartyName
         });
     };
 
     // Handle query param for auto-selection
     useEffect(() => {
         const appId = searchParams.get('applicationId');
-        if (appId) {
-            setTimeout(() => handleSelectConversation(appId), 0);
+        if (appId && !selectedApplicationId) {
+            const fetchConversationDetails = async () => {
+                try {
+                    const response = await api.get(`/applications/${appId}`);
+                    if (response.data.success) {
+                        const app = response.data.data;
+                        const companyName = app.internshipId?.companyId?.companyName || 'Company';
+                        handleSelectConversation(appId, companyName);
+                    }
+                } catch (error) {
+                    console.error('Failed to auto-select conversation:', error);
+                }
+            };
+            fetchConversationDetails();
         }
     }, [searchParams]);
 

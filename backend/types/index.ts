@@ -103,6 +103,12 @@ export interface IInternship extends Document {
     views: number;
 }
 
+export interface IInterviewDetails {
+    date: Date;
+    time: string;
+    meetingLink: string;
+}
+
 // Application interface
 export interface IApplication extends Document {
     internshipId: Types.ObjectId;
@@ -111,6 +117,7 @@ export interface IApplication extends Document {
     appliedAt: Date;
     notes?: string;
     coverLetter?: string;
+    interviewDetails?: IInterviewDetails;
     createdAt?: Date;
     updatedAt?: Date;
 }

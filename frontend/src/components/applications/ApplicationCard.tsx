@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react'
 import Link from 'next/link'
-import { Calendar, MapPin, IndianRupee, Clock, Building2, MessageCircle } from 'lucide-react'
+import { Calendar, MapPin, IndianRupee, Clock, Building2, MessageCircle, Video, ExternalLink } from 'lucide-react'
 import { Application } from '@/types'
 import { CompanyLogo, StatusBadge } from '@/components/common'
 
@@ -14,13 +14,15 @@ const ApplicationCard = memo(({ application, formatDate, isHighlighted = false }
     // Timeline steps logic
     const timelineSteps = useMemo(() => {
         const s = application.status;
+        const interviewScheduled = s === 'interview_scheduled';
         const assessmentDone = s === 'assessment_completed' || s === 'accepted';
         const accepted = s === 'accepted';
 
         return [
             { id: 'applied', label: 'Applied', status: 'completed' },
             { id: 'review', label: 'In Review', status: s === 'pending' ? 'current' : 'completed' },
-            { id: 'shortlisted', label: 'Shortlisted', status: s === 'shortlisted' ? 'current' : (assessmentDone || accepted) ? 'completed' : 'pending' },
+            { id: 'shortlisted', label: 'Shortlisted', status: s === 'shortlisted' ? 'current' : (interviewScheduled || assessmentDone || accepted) ? 'completed' : 'pending' },
+            { id: 'interview', label: 'Interview', status: interviewScheduled ? 'current' : (assessmentDone || accepted) ? 'completed' : 'pending' },
             { id: 'assessment', label: 'Assessment', status: s === 'assessment_completed' ? 'current' : accepted ? 'completed' : 'pending' },
             { id: 'offer', label: 'Offer', status: accepted ? 'completed' : 'pending' }
         ];
@@ -126,6 +128,50 @@ const ApplicationCard = memo(({ application, formatDate, isHighlighted = false }
                         </div>
                     )}
 
+                    {/* Interview Details Section */}
+                    {application.status === 'interview_scheduled' && application.interviewDetails && (
+                        <div className="mb-4 bg-indigo-50/50 border border-indigo-100 rounded-xl p-3 sm:p-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="space-y-1">
+                                    <h4 className="text-xs font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                                        <Video size={12} />
+                                        Interview Scheduled
+                                    </h4>
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-bold text-gray-900">
+                                        <span className="flex items-center gap-1.5 text-indigo-700">
+                                            <Calendar size={14} />
+                                            {new Date(application.interviewDetails.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                        </span>
+                                        <span className="text-gray-300">|</span>
+                                        <span className="flex items-center gap-1.5">
+                                            <Clock size={14} />
+                                            {application.interviewDetails.time}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <a
+                                        href={application.interviewDetails.meetingLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-all text-xs font-bold shadow-sm shadow-indigo-200"
+                                    >
+                                        Join Meeting
+                                        <ExternalLink size={12} />
+                                    </a>
+                                    <a
+                                        href={`https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Interview: ' + application.internshipTitle)}&dates=${new Date(application.interviewDetails.date).toISOString().replace(/-|:|\.\d+/g, '')}/${new Date(application.interviewDetails.date).toISOString().replace(/-|:|\.\d+/g, '')}&details=${encodeURIComponent('Interview for ' + application.internshipTitle + ' at ' + application.company + '\n\nMeeting Link: ' + application.interviewDetails.meetingLink)}&location=${encodeURIComponent(application.interviewDetails.meetingLink)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-indigo-200 text-indigo-600 rounded-lg hover:bg-indigo-50 transition-all text-xs font-bold"
+                                    >
+                                        Add to Calendar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Actions */}
                     <div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-3 pt-2">
                         <Link
@@ -133,8 +179,7 @@ const ApplicationCard = memo(({ application, formatDate, isHighlighted = false }
                             className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-primary transition-colors px-2 py-1.5 rounded-lg hover:bg-gray-50 bg-white border border-gray-200 sm:border-transparent sm:bg-transparent"
                         >
                             <MessageCircle size={18} />
-                            <span className="sm:hidden">Message</span>
-                            <span className="hidden sm:inline">Message</span>
+                            <span>Message</span>
                         </Link>
                         <Link
                             href={`/student/internships/${application.internshipId}`}

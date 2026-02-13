@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Bell, Check, CheckCheck, Trash2, Loader2 } from 'lucide-react'
 import api from '@/lib/api'
 import { useAlert } from '@/components/ui/AlertProvider'
@@ -19,11 +20,30 @@ export default function NotificationsPage() {
   const [filterType, setFilterType] = useState('all')
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
   const { showAlert } = useAlert()
 
   useEffect(() => {
     fetchNotifications()
   }, [])
+
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read if not already read
+    if (!notification.read) {
+      handleMarkAsRead(notification._id)
+    }
+
+    // Navigate based on type and payload
+    if (notification.type === 'application' || notification.type === 'status_update') {
+      router.push('/student/applications')
+    } else if (notification.type === 'general') {
+      if (notification.title === 'New Message' && notification.payload?.applicationId) {
+        router.push(`/student/messages?applicationId=${notification.payload.applicationId}`)
+      } else {
+        router.push('/student/dashboard')
+      }
+    }
+  }
 
   const fetchNotifications = async () => {
     try {
@@ -37,7 +57,8 @@ export default function NotificationsPage() {
     }
   }
 
-  const handleMarkAsRead = async (id: string) => {
+  const handleMarkAsRead = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
     try {
       await api.patch(`/notifications/${id}/read`)
       setNotifications(notifications.map(notif =>
@@ -60,7 +81,8 @@ export default function NotificationsPage() {
     }
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
     // For now, just remove from local state
     setNotifications(notifications.filter(notif => notif._id !== id))
   }
@@ -198,14 +220,15 @@ export default function NotificationsPage() {
           filteredNotifications.map((notification) => (
             <div
               key={notification._id}
-              className={`bg-white rounded-xl shadow-sm border p-3 sm:p-4 hover:shadow-md transition-all ${notification.read ? 'border-gray-100' : 'border-primary/30 bg-primary/10/30'
+              onClick={() => handleNotificationClick(notification)}
+              className={`bg-white rounded-xl shadow-sm border p-3 sm:p-4 hover:shadow-md transition-all cursor-pointer group active:scale-[0.99] ${notification.read ? 'border-gray-100 opacity-80' : 'border-primary/30 bg-primary/[0.02]'
                 }`}
             >
               <div className="flex items-start gap-3 sm:gap-4">
-                <div className="text-2xl sm:text-3xl flex-shrink-0">{getNotificationIcon(notification.type)}</div>
+                <div className="text-2xl sm:text-3xl flex-shrink-0 group-hover:scale-110 transition-transform">{getNotificationIcon(notification.type)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="text-sm sm:text-base font-semibold text-gray-900">{notification.title}</h3>
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 group-hover:text-primary transition-colors">{notification.title}</h3>
                     {!notification.read && (
                       <span className="flex-shrink-0 w-2 h-2 bg-primary rounded-full mt-1"></span>
                     )}
@@ -218,7 +241,7 @@ export default function NotificationsPage() {
                     <div className="flex gap-1 sm:gap-2">
                       {!notification.read && (
                         <button
-                          onClick={() => handleMarkAsRead(notification._id)}
+                          onClick={(e) => handleMarkAsRead(notification._id, e)}
                           className="text-primary hover:text-primary p-1 hover:bg-primary/10 rounded transition-colors"
                           title="Mark as read"
                         >
@@ -226,7 +249,7 @@ export default function NotificationsPage() {
                         </button>
                       )}
                       <button
-                        onClick={() => handleDelete(notification._id)}
+                        onClick={(e) => handleDelete(notification._id, e)}
                         className="text-gray-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition-colors"
                         title="Delete"
                       >

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, User, Briefcase, Star, Mail, Calendar, CheckCircle, XCircle, Clock, Loader2, Users, FileText } from 'lucide-react'
+import { Search, Filter, User, Briefcase, Star, Mail, Calendar, CheckCircle, XCircle, Clock, Loader2, Users, FileText, MessageCircle } from 'lucide-react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { StatCard } from '@/components/analytics/StatCard'
@@ -39,6 +39,13 @@ export default function Applications() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [showInterviewModal, setShowInterviewModal] = useState(false)
+  const [selectedAppForInterview, setSelectedAppForInterview] = useState<string | null>(null)
+  const [interviewForm, setInterviewForm] = useState({
+    date: '',
+    time: '',
+    meetingLink: `https://meet.google.com/${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 5)}`
+  })
   const router = useRouter()
 
   const handleViewProfile = (studentId: string) => {
@@ -110,21 +117,33 @@ export default function Applications() {
     fetchData()
   }, [])
 
-  const handleUpdateStatus = async (applicationId: string, status: string) => {
+  const handleUpdateStatus = async (applicationId: string, status: string, interviewDetails?: any) => {
     try {
       setActionLoading(applicationId)
-      await api.patch(`/applications/${applicationId}/status`, { status })
+      await api.patch(`/applications/${applicationId}/status`, {
+        status,
+        ...(interviewDetails && { interviewDetails })
+      })
 
       // Update local state
       setApplications(prev => prev.map(app =>
         app.id === applicationId ? { ...app, status } : app
       ))
+      if (status === 'interview_scheduled') {
+        showAlert('Interview scheduled successfully!', 'success')
+        setShowInterviewModal(false)
+      }
     } catch (err: any) {
       console.error('Failed to update status:', err)
-      showAlert('Failed to update application status', 'error')
+      showAlert(err.response?.data?.message || 'Failed to update application status', 'error')
     } finally {
       setActionLoading(null)
     }
+  }
+
+  const openInterviewModal = (appId: string) => {
+    setSelectedAppForInterview(appId)
+    setShowInterviewModal(true)
   }
 
   const filteredApplications = applications.filter(app => {
@@ -428,61 +447,73 @@ export default function Applications() {
                   </div>
 
                   <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-50">
+                    {/* Primary Actions Based on Status */}
                     {app.status === 'pending' && (
-                      <>
-                        <button
-                          onClick={() => handleUpdateStatus(app.id, 'shortlisted')}
-                          disabled={actionLoading === app.id}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
-                        >
-                          {actionLoading === app.id ? (
-                            <Loader2 size={14} className="animate-spin" />
-                          ) : (
-                            <CheckCircle size={14} />
-                          )}
-                          Shortlist
-                        </button>
-                        <button
-                          onClick={() => handleUpdateStatus(app.id, 'rejected')}
-                          disabled={actionLoading === app.id}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
-                        >
-                          <XCircle size={14} />
-                          Reject
-                        </button>
-                      </>
+                      <button
+                        onClick={() => handleUpdateStatus(app.id, 'shortlisted')}
+                        disabled={actionLoading === app.id}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                      >
+                        {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                        Shortlist
+                      </button>
                     )}
+
+                    {app.status === 'assessment_completed' && (
+                      <button
+                        onClick={() => openInterviewModal(app.id)}
+                        disabled={actionLoading === app.id}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                      >
+                        <Calendar size={14} />
+                        Schedule Interview
+                      </button>
+                    )}
+
                     {app.status === 'shortlisted' && (
                       <button
                         onClick={() => handleUpdateStatus(app.id, 'assessment_completed')}
                         disabled={actionLoading === app.id}
-                        className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50 shadow-sm"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
                       >
-                        {actionLoading === app.id ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          <CheckCircle size={14} />
-                        )}
+                        {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
                         Mark Assessment Done
                       </button>
                     )}
-                    {app.status === 'assessment_completed' && (
+
+                    {(app.status === 'assessment_completed' || app.status === 'interview_scheduled') && (
                       <button
                         onClick={() => handleUpdateStatus(app.id, 'accepted')}
                         disabled={actionLoading === app.id}
-                        className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-semibold disabled:opacity-50 shadow-sm"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
                       >
-                        {actionLoading === app.id ? (
-                          <Loader2 size={14} className="animate-spin" />
-                        ) : (
-                          <CheckCircle size={14} />
-                        )}
+                        {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
                         Accept
                       </button>
                     )}
+                    {/* Reject Button - Available at most stages */}
+                    {['pending', 'shortlisted', 'assessment_completed', 'interview_scheduled'].includes(app.status) && (
+                      <button
+                        onClick={() => handleUpdateStatus(app.id, 'rejected')}
+                        disabled={actionLoading === app.id}
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm rounded-lg"
+                      >
+                        <XCircle size={14} />
+                        Reject
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => router.push(`/company/messages?applicationId=${app.id}`)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-indigo-200 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors text-xs font-bold rounded-lg ml-auto"
+                    >
+                      <MessageCircle size={14} />
+                      Message
+                    </button>
+
                     <button
                       onClick={() => handleViewProfile(app.studentId)}
-                      className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 border border-blue-200 text-blue-700 bg-blue-50/50 rounded-lg hover:bg-blue-100 transition-colors text-xs sm:text-sm font-medium"
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-blue-200 text-blue-700 bg-blue-50/50 rounded-lg hover:bg-blue-100 transition-colors text-xs font-medium"
                     >
                       <User size={14} />
                       View Profile
@@ -506,6 +537,82 @@ export default function Applications() {
           </div>
         )}
       </div>
-    </div>
+      {/* Interview Scheduling Modal */}
+      {
+        showInterviewModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+              </div>
+              <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+              <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <div className="sm:flex sm:items-start">
+                    <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                      <Calendar className="h-6 w-6 text-indigo-600" aria-hidden="true" />
+                    </div>
+                    <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                      <h3 className="text-lg leading-6 font-bold text-gray-900" id="modal-title">
+                        Schedule Interview
+                      </h3>
+                      <div className="mt-4 space-y-4">
+                        <div>
+                          <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Interview Date</label>
+                          <input
+                            type="date"
+                            value={interviewForm.date}
+                            onChange={(e) => setInterviewForm({ ...interviewForm, date: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Interview Time</label>
+                          <input
+                            type="time"
+                            value={interviewForm.time}
+                            onChange={(e) => setInterviewForm({ ...interviewForm, time: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Google Meet Link</label>
+                          <input
+                            type="url"
+                            placeholder="https://meet.google.com/..."
+                            value={interviewForm.meetingLink}
+                            onChange={(e) => setInterviewForm({ ...interviewForm, meetingLink: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold"
+                          />
+                          <p className="mt-1 text-[10px] text-gray-500 font-medium italic">* A random Meet link has been generated for your convenience.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateStatus(selectedAppForInterview!, 'interview_scheduled', interviewForm)}
+                    disabled={!interviewForm.date || !interviewForm.time || !interviewForm.meetingLink || actionLoading === selectedAppForInterview}
+                    className="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-bold text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 transition-all shadow-indigo-200"
+                  >
+                    {actionLoading === selectedAppForInterview ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Schedule & Notify Student
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowInterviewModal(false)}
+                    className="mt-3 w-full inline-flex justify-center rounded-xl border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-bold text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      }
+    </div >
   )
 }

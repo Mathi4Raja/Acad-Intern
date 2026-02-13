@@ -8,7 +8,7 @@ import { useSocket } from '@/lib/SocketContext';
 
 interface ConversationListProps {
     selectedApplicationId: string | null;
-    onSelectConversation: (applicationId: string) => void;
+    onSelectConversation: (applicationId: string, otherPartyName: string) => void;
     currentUserRole: 'student' | 'company';
     currentUserId: string;
 }
@@ -189,7 +189,7 @@ export default function ConversationList({
                         return (
                             <button
                                 key={conv.application._id}
-                                onClick={() => onSelectConversation(conv.application._id)}
+                                onClick={() => onSelectConversation(conv.application._id, otherParty)}
                                 className={`w-full text-left p-3 rounded-xl transition-all duration-200 group relative
                                     ${isSelected
                                         ? 'bg-primary/5 ring-1 ring-primary/20 shadow-sm'

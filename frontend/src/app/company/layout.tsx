@@ -18,11 +18,12 @@ const navigation = [
 ]
 
 export default function CompanyLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout, isLoading: authLoading } = useAuth()
+  const { user, profile, logout, isLoading: authLoading } = useAuth()
   const { notifications, markAsRead, markAllAsRead } = useNotifications()
   const pathname = usePathname()
   const router = useRouter()
   const isMessagesPage = pathname === '/company/messages'
+  const companyName = (profile as any)?.companyName || user?.name || 'Company';
 
   // Redirect to login if not authenticated or wrong role
   useEffect(() => {
@@ -45,7 +46,7 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
     <DashboardLayout
       variant="company"
       navigation={navigation}
-      userName={user?.name || 'Company'}
+      userName={companyName}
       userEmail={user?.email}
       notificationHref="/company/notifications"
       notifications={notifications}
