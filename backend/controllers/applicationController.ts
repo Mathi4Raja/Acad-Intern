@@ -297,21 +297,23 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
-        .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
-        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
-        .header { background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); padding: 48px 32px; text-align: center; color: #ffffff; }
-        .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; }
-        .content { padding: 40px 32px; }
-        .badge { display: inline-block; padding: 6px 14px; background: #dbeafe; color: #1e40af; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px; }
-        .content p { font-size: 15px; color: #4b5563; margin: 0 0 20px; }
-        .details-card { background: #f9fafb; border-radius: 12px; padding: 20px; margin: 24px 0; border: 1px solid #f3f4f6; }
-        .detail-row { margin-bottom: 8px; font-size: 14px; }
-        .detail-label { color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
-        .detail-value { color: #111827; font-weight: 700; }
-        .button-wrapper { text-align: center; margin: 32px 0 8px; }
-        .button { display: inline-block; padding: 14px 32px; background-color: #2563eb; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
-        .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #374151; margin: 0; padding: 0; background-color: #f8fafc; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f8fafc; padding: 40px 0; }
+        .container { width: 92%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #eef2f6; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+        .header { background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); padding: 56px 40px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.025em; }
+        .content { padding: 48px 40px; }
+        .status-badge { display: inline-block; padding: 8px 16px; background: #eff6ff; color: #2563eb; border-radius: 99px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px; border: 1px solid #dbeafe; }
+        .greeting { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 12px; }
+        .message { font-size: 16px; color: #4b5563; margin-bottom: 32px; }
+        .card { background: #f9fbfc; border-radius: 16px; padding: 24px; margin: 32px 0; border: 1px solid #f1f5f9; }
+        .item { margin-bottom: 16px; }
+        .item:last-child { margin-bottom: 0; }
+        .label { color: #94a3b8; font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; margin-bottom: 4px; }
+        .value { color: #1e293b; font-weight: 700; font-size: 15px; }
+        .button-wrapper { text-align: center; margin-top: 40px; }
+        .button { display: inline-block; padding: 16px 36px; background-color: #2563eb; color: #ffffff !important; text-decoration: none; border-radius: 14px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+        .footer { padding: 40px; text-align: center; font-size: 13px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
     </style>
 </head>
 <body>
@@ -321,25 +323,25 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
                 <h1>Great News!</h1>
             </div>
             <div class="content">
-                <div class="badge">Shortlisted</div>
-                <p>Hi ${student.name},</p>
-                <p>You've been shortlisted for the internship at <strong>${companyName}</strong>. The hiring team was impressed with your application and wants to move forward.</p>
+                <div style="text-align: center;"><div class="status-badge">Shortlisted</div></div>
+                <p class="greeting">Hi ${student.name},</p>
+                <p class="message">You’ve been shortlisted for the internship at <strong>${companyName}</strong>! The hiring team was impressed with your profile and wants to move forward with your application.</p>
                 
-                <div class="details-card">
-                    <div class="detail-row">
-                        <div class="detail-label">Internship</div>
-                        <div class="detail-value">${internship.title}</div>
+                <div class="card">
+                    <div class="item">
+                        <div class="label">Internship</div>
+                        <div class="value">${internship.title}</div>
                     </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Company</div>
-                        <div class="detail-value">${companyName}</div>
+                    <div class="item">
+                        <div class="label">Company</div>
+                        <div class="value">${companyName}</div>
                     </div>
                 </div>
 
-                <p>Keep an eye on your messages for next steps and interview details.</p>
+                <p class="message" style="margin-bottom: 0;">Keep an eye on your messages for next steps and interview details. Good luck!</p>
                 
                 <div class="button-wrapper">
-                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/student/applications" class="button">View Application Status</a>
+                    <a href="${(process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim()}/student/applications" class="button">View Application Status</a>
                 </div>
             </div>
             <div class="footer">
@@ -382,22 +384,24 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
-        .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
-        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
-        .header { background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 48px 32px; text-align: center; color: #ffffff; }
-        .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; }
-        .content { padding: 40px 32px; }
-        .badge { display: inline-block; padding: 6px 14px; background: #dcfce7; color: #166534; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px; }
-        .content p { font-size: 15px; color: #4b5563; margin: 0 0 20px; }
-        .details-card { background: #f9fafb; border-radius: 12px; padding: 20px; margin: 24px 0; border: 1px solid #f3f4f6; }
-        .detail-row { margin-bottom: 8px; font-size: 14px; }
-        .detail-label { color: #9ca3af; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; }
-        .detail-value { color: #111827; font-weight: 700; }
-        .button-wrapper { text-align: center; margin: 32px 0 8px; }
-        .button { display: inline-block; padding: 14px 32px; background-color: #059669; color: #ffffff !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; margin: 0 5px; }
-        .button.secondary { background-color: #ffffff; color: #059669 !important; border: 2px solid #059669; }
-        .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #374151; margin: 0; padding: 0; background-color: #f8fafc; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f8fafc; padding: 40px 0; }
+        .container { width: 92%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #eef2f6; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+        .header { background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 56px 40px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.025em; }
+        .content { padding: 48px 40px; }
+        .status-badge { display: inline-block; padding: 8px 16px; background: #ecfdf5; color: #059669; border-radius: 99px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px; border: 1px solid #a7f3d0; }
+        .greeting { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 12px; }
+        .message { font-size: 16px; color: #4b5563; margin-bottom: 32px; }
+        .card { background: #f9fbfc; border-radius: 16px; padding: 24px; margin: 32px 0; border: 1px solid #f1f5f9; }
+        .item { margin-bottom: 16px; }
+        .item:last-child { margin-bottom: 0; }
+        .label { color: #94a3b8; font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; margin-bottom: 4px; }
+        .value { color: #1e293b; font-weight: 700; font-size: 15px; }
+        .button-wrapper { text-align: center; margin-top: 40px; }
+        .button { display: inline-block; padding: 16px 36px; background-color: #059669; color: #ffffff !important; text-decoration: none; border-radius: 14px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2); }
+        .secondary-link { display: block; margin-top: 16px; color: #059669; font-size: 14px; font-weight: 600; text-decoration: underline; }
+        .footer { padding: 40px; text-align: center; font-size: 13px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
     </style>
 </head>
 <body>
@@ -407,34 +411,30 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
                 <h1>Interview Scheduled!</h1>
             </div>
             <div class="content">
-                <div class="badge">Interview Details</div>
-                <p>Hi ${student.name},</p>
-                <p>Exciting news! Your interview for the <strong>${internship.title}</strong> role at <strong>${companyName}</strong> has been scheduled.</p>
+                <div style="text-align: center;"><div class="status-badge">Action Required</div></div>
+                <p class="greeting">Hi ${student.name},</p>
+                <p class="message">Exciting news! Your interview for the <strong>${internship.title}</strong> role at <strong>${companyName}</strong> has been scheduled.</p>
                 
-                <div class="details-card">
-                    <div class="detail-row">
-                        <div class="detail-label">Date</div>
-                        <div class="detail-value">${details?.date ? new Date(details.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'TBD'}</div>
+                <div class="card">
+                    <div class="item">
+                        <div class="label">Date</div>
+                        <div class="value">${details?.date ? new Date(details.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'TBD'}</div>
                     </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Time</div>
-                        <div class="detail-value">${details?.time || 'TBD'}</div>
+                    <div class="item">
+                        <div class="label">Time</div>
+                        <div class="value">${details?.time || 'TBD'}</div>
                     </div>
-                    <div class="detail-row">
-                        <div class="detail-label">Meeting Link</div>
-                        <div class="detail-value"><a href="${details?.meetingLink || '#'}" style="color: #059669; text-decoration: none; font-weight: 800;">${details?.meetingLink || 'Join Interview'}</a></div>
-                    </div>
-                    <div class="detail-row" style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 12px;">
-                        <div class="detail-label">Position</div>
-                        <div class="detail-value">${internship.title}</div>
+                    <div class="item">
+                        <div class="label">Meeting Link</div>
+                        <div class="value"><a href="${details?.meetingLink || '#'}" style="color: #059669; text-decoration: underline;">Join Interview</a></div>
                     </div>
                 </div>
 
-                <p>Please ensure you're on time. You can join directly using the button below or add the event to your calendar.</p>
+                <p class="message" style="margin-bottom: 0;">Please ensure you're on time. You can join directly using the button below or add the event to your calendar.</p>
                 
                 <div class="button-wrapper">
                     <a href="${details?.meetingLink || '#'}" class="button">Join Interview</a>
-                    <a href="${calendarLink}" class="button secondary">Add to Calendar</a>
+                    <a href="${calendarLink}" class="secondary-link">Add to Calendar</a>
                 </div>
             </div>
             <div class="footer">
@@ -470,17 +470,23 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #1f2937; margin: 0; padding: 0; background-color: #f9fafb; }
-        .wrapper { width: 100%; table-layout: fixed; background-color: #f9fafb; padding-bottom: 40px; }
-        .container { width: 100%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #f3f4f6; border-radius: 16px; overflow: hidden; margin-top: 20px; }
-        .header { background: #ffffff; padding: 48px 32px 32px; text-align: center; border-bottom: 1px solid #f3f4f6; }
-        .header h1 { margin: 0; font-size: 20px; font-weight: 800; color: #111827; letter-spacing: -0.025em; }
-        .content { padding: 40px 32px; }
-        .badge { display: inline-block; padding: 6px 14px; background: #f3f4f6; color: #6b7280; border-radius: 99px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px; }
-        .content p { font-size: 15px; color: #4b5563; margin: 0 0 20px; }
-        .button-wrapper { text-align: center; margin: 32px 0 8px; }
-        .button { display: inline-block; padding: 14px 32px; border: 2px solid #e5e7eb; color: #374151 !important; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 15px; }
-        .footer { padding: 32px; text-align: center; font-size: 12px; color: #9ca3af; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #374151; margin: 0; padding: 0; background-color: #f8fafc; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f8fafc; padding: 40px 0; }
+        .container { width: 92%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #eef2f6; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+        .header { background: linear-gradient(135deg, #64748b 0%, #1e293b 100%); padding: 56px 40px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.025em; }
+        .content { padding: 48px 40px; }
+        .status-badge { display: inline-block; padding: 8px 16px; background: #f1f5f9; color: #64748b; border-radius: 99px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px; border: 1px solid #e2e8f0; }
+        .greeting { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 12px; }
+        .message { font-size: 16px; color: #4b5563; margin-bottom: 32px; }
+        .card { background: #f9fbfc; border-radius: 16px; padding: 24px; margin: 32px 0; border: 1px solid #f1f5f9; }
+        .item { margin-bottom: 16px; }
+        .item:last-child { margin-bottom: 0; }
+        .label { color: #94a3b8; font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; margin-bottom: 4px; }
+        .value { color: #1e293b; font-weight: 700; font-size: 15px; }
+        .button-wrapper { text-align: center; margin-top: 40px; }
+        .button { display: inline-block; padding: 16px 36px; background-color: #ffffff; color: #334155 !important; text-decoration: none; border-radius: 14px; font-weight: 700; font-size: 16px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .footer { padding: 40px; text-align: center; font-size: 13px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
     </style>
 </head>
 <body>
@@ -490,12 +496,26 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
                 <h1>Application Update</h1>
             </div>
             <div class="content">
-                <div class="badge">Update</div>
-                <p>Hi ${student.name},</p>
-                <p>Thank you for your interest in the <strong>${internship.title}</strong> role at <strong>${companyName}</strong>.</p>
-                <p>The team has decided to move forward with other candidates at this time. We appreciate the effort you put into your application and wish you the best in your search.</p>
+                <div style="text-align: center;"><div class="status-badge">Update Received</div></div>
+                <p class="greeting">Hi ${student.name},</p>
+                <p class="message">Thank you for giving us the opportunity to review your application for the <strong>${internship.title}</strong> role at <strong>${companyName}</strong>.</p>
+                
+                <div class="card">
+                    <div class="item">
+                        <div class="label">Role</div>
+                        <div class="value">${internship.title}</div>
+                    </div>
+                    <div class="item">
+                        <div class="label">Company</div>
+                        <div class="value">${companyName}</div>
+                    </div>
+                </div>
+
+                <p class="message">After careful consideration, the team has decided to move forward with other candidates who more closely match our current requirements for this specific role.</p>
+                <p class="message" style="margin-bottom: 0;">We appreciate the time and effort you invested. We encourage you to explore other opportunities on our platform that align with your skills.</p>
+                
                 <div class="button-wrapper">
-                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/student/dashboard" class="button">Explore Other Roles</a>
+                    <a href="${(process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim()}/student/internships" class="button">Explore Other Roles</a>
                 </div>
             </div>
             <div class="footer">
@@ -517,6 +537,91 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
                 });
             } catch (emailError) {
                 console.error('Rejection email failed to send:', emailError);
+                // Non-blocking
+            }
+        }
+
+        // Send Accepted Email
+        if (status === 'accepted' && (application.studentId as any).email) {
+            const student = application.studentId as any;
+            const companyName = company.companyName;
+
+            const acceptedHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #374151; margin: 0; padding: 0; background-color: #f8fafc; }
+        .wrapper { width: 100%; table-layout: fixed; background-color: #f8fafc; padding: 40px 0; }
+        .container { width: 92%; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #eef2f6; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 56px 40px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 32px; font-weight: 800; letter-spacing: -0.025em; }
+        .content { padding: 48px 40px; }
+        .status-badge { display: inline-block; padding: 8px 16px; background: #ecfdf5; color: #059669; border-radius: 99px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px; border: 1px solid #a7f3d0; }
+        .greeting { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 24px; }
+        .message { font-size: 16px; color: #4b5563; margin-bottom: 32px; }
+        .card { background: #f9fbfc; border-radius: 16px; padding: 24px; margin: 32px 0; border: 1px solid #f1f5f9; }
+        .item { margin-bottom: 16px; }
+        .item:last-child { margin-bottom: 0; }
+        .label { color: #94a3b8; font-weight: 800; text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; margin-bottom: 4px; }
+        .value { color: #1e293b; font-weight: 700; font-size: 15px; }
+        .button-wrapper { text-align: center; margin-top: 40px; }
+        .button { display: inline-block; padding: 16px 36px; background-color: #059669; color: #ffffff !important; text-decoration: none; border-radius: 14px; font-weight: 700; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2); }
+        .footer { padding: 40px; text-align: center; font-size: 13px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <div class="header">
+                <h1>Congratulations!</h1>
+            </div>
+            <div class="content">
+                <div style="text-align: center;"><div class="status-badge">Selected</div></div>
+                <p class="greeting">Hi ${student.name},</p>
+                <p class="message">We are thrilled to inform you that you have been <strong>selected</strong> for the <strong>${internship.title}</strong> role at <strong>${companyName}</strong>!</p>
+                
+                <div class="card">
+                    <div class="item">
+                        <div class="label">Role</div>
+                        <div class="value">${internship.title}</div>
+                    </div>
+                    <div class="item">
+                        <div class="label">Company</div>
+                        <div class="value">${companyName}</div>
+                    </div>
+                    <div class="item">
+                        <div class="label">Status</div>
+                        <div class="value" style="color: #059669;">Offer Extended</div>
+                    </div>
+                </div>
+
+                <p class="message" style="margin-bottom: 0;">The company will be in touch shortly with the onboarding details. Keep an eye on your messages for the next steps.</p>
+                
+                <div class="button-wrapper">
+                    <a href="${(process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim()}/student/applications" class="button">View Dashboard</a>
+                </div>
+            </div>
+            <div class="footer">
+                <p>&copy; {{CURRENT_YEAR}} {{SITE_NAME}}. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+            `;
+
+            try {
+                await sendEmail({
+                    to: student.email,
+                    subject: `You've been selected! ${internship.title} at ${companyName}`,
+                    text: `Congratulations! You have been selected for the ${internship.title} role at ${companyName}. The company will be in touch shortly.`,
+                    html: acceptedHtml,
+                    type: 'accepted'
+                });
+            } catch (emailError) {
+                console.error('Accepted email failed to send:', emailError);
                 // Non-blocking
             }
         }

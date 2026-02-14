@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MessageCircle, Loader2, Search } from 'lucide-react';
+import { MessageCircle, Loader2, Search, Trash2 } from 'lucide-react';
 import { Conversation } from '@/types';
 import { messageApi } from '@/lib/api';
 import { useSocket } from '@/lib/SocketContext';
@@ -11,13 +11,15 @@ interface ConversationListProps {
     onSelectConversation: (applicationId: string, otherPartyName: string) => void;
     currentUserRole: 'student' | 'company';
     currentUserId: string;
+    onDelete?: (applicationId: string) => void;
 }
 
 export default function ConversationList({
     selectedApplicationId,
     onSelectConversation,
     currentUserRole,
-    currentUserId
+    currentUserId,
+    onDelete
 }: ConversationListProps) {
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
@@ -130,6 +132,37 @@ export default function ConversationList({
         }
     };
 
+    const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; applicationId: string | null }>({
+        isOpen: false,
+        applicationId: null
+    });
+
+    const handleDeleteConversation = async (applicationId: string, event: React.MouseEvent) => {
+        event.stopPropagation(); // Prevent selecting the conversation
+        setDeleteConfirmation({ isOpen: true, applicationId });
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirmation.applicationId) return;
+
+        try {
+            await messageApi.deleteConversation(deleteConfirmation.applicationId);
+            setConversations(prev => prev.filter(c => c.application._id !== deleteConfirmation.applicationId));
+
+            // Notify parent about deletion
+            if (onDelete) onDelete(deleteConfirmation.applicationId);
+
+            // If the deleted conversation was selected, deselect it
+            if (selectedApplicationId === deleteConfirmation.applicationId) {
+                // UI update is handled via parent callback and prop update
+            }
+        } catch (error) {
+            console.error('Failed to delete conversation:', error);
+        } finally {
+            setDeleteConfirmation({ isOpen: false, applicationId: null });
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -187,87 +220,123 @@ export default function ConversationList({
                         const statusStyle = statusColors[conv.application.status as keyof typeof statusColors] || statusColors.pending;
 
                         return (
-                            <button
-                                key={conv.application._id}
-                                onClick={() => onSelectConversation(conv.application._id, otherParty)}
-                                className={`w-full text-left p-3 rounded-xl transition-all duration-200 group relative
+                            <div key={conv.application._id} className="relative group/item">
+                                <button
+                                    onClick={() => onSelectConversation(conv.application._id, otherParty)}
+                                    className={`w-full text-left p-3 rounded-xl transition-all duration-200 group relative
                                     ${isSelected
-                                        ? 'bg-primary/5 ring-1 ring-primary/20 shadow-sm'
-                                        : 'hover:bg-gray-50 border border-transparent hover:border-gray-100'
-                                    }`}
-                                style={{ animation: `fadeIn 0.3s ease-out ${index * 0.05}s backwards` }}
-                            >
-                                <div className="flex gap-3">
-                                    {/* Avatar */}
-                                    <div className="relative flex-shrink-0">
-                                        {(() => {
-                                            // Determine which profile picture to show based on current user role
-                                            const profilePicture = currentUserRole === 'student'
-                                                ? (conv as any).companyLogo
-                                                : (conv as any).studentProfilePicture;
+                                            ? 'bg-primary/5 ring-1 ring-primary/20 shadow-sm'
+                                            : 'hover:bg-gray-50 border border-transparent hover:border-gray-100'
+                                        }`}
+                                    style={{ animation: `fadeIn 0.3s ease-out ${index * 0.05}s backwards` }}
+                                >
+                                    <div className="flex gap-3">
+                                        {/* Avatar */}
+                                        <div className="relative flex-shrink-0">
+                                            {(() => {
+                                                // Determine which profile picture to show based on current user role
+                                                const profilePicture = currentUserRole === 'student'
+                                                    ? (conv as any).companyLogo
+                                                    : (conv as any).studentProfilePicture;
 
-                                            return profilePicture ? (
-                                                <img
-                                                    src={profilePicture}
-                                                    alt={otherParty}
-                                                    className={`w-12 h-12 rounded-full object-cover shadow-sm transition-transform group-active:scale-95 ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
-                                                        }`}
-                                                    onError={(e) => {
-                                                        // Fallback to initial on error
-                                                        const target = e.target as HTMLImageElement;
-                                                        target.style.display = 'none';
-                                                        target.nextElementSibling?.classList.remove('hidden');
-                                                    }}
-                                                />
-                                            ) : null;
-                                        })()}
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shadow-sm transition-transform group-active:scale-95 ${(currentUserRole === 'student' ? (conv as any).companyLogo : (conv as any).studentProfilePicture) ? 'hidden' : ''
-                                            } ${isSelected
-                                                ? 'bg-primary text-white'
-                                                : 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600'
-                                            }`}>
-                                            {otherParty.charAt(0).toUpperCase()}
-                                        </div>
-                                        {/* Unread indicator (dot) */}
-                                        {conv.unreadCount > 0 && (
-                                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md">
-                                                {conv.unreadCount > 9 ? '9+' : conv.unreadCount}
+                                                return profilePicture ? (
+                                                    <img
+                                                        src={profilePicture}
+                                                        alt={otherParty}
+                                                        className={`w-12 h-12 rounded-full object-cover shadow-sm transition-transform group-active:scale-95 ${isSelected ? 'ring-2 ring-primary ring-offset-2' : ''
+                                                            }`}
+                                                        onError={(e) => {
+                                                            // Fallback to initial on error
+                                                            const target = e.target as HTMLImageElement;
+                                                            target.style.display = 'none';
+                                                            target.nextElementSibling?.classList.remove('hidden');
+                                                        }}
+                                                    />
+                                                ) : null;
+                                            })()}
+                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shadow-sm transition-transform group-active:scale-95 ${(currentUserRole === 'student' ? (conv as any).companyLogo : (conv as any).studentProfilePicture) ? 'hidden' : ''
+                                                } ${isSelected
+                                                    ? 'bg-primary text-white'
+                                                    : 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600'
+                                                }`}>
+                                                {otherParty.charAt(0).toUpperCase()}
                                             </div>
-                                        )}
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                        <div className="flex items-center justify-between gap-2 mb-0.5">
-                                            <h3 className={`text-sm font-semibold truncate transition-colors ${isSelected ? 'text-primary' : 'text-gray-900 group-hover:text-gray-900'}`}>
-                                                {otherParty}
-                                            </h3>
-                                            <span className={`text-[10px] whitespace-nowrap ${conv.unreadCount > 0 ? 'text-primary font-bold' : 'text-gray-400'}`}>
-                                                {formatTime(conv.lastMessage?.createdAt)}
-                                            </span>
+                                            {/* Unread indicator (dot) */}
+                                            {conv.unreadCount > 0 && (
+                                                <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                                                    {conv.unreadCount > 9 ? '9+' : conv.unreadCount}
+                                                </div>
+                                            )}
                                         </div>
 
-                                        <p className="text-xs text-gray-500 truncate mb-1.5 opacity-80">
-                                            {conv.application.internshipId.title}
-                                        </p>
+                                        {/* Content */}
+                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                            <div className="flex items-center justify-between gap-2 mb-0.5">
+                                                <h3 className={`text-sm font-semibold truncate transition-colors ${isSelected ? 'text-primary' : 'text-gray-900 group-hover:text-gray-900'}`}>
+                                                    {otherParty}
+                                                </h3>
+                                                <span className={`text-[10px] whitespace-nowrap ${conv.unreadCount > 0 ? 'text-primary font-bold' : 'text-gray-400'}`}>
+                                                    {formatTime(conv.lastMessage?.createdAt)}
+                                                </span>
+                                            </div>
 
-                                        <div className="flex items-center justify-between gap-4">
-                                            <p className={`text-xs truncate max-w-[140px] sm:max-w-[180px] ${conv.unreadCount > 0 ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
-                                                {conv.lastMessage?.senderId._id === currentUserId && 'You: '}
-                                                {conv.lastMessage?.content || '📎 Attachment'}
+                                            <p className="text-xs text-gray-500 truncate mb-1.5 opacity-80">
+                                                {conv.application.internshipId.title}
                                             </p>
 
-                                            <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium uppercase tracking-wider ${statusStyle}`}>
-                                                {conv.application.status}
-                                            </span>
+                                            <div className="flex items-center justify-between gap-4">
+                                                <p className={`text-xs truncate max-w-[140px] sm:max-w-[180px] ${conv.unreadCount > 0 ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>
+                                                    {conv.lastMessage?.senderId._id === currentUserId && 'You: '}
+                                                    {conv.lastMessage?.content || '📎 Attachment'}
+                                                </p>
+
+                                                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium uppercase tracking-wider ${statusStyle}`}>
+                                                    {conv.application.status}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </button>
+                                </button>
+
+                                {/* Delete Button - visible on hover */}
+                                <button
+                                    onClick={(e) => handleDeleteConversation(conv.application._id, e)}
+                                    className="absolute right-2 bottom-2 p-1.5 rounded-full bg-white text-gray-400 hover:text-red-500 hover:bg-red-50 shadow-sm border border-gray-100 opacity-0 group-hover/item:opacity-100 transition-all duration-200 z-10"
+                                    title="Delete conversation"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            </div>
                         );
                     })
                 )}
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirmation.isOpen && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-xs animate-in fade-in zoom-in duration-200">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Conversation?</h3>
+                        <p className="text-sm text-gray-500 mb-6">
+                            This will hide the conversation from your list until a new message is sent.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setDeleteConfirmation({ isOpen: false, applicationId: null })}
+                                className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-semibold transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-colors"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

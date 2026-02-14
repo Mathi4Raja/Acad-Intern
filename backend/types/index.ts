@@ -5,7 +5,7 @@ import { Document, Types } from 'mongoose';
 export type UserRole = 'student' | 'company' | 'admin';
 
 // Application status enum
-export type ApplicationStatus = 'pending' | 'reviewed' | 'shortlisted' | 'interview_scheduled' | 'assessment_completed' | 'rejected' | 'accepted' | 'expired';
+export type ApplicationStatus = 'pending' | 'shortlisted' | 'interview_scheduled' | 'assessment_completed' | 'rejected' | 'accepted' | 'expired';
 
 // Report status enum
 export type ReportStatus = 'open' | 'under_review' | 'resolved' | 'dismissed';
@@ -141,6 +141,7 @@ export interface IConversationPreference extends Document {
     userId: Types.ObjectId;
     applicationId: Types.ObjectId;
     mutedUntil?: Date;
+    deletedAt?: Date;
     createdAt: Date;
     updatedAt: Date;
 }

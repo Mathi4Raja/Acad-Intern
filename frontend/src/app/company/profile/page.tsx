@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Building, Mail, Phone, MapPin, Globe, Users, Edit, Save, X, Briefcase, Calendar, CheckCircle, Upload, AlertCircle, Shield, Loader2, Trash2, AlertTriangle, Camera } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuth } from '@/lib/AuthContext'
+import { INDUSTRIES, COMPANY_SIZES } from '@/lib/constants'
 
 interface CompanyProfile {
   _id: string;
@@ -252,7 +253,28 @@ export default function CompanyProfilePage() {
       })
 
       if (response.data.success) {
-        setProfile(response.data.data)
+        const p = response.data.data
+        setProfile(p)
+        setFormData({
+          name: p.userId?.name || '',
+          companyName: p.companyName || '',
+          email: p.userId?.email || '',
+          phone: p.phone || '',
+          website: p.website || '',
+          location: p.location || '',
+          industry: p.industry || '',
+          companySize: p.companySize || '',
+          founded: p.founded || '',
+          description: p.description || '',
+          about: p.about || '',
+          benefits: p.benefits || '',
+          cin: p.cin || '',
+          socialLinks: {
+            linkedin: p.socialLinks?.linkedin || '',
+            twitter: p.socialLinks?.twitter || '',
+            instagram: p.socialLinks?.instagram || ''
+          }
+        })
         setIsEditing(false)
         setLogoFile(null)
         setBannerFile(null)
@@ -646,13 +668,9 @@ export default function CompanyProfilePage() {
                 className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="">Select Industry</option>
-                <option value="Technology">Technology</option>
-                <option value="Finance">Finance</option>
-                <option value="Healthcare">Healthcare</option>
-                <option value="Education">Education</option>
-                <option value="E-commerce">E-commerce</option>
-                <option value="Manufacturing">Manufacturing</option>
-                <option value="Other">Other</option>
+                {INDUSTRIES.map(ind => (
+                  <option key={ind} value={ind}>{ind}</option>
+                ))}
               </select>
             ) : (
               <p className="text-xs sm:text-sm text-gray-900">{formData.industry || '-'}</p>
@@ -730,12 +748,9 @@ export default function CompanyProfilePage() {
                 className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="">Select Size</option>
-                <option value="1-10">1-10</option>
-                <option value="11-50">11-50</option>
-                <option value="50-200">50-200</option>
-                <option value="201-500">201-500</option>
-                <option value="501-1000">501-1000</option>
-                <option value="1000+">1000+</option>
+                {COMPANY_SIZES.map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
               </select>
             ) : (
               <p className="text-xs sm:text-sm text-gray-900">{formData.companySize || '-'}</p>

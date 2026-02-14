@@ -8,7 +8,7 @@ export interface Applicant {
     name: string
     email: string
     position: string
-    status: 'pending' | 'shortlisted' | 'interviewed' | 'offered' | 'rejected'
+    status: 'pending' | 'shortlisted' | 'interview_scheduled' | 'assessment_completed' | 'rejected' | 'accepted' | 'expired'
     matchScore: number
     appliedDate: string
     skills: string[]
@@ -25,10 +25,12 @@ interface ApplicationCardProps {
 
 const statusColors: Record<Applicant['status'], string> = {
     pending: 'border-l-yellow-400',
-    shortlisted: 'border-l-blue-400',
-    interviewed: 'border-l-purple-400',
-    offered: 'border-l-green-400',
-    rejected: 'border-l-red-400'
+    shortlisted: 'border-l-blue-500',
+    interview_scheduled: 'border-l-purple-500',
+    assessment_completed: 'border-l-indigo-500',
+    accepted: 'border-l-green-500',
+    rejected: 'border-l-red-500',
+    expired: 'border-l-gray-400'
 }
 
 export function ApplicationCard({ applicant, onView, isDragging = false, className }: ApplicationCardProps) {
@@ -60,14 +62,14 @@ export function ApplicationCard({ applicant, onView, isDragging = false, classNa
                     <p className="text-xs text-gray-500 truncate mb-2">{applicant.position}</p>
 
                     {/* Skills */}
-                    <div className="flex flex-wrap gap-1 mb-2">
+                    <div className="flex flex-wrap gap-1 items-start mb-3">
                         {applicant.skills.slice(0, 3).map((skill, i) => (
-                            <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                            <span key={i} className="text-[10px] bg-gray-50 text-gray-500 px-2 py-0.5 rounded-full border border-gray-100 font-bold">
                                 {skill}
                             </span>
                         ))}
                         {applicant.skills.length > 3 && (
-                            <span className="text-xs text-gray-400">+{applicant.skills.length - 3}</span>
+                            <span className="text-[10px] text-gray-400 font-bold ml-1">+{applicant.skills.length - 3}</span>
                         )}
                     </div>
 

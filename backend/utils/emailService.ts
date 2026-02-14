@@ -7,7 +7,7 @@ interface EmailOptions {
     subject: string;
     text: string;
     html: string;
-    type?: 'password_reset' | 'general' | 'welcome' | 'shortlisted' | 'rejected' | 'email_verification' | 'interview_scheduled' | 'message_alert';
+    type?: 'password_reset' | 'general' | 'welcome' | 'shortlisted' | 'rejected' | 'accepted' | 'email_verification' | 'interview_scheduled' | 'message_alert';
 }
 
 /**
@@ -28,8 +28,8 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
         key: {
             $in: [
                 'emailFrom', 'emailFromName', 'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass',
-                'emailNotifications', 'welcomeEmail', 'shortlistedEmail', 'rejectedEmail',
-                'interviewScheduledEmail', 'messageAlertEmail', 'reminderEmail',
+                'emailNotifications', 'welcomeEmail', 'applicationStatusEmail',
+                'messageAlertEmail', 'reminderEmail',
                 'siteName'
             ]
         }
@@ -60,9 +60,10 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
     // Granular Type-based Checks
     const typeConfigs: Record<string, string> = {
         'welcome': 'welcomeEmail',
-        'shortlisted': 'shortlistedEmail',
-        'rejected': 'rejectedEmail',
-        'interview_scheduled': 'interviewScheduledEmail',
+        'shortlisted': 'applicationStatusEmail',
+        'rejected': 'applicationStatusEmail',
+        'accepted': 'applicationStatusEmail',
+        'interview_scheduled': 'applicationStatusEmail',
         'message_alert': 'messageAlertEmail',
         'general': 'reminderEmail' // Used for stale app & closing soon
     };

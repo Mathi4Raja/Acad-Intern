@@ -4,11 +4,21 @@ import Company from '../models/Company';
 import { AuthRequest } from '../types';
 import { verifyCin as verifyCompanyCin } from '../utils/mcaVerificationService';
 
+// Helper for URL validation that auto-prefixes https:// if missing
+const flexibleUrl = z.string().trim().transform((val) => {
+    if (!val) return val;
+    // If it doesn't start with a protocol, prefix with https://
+    if (!/^(https?:\/\/)/i.test(val)) {
+        return `https://${val}`;
+    }
+    return val;
+}).pipe(z.string().url('Invalid URL format'));
+
 // Schema for profile update
 const companySchema = z.object({
     name: z.string().min(2).optional(), // Contact Person Name
     companyName: z.string().min(2).optional(),
-    website: z.string().url().optional().or(z.literal('')),
+    website: flexibleUrl.optional().or(z.literal('')),
     description: z.string().optional(),
     cin: z.string().optional().or(z.literal('')),
     logo: z.string().url().optional().or(z.literal('')).nullable(),
@@ -21,9 +31,9 @@ const companySchema = z.object({
     about: z.string().optional(),
     benefits: z.string().optional(),
     socialLinks: z.object({
-        linkedin: z.string().optional(),
-        twitter: z.string().optional(),
-        instagram: z.string().optional()
+        linkedin: flexibleUrl.optional().or(z.literal('')),
+        twitter: flexibleUrl.optional().or(z.literal('')),
+        instagram: flexibleUrl.optional().or(z.literal(''))
     }).optional()
 });
 

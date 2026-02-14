@@ -9,6 +9,7 @@ type UserRole = 'student' | 'company' | null
 
 import { useAuth } from '@/lib/AuthContext'
 import { useSettings } from '@/lib/SettingsContext'
+import { DEPARTMENTS } from '@/lib/constants'
 
 declare global {
   interface Window {
@@ -410,12 +411,9 @@ export default function SignupPage() {
                         className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-sm bg-gray-50/50 focus:bg-white"
                       >
                         <option value="">Select Department</option>
-                        <option value="CSE">Computer Science</option>
-                        <option value="ECE">Electronics</option>
-                        <option value="ME">Mechanical</option>
-                        <option value="EE">Electrical</option>
-                        <option value="CE">Civil</option>
-                        <option value="OTHER">Other</option>
+                        {DEPARTMENTS.map(dept => (
+                          <option key={dept} value={dept}>{dept}</option>
+                        ))}
                       </select>
                     </div>
 

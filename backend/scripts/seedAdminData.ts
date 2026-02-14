@@ -178,7 +178,7 @@ async function seedAdminData() {
         // Create applications
         console.log(`📋 Creating applications...`);
         let applicationCount = 0;
-        const appStatuses = ['pending', 'reviewed', 'shortlisted', 'interview_scheduled', 'accepted', 'rejected'];
+        const appStatuses = ['pending', 'shortlisted', 'interview_scheduled', 'accepted', 'rejected'];
 
         for (const student of students) {
             // Each student applies to 3-8 internships

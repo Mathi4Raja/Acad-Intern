@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/api';
 
 import ConversationList from '@/components/messages/ConversationList';
@@ -27,14 +27,30 @@ function MessagesContent() {
         });
     };
 
+    const router = useRouter();
+
+    const handleConversationDeleted = (applicationId: string) => {
+        if (selectedApplicationId === applicationId) {
+            setSelectedApplicationId(null);
+            setSelectedConversation(null);
+
+            // Remove query param to prevent re-selection
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+        }
+    };
+
+    // Handle query param for auto-selection
     useEffect(() => {
-        if (urlApplicationId && !selectedApplicationId) {
+        const appId = searchParams.get('applicationId');
+        if (appId && !selectedApplicationId) {
             const fetchConversationDetails = async () => {
                 try {
-                    const response = await api.get(`/applications/${urlApplicationId}`);
+                    const response = await api.get(`/applications/${appId}`);
                     if (response.data.success) {
                         const app = response.data.data;
-                        handleSelectConversation(urlApplicationId, app.studentId.name);
+                        const studentName = app.studentId?.name || 'Student';
+                        handleSelectConversation(appId, studentName);
                     }
                 } catch (error) {
                     console.error('Failed to auto-select conversation:', error);
@@ -42,7 +58,7 @@ function MessagesContent() {
             };
             fetchConversationDetails();
         }
-    }, [urlApplicationId]);
+    }, [searchParams]);
 
     if (!user) {
         return (
@@ -55,12 +71,14 @@ function MessagesContent() {
     return (
         <div className="h-full flex flex-col md:p-4 lg:p-6 lg:max-w-7xl lg:mx-auto w-full bg-gray-50 md:bg-transparent">
             <div className="flex-1 bg-white md:rounded-2xl md:shadow-sm md:border md:border-gray-200 overflow-hidden flex min-h-0">
+                {/* Conversations List */}
                 <div className={`w-full md:w-80 lg:w-96 border-r border-gray-100 flex flex-col ${selectedConversation ? 'hidden md:flex' : 'flex'}`}>
                     <ConversationList
                         selectedApplicationId={selectedApplicationId}
                         onSelectConversation={handleSelectConversation}
                         currentUserRole="company"
                         currentUserId={user.id}
+                        onDelete={handleConversationDeleted}
                     />
                 </div>
 

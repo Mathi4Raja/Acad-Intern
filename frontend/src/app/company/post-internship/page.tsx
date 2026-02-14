@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { IndianRupee, Calendar, MapPin, Clock, Users, Briefcase, FileText, Plus, X, Loader2, PlusCircle } from 'lucide-react'
 import api from '@/lib/api'
 import { useAlert } from '@/components/ui/AlertProvider'
+import { INTERNSHIP_MODES } from '@/lib/constants'
 
 export default function PostInternship() {
   const router = useRouter()
@@ -233,9 +234,9 @@ export default function PostInternship() {
                     className="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     required
                   >
-                    <option value="remote">Remote</option>
-                    <option value="hybrid">Hybrid</option>
-                    <option value="onsite">On-site</option>
+                    {INTERNSHIP_MODES.map(mode => (
+                      <option key={mode.value} value={mode.value}>{mode.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>

@@ -12,8 +12,19 @@ import Internship from '../models/Internship';
 import SystemSetting from '../models/SystemSetting';
 import { AuthRequest } from '../types';
 import { sendEmail, generateResetToken, hashToken } from '../utils/emailService';
+import { uploadToR2, isR2Configured, getKeyFromUrl, getFileStream, deleteFromR2 } from '../utils/r2Storage';
 import crypto from 'crypto';
 
+
+// Helper for URL validation that auto-prefixes https:// if missing
+const flexibleUrl = z.string().trim().transform((val) => {
+    if (!val) return val;
+    // If it doesn't start with a protocol, prefix with https://
+    if (!/^(https?:\/\/)/i.test(val)) {
+        return `https://${val}`;
+    }
+    return val;
+}).pipe(z.string().url('Invalid URL format'));
 
 // Validation schemas
 const signupSchema = z.object({
@@ -23,7 +34,7 @@ const signupSchema = z.object({
     role: z.enum(['student', 'company', 'admin']),
     // Company specific fields
     companyName: z.string().optional(),
-    website: z.string().url('Invalid website URL').optional().or(z.literal('')),
+    website: flexibleUrl.optional().or(z.literal('')),
     cin: z.string().optional(),
     description: z.string().optional(),
     // Student specific fields
@@ -309,7 +320,7 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
                        <p>You can start exploring curated opportunities and building your profile immediately.</p>`
                 }
                 <div class="button-wrapper">
-                    <a href="${dashboardUrl}${isCompany ? '/company/internships/new' : '/student/dashboard'}" class="button">${isCompany ? 'Post an Internship' : 'Explore Opportunities'}</a>
+                    <a href="${dashboardUrl}${isCompany ? '/company/post-internship' : '/student/dashboard'}" class="button">${isCompany ? 'Post an Internship' : 'Explore Opportunities'}</a>
                 </div>
                 <p>If you have any questions, our team is here to help you every step of the way.</p>
             </div>
@@ -1066,14 +1077,52 @@ export const deleteAccount = async (req: AuthRequest, res: Response, next: NextF
 
         // Delete related data based on user role
         if (user.role === 'student') {
+            const studentProfile = await StudentProfile.findOne({ userId });
+            if (studentProfile) {
+                // Delete files from R2
+                const filesToDelete = [
+                    studentProfile.resumeUrl,
+                    studentProfile.profilePicture,
+                    studentProfile.bannerImage
+                ].filter(Boolean) as string[];
+
+                for (const url of filesToDelete) {
+                    const key = getKeyFromUrl(url);
+                    if (key) {
+                        try {
+                            await deleteFromR2(key);
+                        } catch (err) {
+                            console.error(`Failed to delete file from R2: ${key}`, err);
+                        }
+                    }
+                }
+
+                // Delete student profile
+                await StudentProfile.deleteOne({ userId });
+            }
             // Delete student's applications
             await Application.deleteMany({ studentId: userId });
-            // Delete student profile
-            await StudentProfile.deleteOne({ userId });
         } else if (user.role === 'company') {
             // Get company to find internships
             const company = await Company.findOne({ userId });
             if (company) {
+                // Delete files from R2
+                const filesToDelete = [
+                    company.logo,
+                    company.banner
+                ].filter(Boolean) as string[];
+
+                for (const url of filesToDelete) {
+                    const key = getKeyFromUrl(url);
+                    if (key) {
+                        try {
+                            await deleteFromR2(key);
+                        } catch (err) {
+                            console.error(`Failed to delete file from R2: ${key}`, err);
+                        }
+                    }
+                }
+
                 // Delete all applications to company's internships
                 const internships = await Internship.find({ companyId: company._id });
                 const internshipIds = internships.map(i => i._id);
@@ -1085,10 +1134,57 @@ export const deleteAccount = async (req: AuthRequest, res: Response, next: NextF
             }
         }
 
-        // Delete user's messages (sent and received)
-        await Message.deleteMany({
+        // Conditional Message Deletion
+        // 1. Find all messages involving this user
+        const messages = await Message.find({
             $or: [{ senderId: userId }, { receiverId: userId }]
         });
+
+        // 2. Group by conversation partner
+        const partners = new Set<string>();
+        messages.forEach(msg => {
+            const partnerId = msg.senderId.toString() === userId.toString() ? msg.receiverId.toString() : msg.senderId.toString();
+            partners.add(partnerId);
+        });
+
+        // 3. Process each conversation
+        for (const partnerId of partners) {
+            // Check if partner still exists
+            const partnerExists = await User.exists({ _id: partnerId });
+
+            if (!partnerExists) {
+                // Partner deleted -> Delete messages & attachments
+                const conversationMessages = messages.filter(msg =>
+                    (msg.senderId.toString() === userId.toString() && msg.receiverId.toString() === partnerId) ||
+                    (msg.senderId.toString() === partnerId && msg.receiverId.toString() === userId.toString())
+                );
+
+                // Delete attachments from R2
+                for (const msg of conversationMessages) {
+                    if (msg.attachments && msg.attachments.length > 0) {
+                        for (const attachment of msg.attachments) {
+                            const key = getKeyFromUrl(attachment.fileUrl);
+                            if (key) {
+                                try {
+                                    await deleteFromR2(key);
+                                } catch (err) {
+                                    console.error(`Failed to delete message attachment from R2: ${key}`, err);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Delete messages from DB
+                await Message.deleteMany({
+                    $or: [
+                        { senderId: userId, receiverId: partnerId },
+                        { senderId: partnerId, receiverId: userId }
+                    ]
+                });
+            }
+            // If partner exists, do nothing (retain messages)
+        }
 
         // Delete user's notifications
         await Notification.deleteMany({ userId });

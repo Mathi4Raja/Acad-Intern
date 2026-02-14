@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import api from '@/lib/api';
 
@@ -26,6 +26,21 @@ function MessagesContent() {
             applicationId,
             otherPartyName
         });
+    };
+
+    const router = useRouter(); // Import obtained from next/navigation
+
+    const handleConversationDeleted = (applicationId: string) => {
+        if (selectedApplicationId === applicationId) {
+            setSelectedApplicationId(null);
+            setSelectedConversation(null);
+
+            // Remove query param to prevent re-selection
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+            // Alternatively use router.replace('/student/messages');
+            // But window.history is faster and simpler for just clearing params without full navigation
+        }
     };
 
     // Handle query param for auto-selection
@@ -69,6 +84,7 @@ function MessagesContent() {
                         onSelectConversation={handleSelectConversation}
                         currentUserRole="student"
                         currentUserId={user.id}
+                        onDelete={handleConversationDeleted}
                     />
                 </div>
 

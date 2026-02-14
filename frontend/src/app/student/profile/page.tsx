@@ -5,6 +5,7 @@ import { Upload, Save, Plus, X, User, GraduationCap, FileText, Award, Loader2, E
 import api, { settingsApi } from '@/lib/api' // Import settingsApi
 import { useAuth } from '@/lib/AuthContext'
 import toast from 'react-hot-toast'
+import { DEPARTMENTS } from '@/lib/constants'
 
 interface StudentProfile {
   _id?: string
@@ -65,17 +66,6 @@ export default function StudentProfile() {
     profilePicture: null,
     bannerImage: null
   })
-
-  const departments = [
-    'Computer Science',
-    'Information Technology',
-    'Electronics',
-    'Mechanical Engineering',
-    'Civil Engineering',
-    'Business Administration',
-    'Data Science',
-    'Artificial Intelligence'
-  ]
 
   // Fetch profile on mount
   useEffect(() => {
@@ -142,10 +132,25 @@ export default function StudentProfile() {
 
       if (response.data.success && response.data.data) {
         const data = response.data.data
+
+        // Map legacy codes to full names if necessary
+        const legacyMapping: Record<string, string> = {
+          'CSE': 'Computer Science',
+          'ECE': 'Electronics',
+          'ME': 'Mechanical Engineering',
+          'EE': 'Electrical Engineering',
+          'CE': 'Civil Engineering',
+          'IT': 'Information Technology',
+          'OTHER': 'Other'
+        }
+
+        const dept = data.department || ''
+        const mappedDept = legacyMapping[dept] || dept
+
         setProfile({
           _id: data._id,
           userId: data.userId,
-          department: data.department || '',
+          department: mappedDept,
           semester: data.semester || null,
           phone: data.phone || '',
           skills: data.skills || [],
@@ -296,12 +301,13 @@ export default function StudentProfile() {
         setResumeFile(null) // Clear pending file
         setProfilePicFile(null)
         setBannerFile(null)
+        const data = response.data.data
         setProfile({
           ...profile,
-          resumeUrl: updatedResumeUrl,
-          profilePicture: updatedProfilePicUrl,
-          bannerImage: updatedBannerUrl
-        }) // Update local profile state with new URL
+          ...data,
+          linkedIn: data.linkedIn || '',
+          github: data.github || ''
+        }) // Update local profile state with all values from backend
         setResumeVersion(Date.now()) // Update version to bust cache
         setSuccessMessage('Profile saved successfully!')
         setTimeout(() => setSuccessMessage(null), 3000)
@@ -679,7 +685,7 @@ export default function StudentProfile() {
               className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50"
             >
               <option value="">Select</option>
-              {departments.map((dept) => (
+              {DEPARTMENTS.map((dept) => (
                 <option key={dept} value={dept}>{dept}</option>
               ))}
             </select>

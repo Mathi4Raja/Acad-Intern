@@ -77,6 +77,9 @@ export const messageApi = {
 
     getPreferences: (applicationId: string) =>
         api.get(`/messages/application/${applicationId}/preferences`),
+
+    deleteConversation: (applicationId: string) =>
+        api.delete(`/messages/application/${applicationId}`),
 };
 
 export const companyApi = {

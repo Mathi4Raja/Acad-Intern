@@ -14,17 +14,16 @@ const ApplicationCard = memo(({ application, formatDate, isHighlighted = false }
     // Timeline steps logic
     const timelineSteps = useMemo(() => {
         const s = application.status;
-        const interviewScheduled = s === 'interview_scheduled';
-        const assessmentDone = s === 'assessment_completed' || s === 'accepted';
-        const accepted = s === 'accepted';
+        const isAssessment = s === 'assessment_completed';
+        const isInterview = s === 'interview_scheduled';
+        const isAccepted = s === 'accepted';
 
         return [
-            { id: 'applied', label: 'Applied', status: 'completed' },
-            { id: 'review', label: 'In Review', status: s === 'pending' ? 'current' : 'completed' },
-            { id: 'shortlisted', label: 'Shortlisted', status: s === 'shortlisted' ? 'current' : (interviewScheduled || assessmentDone || accepted) ? 'completed' : 'pending' },
-            { id: 'interview', label: 'Interview', status: interviewScheduled ? 'current' : (assessmentDone || accepted) ? 'completed' : 'pending' },
-            { id: 'assessment', label: 'Assessment', status: s === 'assessment_completed' ? 'current' : accepted ? 'completed' : 'pending' },
-            { id: 'offer', label: 'Offer', status: accepted ? 'completed' : 'pending' }
+            { id: 'applied', label: 'Applied', status: s === 'pending' ? 'current' : 'completed' },
+            { id: 'shortlisted', label: 'Shortlisted', status: s === 'shortlisted' ? 'current' : (isAssessment || isInterview || isAccepted) ? 'completed' : 'pending' },
+            { id: 'assessment', label: 'Assessment', status: isAssessment ? 'current' : (isInterview || isAccepted) ? 'completed' : 'pending' },
+            { id: 'interview', label: 'Interview', status: isInterview ? 'current' : isAccepted ? 'completed' : 'pending' },
+            { id: 'offer', label: 'Offer', status: isAccepted ? 'completed' : 'pending' }
         ];
     }, [application.status])
 

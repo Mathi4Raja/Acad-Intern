@@ -115,8 +115,29 @@ export const getConversations = async (req: AuthRequest, res: Response, next: Ne
             })
         );
 
+        // Filter out deleted conversations
+        const preferences = await ConversationPreference.find({
+            userId,
+            applicationId: { $in: applications.map((a: any) => a._id) }
+        });
+
+        const deletedMap = new Map();
+        preferences.forEach(p => {
+            if (p.deletedAt) deletedMap.set(p.applicationId.toString(), p.deletedAt);
+        });
+
+        const visibleConversations = conversations.filter(c => {
+            if (!c.lastMessage) return false; // Hide empty conversations too
+            const deletedAt = deletedMap.get(c.application._id.toString());
+            // If deletedAt exists and is newer than last message, hide it
+            if (deletedAt && new Date(deletedAt) > new Date(c.lastMessage.createdAt)) {
+                return false;
+            }
+            return true;
+        });
+
         // Sort by last message time
-        conversations.sort((a, b) => {
+        visibleConversations.sort((a, b) => {
             const timeA = a.lastMessage?.createdAt?.getTime() || 0;
             const timeB = b.lastMessage?.createdAt?.getTime() || 0;
             return timeB - timeA;
@@ -124,7 +145,7 @@ export const getConversations = async (req: AuthRequest, res: Response, next: Ne
 
         res.status(200).json({
             success: true,
-            data: conversations
+            data: visibleConversations
         });
     } catch (error) {
         next(error);
@@ -586,6 +607,75 @@ export const getPreferences = async (req: AuthRequest, res: Response, next: Next
         res.status(200).json({
             success: true,
             data: preferences || { mutedUntil: null }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Delete conversation (soft delete for user, hard delete if both deleted)
+// @route   DELETE /api/messages/application/:applicationId
+// @access  Private
+export const deleteConversation = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { applicationId } = req.params;
+        const userId = req.user?._id;
+
+        // 1. Soft delete for current user
+        await ConversationPreference.findOneAndUpdate(
+            { userId, applicationId },
+            {
+                deletedAt: new Date()
+            },
+            { upsert: true, new: true }
+        );
+
+        // 2. Check if other party has also deleted
+        // First get the application to know who the other party is
+        const application = await Application.findById(applicationId);
+        if (application) {
+            let otherPartyId;
+            if (req.user?.role === 'student') {
+                const Company = require('../models/Company').default;
+                // Need to get company userId
+                // Using any cast to access internshipId logic
+                const internshipId: any = application.internshipId;
+                // Since we didn't populate, internshipId is an ID string or ObjectId
+                // We need to fetch the internship first to get companyId
+                const Internship = require('../models/Internship').default;
+                const internship = await Internship.findById(internshipId);
+
+                if (internship) {
+                    const company = await Company.findById(internship.companyId);
+                    otherPartyId = company?.userId;
+                }
+            } else {
+                otherPartyId = application.studentId;
+            }
+
+            if (otherPartyId) {
+                const otherPreference = await ConversationPreference.findOne({
+                    userId: otherPartyId,
+                    applicationId
+                });
+
+                if (otherPreference && otherPreference.deletedAt) {
+                    // Both have deleted. Check if there are any messages sent AFTER the other party deleted.
+                    const lastMessage = await Message.findOne({ applicationId })
+                        .sort({ createdAt: -1 });
+
+                    if (!lastMessage || new Date(lastMessage.createdAt) < new Date(otherPreference.deletedAt)) {
+                        // Safe to hard delete!
+                        await Message.deleteMany({ applicationId });
+                        console.log(`[HARD DELETE] Messages for application ${applicationId} permanently deleted.`);
+                    }
+                }
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Conversation deleted'
         });
     } catch (error) {
         next(error);

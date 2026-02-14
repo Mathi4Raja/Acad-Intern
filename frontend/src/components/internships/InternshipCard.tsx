@@ -95,19 +95,17 @@ const InternshipCard = memo(({
                 </div>
 
                 {/* Key Details Row */}
-                <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs sm:text-sm text-gray-600 mb-4 bg-gray-50/50 p-3 rounded-lg border border-gray-100">
-                    <span className="flex items-center gap-1.5 font-medium">
-                        <MapPin size={14} className="text-gray-400" />
+                <div className="flex flex-wrap gap-2 text-[11px] mb-4">
+                    <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 text-gray-600 rounded-full font-bold border border-gray-100 group-hover:bg-gray-100/80 transition-colors">
+                        <MapPin size={12} className="text-gray-400" />
                         {getModeLabel(internship.mode)}
                     </span>
-                    <div className="w-px h-4 bg-gray-300 self-center hidden sm:block" />
-                    <span className="flex items-center gap-1.5 font-medium">
-                        <Clock size={14} className="text-gray-400" />
-                        {internship.durationWeeks} weeks
+                    <span className="flex items-center gap-1.5 px-3 py-1 bg-gray-50 text-gray-600 rounded-full font-bold border border-gray-100 group-hover:bg-gray-100/80 transition-colors">
+                        <Clock size={12} className="text-gray-400" />
+                        {internship.durationWeeks} Weeks
                     </span>
-                    <div className="w-px h-4 bg-gray-300 self-center hidden sm:block" />
-                    <span className="flex items-center gap-1.5 font-semibold text-gray-900">
-                        <IndianRupee size={14} className="text-green-600" />
+                    <span className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full font-black border border-emerald-100/50">
+                        <IndianRupee size={12} />
                         {formatStipend(internship.stipend)}
                     </span>
                 </div>
@@ -118,17 +116,17 @@ const InternshipCard = memo(({
         </p> */}
 
                 {/* Skills */}
-                <div className="flex flex-wrap gap-2 mb-auto">
+                <div className="flex flex-wrap gap-1.5 mb-auto items-start">
                     {internship.skillsRequired.slice(0, 3).map((skill) => (
                         <span
                             key={skill}
-                            className="bg-white border border-gray-200 text-gray-600 px-2.5 py-1 rounded-md text-xs font-medium group-hover:border-primary/20 group-hover:text-primary transition-colors"
+                            className="bg-blue-50 text-primary px-2.5 py-1 rounded-full text-[11px] font-bold border border-primary/10 group-hover:bg-blue-100/50 transition-all"
                         >
                             {skill}
                         </span>
                     ))}
                     {internship.skillsRequired.length > 3 && (
-                        <span className="bg-gray-50 text-gray-500 px-2.5 py-1 rounded-md text-xs font-medium">
+                        <span className="bg-gray-50 text-gray-500 px-2.5 py-1 rounded-full text-[11px] font-bold border border-gray-100">
                             +{internship.skillsRequired.length - 3}
                         </span>
                     )}

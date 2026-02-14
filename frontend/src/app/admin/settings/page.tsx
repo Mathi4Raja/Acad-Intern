@@ -24,9 +24,7 @@ interface SettingsData {
   emailFrom: string;
   emailFromName: string;
   welcomeEmail: boolean;
-  shortlistedEmail: boolean;
-  rejectedEmail: boolean;
-  interviewScheduledEmail: boolean;
+  applicationStatusEmail: boolean;
   messageAlertEmail: boolean;
   reminderEmail: boolean;
   passwordResetExpiry: number;
@@ -66,9 +64,7 @@ const defaultSettings: SettingsData = {
 
   // Notification Settings
   welcomeEmail: true,
-  shortlistedEmail: true,
-  rejectedEmail: true,
-  interviewScheduledEmail: true,
+  applicationStatusEmail: true,
   messageAlertEmail: true,
   reminderEmail: true,
 
@@ -603,11 +599,9 @@ function AdminSettingsContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
                       { key: 'welcomeEmail', label: 'Welcome & Verification', desc: 'Onboarding & account activation', icon: Users, color: 'text-orange-600', bg: 'bg-orange-50' },
-                      { key: 'shortlistedEmail', label: 'Shortlisted Status', desc: 'Positive recruitment updates', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                      { key: 'rejectedEmail', label: 'Rejected Status', desc: 'Outcome notifications', icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-50' },
-                      { key: 'interviewScheduledEmail', label: 'Interview Scheduled', desc: 'Meeting invites & details', icon: Clock, color: 'text-blue-600', bg: 'bg-blue-50' },
+                      { key: 'applicationStatusEmail', label: 'Application Status Updates', desc: 'Shortlisted, Selected, Rejected & Interview alerts', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                       { key: 'messageAlertEmail', label: 'Message Alerts', desc: '3+ unread message warnings', icon: Bell, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                      { key: 'reminderEmail', label: 'System Reminders', desc: 'Stale apps & closing soon', icon: Activity, color: 'text-cyan-600', bg: 'bg-cyan-50' }
+                      { key: 'reminderEmail', label: 'System Reminders', desc: 'Automated nudges for pending applications & deadlines', icon: Activity, color: 'text-cyan-600', bg: 'bg-cyan-50' }
                     ].map((item) => (
                       <div key={item.key} className="p-3.5 bg-white border border-gray-100 rounded-2xl flex items-center justify-between group hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
                         <div className="flex items-center gap-3">
@@ -636,11 +630,9 @@ function AdminSettingsContent() {
                             <div className={cn(
                               "w-11 h-6 bg-gray-100 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all",
                               item.key === 'welcomeEmail' ? "peer-checked:bg-orange-600" :
-                                item.key === 'shortlistedEmail' ? "peer-checked:bg-emerald-600" :
-                                  item.key === 'rejectedEmail' ? "peer-checked:bg-red-500" :
-                                    item.key === 'interviewScheduledEmail' ? "peer-checked:bg-blue-600" :
-                                      item.key === 'messageAlertEmail' ? "peer-checked:bg-indigo-600" :
-                                        "peer-checked:bg-cyan-600"
+                                item.key === 'applicationStatusEmail' ? "peer-checked:bg-emerald-600" :
+                                  item.key === 'messageAlertEmail' ? "peer-checked:bg-indigo-600" :
+                                    "peer-checked:bg-cyan-600"
                             )}></div>
                           </label>
                         </div>

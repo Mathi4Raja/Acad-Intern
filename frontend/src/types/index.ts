@@ -54,7 +54,7 @@ export interface Internship {
     hasApplied?: boolean
 }
 
-export type ApplicationStatus = 'pending' | 'reviewed' | 'shortlisted' | 'interview_scheduled' | 'assessment_completed' | 'accepted' | 'rejected' | 'expired';
+export type ApplicationStatus = 'pending' | 'shortlisted' | 'interview_scheduled' | 'assessment_completed' | 'accepted' | 'rejected' | 'expired';
 
 export interface Application {
     id: string

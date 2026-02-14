@@ -206,14 +206,13 @@ export default function PublicInternshipDetailPage() {
                         </div>
                     </div>
 
-                    {/* Skills */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
                         <h2 className="text-base font-bold text-gray-900 mb-3">Skills required</h2>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 items-start">
                             {internship.skillsRequired.map((skill) => (
                                 <span
                                     key={skill}
-                                    className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium border border-gray-200"
+                                    className="px-3 py-1.5 bg-blue-50 text-primary rounded-full text-[11px] font-bold border border-primary/10 transition-all hover:bg-blue-100/50"
                                 >
                                     {skill}
                                 </span>

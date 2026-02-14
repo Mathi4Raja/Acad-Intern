@@ -8,7 +8,8 @@ import {
     markAsSeen,
     getUnreadCount,
     muteConversation,
-    getPreferences
+    getPreferences,
+    deleteConversation
 } from '../controllers/messageController';
 
 const router = express.Router();
@@ -45,5 +46,8 @@ router.post('/application/:applicationId/mute', muteConversation);
 
 // Get conversation preferences
 router.get('/application/:applicationId/preferences', getPreferences);
+
+// Delete conversation
+router.delete('/application/:applicationId', deleteConversation);
 
 export default router;

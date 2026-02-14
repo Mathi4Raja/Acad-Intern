@@ -4,6 +4,16 @@ import StudentProfile from '../models/StudentProfile';
 import { AuthRequest } from '../types';
 import { getKeyFromUrl, hasFile } from '../utils/r2Storage';
 
+// Helper for URL validation that auto-prefixes https:// if missing
+const flexibleUrl = z.string().trim().transform((val) => {
+    if (!val) return val;
+    // If it doesn't start with a protocol, prefix with https://
+    if (!/^(https?:\/\/)/i.test(val)) {
+        return `https://${val}`;
+    }
+    return val;
+}).pipe(z.string().url('Invalid URL format'));
+
 // Schema
 const profileSchema = z.object({
     department: z.string().optional(),
@@ -13,8 +23,8 @@ const profileSchema = z.object({
     bio: z.string().optional(),
     cgpa: z.number().min(0).max(10).optional(),
     hoursRequired: z.number().min(0).optional(),
-    linkedIn: z.string().url().optional().or(z.literal('')),
-    github: z.string().url().optional().or(z.literal('')),
+    linkedIn: flexibleUrl.optional().or(z.literal('')),
+    github: flexibleUrl.optional().or(z.literal('')),
     profilePicture: z.string().url().optional().or(z.literal('')).nullable(),
     bannerImage: z.string().url().optional().or(z.literal('')).nullable(),
     phone: z.string().optional()
