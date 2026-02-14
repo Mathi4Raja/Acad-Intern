@@ -13,8 +13,8 @@ interface ApplicantDetailModalProps {
 
 const statusActions: { status: Applicant['status']; label: string; icon: typeof CheckCircle; color: string }[] = [
     { status: 'shortlisted', label: 'Shortlist', icon: Star, color: 'bg-blue-600 hover:bg-blue-700' },
-    { status: 'interviewed', label: 'Mark Interviewed', icon: Calendar, color: 'bg-purple-600 hover:bg-purple-700' },
-    { status: 'offered', label: 'Make Offer', icon: CheckCircle, color: 'bg-green-600 hover:bg-green-700' },
+    { status: 'assessment_completed', label: 'Mark Assessment Done', icon: Calendar, color: 'bg-purple-600 hover:bg-purple-700' },
+    { status: 'accepted', label: 'Accept', icon: CheckCircle, color: 'bg-green-600 hover:bg-green-700' },
     { status: 'rejected', label: 'Reject', icon: XCircle, color: 'bg-red-600 hover:bg-red-700' }
 ]
 

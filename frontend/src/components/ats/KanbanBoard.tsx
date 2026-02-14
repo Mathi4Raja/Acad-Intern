@@ -13,8 +13,9 @@ interface KanbanBoardProps {
 const columns: { status: Applicant['status']; title: string; color: string }[] = [
     { status: 'pending', title: 'Pending Review', color: 'bg-yellow-100 text-yellow-800' },
     { status: 'shortlisted', title: 'Shortlisted', color: 'bg-blue-100 text-blue-800' },
-    { status: 'interviewed', title: 'Interviewed', color: 'bg-purple-100 text-purple-800' },
-    { status: 'offered', title: 'Offered', color: 'bg-green-100 text-green-800' },
+    { status: 'interview_scheduled', title: 'Interview Scheduled', color: 'bg-purple-100 text-purple-800' },
+    { status: 'assessment_completed', title: 'Assessment Done', color: 'bg-indigo-100 text-indigo-800' },
+    { status: 'accepted', title: 'Accepted', color: 'bg-green-100 text-green-800' },
     { status: 'rejected', title: 'Rejected', color: 'bg-red-100 text-red-800' }
 ]
 
