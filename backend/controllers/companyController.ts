@@ -12,7 +12,17 @@ const flexibleUrl = z.string().trim().transform((val) => {
         return `https://${val}`;
     }
     return val;
-}).pipe(z.string().url('Invalid URL format'));
+}).pipe(z.string().url('Invalid URL format').refine((val) => {
+    try {
+        const url = new URL(val);
+        // Check if hostname has at least one dot and the last part is at least 2 chars
+        // This prevents "https://invalid" from passing, but allows "https://example.com"
+        const parts = url.hostname.split('.');
+        return parts.length >= 2 && parts[parts.length - 1].length >= 2;
+    } catch {
+        return false;
+    }
+}, { message: "URL must have a valid domain extension" }));
 
 // Schema for profile update
 const companySchema = z.object({
