@@ -1,10 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Building, Mail, Phone, MapPin, Globe, Users, Edit, Save, X, Briefcase, Calendar, CheckCircle, Upload, AlertCircle, Shield, Loader2, Trash2, AlertTriangle, Camera } from 'lucide-react'
+import {
+  Building2, Mail, Phone, MapPin, Globe, Linkedin, Twitter, Instagram,
+  Edit3, Camera, Save, X, Plus, Trash2, CheckCircle2, Loader2, Verified,
+  ExternalLink, Activity, FileText, Briefcase, CheckCircle, Edit,
+  AlertCircle, Shield, Info, Rocket, Gift, AlertTriangle, Building, Users, Calendar
+} from 'lucide-react'
 import api from '@/lib/api'
 import { useAuth } from '@/lib/AuthContext'
+import { useAlert } from '@/components/ui/AlertProvider'
+import { cn } from '@/lib/utils'
 import { INDUSTRIES, COMPANY_SIZES } from '@/lib/constants'
+import { ensureHttps } from '@/lib/formatters'
 
 interface CompanyProfile {
   _id: string;
@@ -248,6 +256,12 @@ export default function CompanyProfilePage() {
 
       const response = await api.post('/companies', {
         ...formData,
+        website: ensureHttps(formData.website),
+        socialLinks: {
+          linkedin: ensureHttps(formData.socialLinks?.linkedin),
+          twitter: ensureHttps(formData.socialLinks?.twitter),
+          instagram: ensureHttps(formData.socialLinks?.instagram)
+        },
         logo: updatedLogoUrl,
         banner: updatedBannerUrl
       })
@@ -520,41 +534,43 @@ export default function CompanyProfilePage() {
             CIN Verification
           </h2>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="space-y-4">
             <div className="flex-1">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                 Corporate Identification Number (CIN)
               </label>
-              <input
-                type="text"
-                name="cin"
-                value={formData.cin}
-                onChange={handleInputChange}
-                placeholder="e.g., L74899DL1995PLC069802"
-                maxLength={21}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-mono uppercase"
-              />
-              <p className="text-xs text-gray-500 mt-1">21 characters, format: L74899DL1995PLC069802</p>
-            </div>
-
-            <div className="flex items-end">
-              <button
-                onClick={handleVerifyCin}
-                disabled={isVerifying || !formData.cin || formData.cin.length !== 21}
-                className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-              >
-                {isVerifying ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle size={16} />
-                    Verify CIN
-                  </>
-                )}
-              </button>
+              <div className="relative max-w-2xl">
+                <input
+                  type="text"
+                  name="cin"
+                  value={formData.cin}
+                  onChange={handleInputChange}
+                  placeholder="e.g., L74899DL1995PLC069802"
+                  maxLength={21}
+                  className="w-full pl-4 pr-36 py-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono uppercase outline-none bg-gray-50/30"
+                />
+                <button
+                  onClick={handleVerifyCin}
+                  disabled={isVerifying || !formData.cin || formData.cin.length !== 21}
+                  className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+                >
+                  {isVerifying ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Verifying...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={14} />
+                      <span>Verify CIN</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <p className="text-[11px] text-gray-400 mt-2 ml-1 flex items-center gap-1.5">
+                <Info size={12} />
+                21 characters, format: L74899DL1995PLC069802
+              </p>
             </div>
           </div>
 
@@ -621,51 +637,66 @@ export default function CompanyProfilePage() {
       )}
 
       {/* Basic Information */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-          <Building size={18} />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-4 group transition-all hover:shadow-md">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 ml-1 flex items-center gap-2">
+          <div className="p-1.5 bg-blue-50 rounded-lg">
+            <Building className="text-primary" size={18} />
+          </div>
           Basic Information
         </h2>
 
-        <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Contact Person</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {/* Contact Person */}
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Contact Person</label>
             {isEditing ? (
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
             ) : (
-              <p className="text-xs sm:text-sm text-gray-900 font-semibold">{formData.name || '-'}</p>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Mail size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{formData.name || 'Not provided'}</span>
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Company Name</label>
+          {/* Company Name */}
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Company Name</label>
             {isEditing ? (
               <input
                 type="text"
                 name="companyName"
                 value={formData.companyName}
                 onChange={handleInputChange}
-                className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
             ) : (
-              <p className="text-xs sm:text-sm text-gray-900 font-semibold">{formData.companyName || '-'}</p>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Building size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{formData.companyName || 'Not provided'}</span>
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Industry</label>
+          {/* Industry */}
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Industry</label>
             {isEditing ? (
               <select
                 name="industry"
                 value={formData.industry}
                 onChange={handleInputChange}
-                className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               >
                 <option value="">Select Industry</option>
                 {INDUSTRIES.map(ind => (
@@ -673,79 +704,93 @@ export default function CompanyProfilePage() {
                 ))}
               </select>
             ) : (
-              <p className="text-xs sm:text-sm text-gray-900">{formData.industry || '-'}</p>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Briefcase size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{formData.industry || 'Not provided'}</span>
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-              <Phone size={12} />
-              Phone
-            </label>
+          {/* Phone */}
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Phone</label>
             {isEditing ? (
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
             ) : (
-              <p className="text-xs sm:text-sm text-gray-900">{formData.phone || '-'}</p>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Phone size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{formData.phone || 'Not provided'}</span>
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-              <Globe size={12} />
-              Website
-            </label>
+          {/* Website */}
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Website</label>
             {isEditing ? (
               <input
                 type="url"
                 name="website"
                 value={formData.website}
                 onChange={handleInputChange}
-                className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
-            ) : formData.website ? (
-              <a href={formData.website} target="_blank" rel="noopener noreferrer" className="text-xs sm:text-sm text-primary hover:underline truncate block">
-                {formData.website}
-              </a>
             ) : (
-              <p className="text-xs sm:text-sm text-gray-900">-</p>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Globe size={14} />
+                </div>
+                {formData.website ? (
+                  <a href={formData.website} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary hover:underline truncate flex items-center gap-1.5">
+                    {formData.website.replace(/^https?:\/\//, '')} <ExternalLink size={12} />
+                  </a>
+                ) : (
+                  <span className="text-sm font-semibold text-gray-400 italic font-normal">Not provided</span>
+                )}
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-              <MapPin size={12} />
-              Location
-            </label>
+          {/* Location */}
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Location</label>
             {isEditing ? (
               <input
                 type="text"
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
-                className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
             ) : (
-              <p className="text-xs sm:text-sm text-gray-900">{formData.location || '-'}</p>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <MapPin size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{formData.location || 'Not provided'}</span>
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-              <Users size={12} />
-              Size
-            </label>
+          {/* Company Size */}
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Company Size</label>
             {isEditing ? (
               <select
                 name="companySize"
                 value={formData.companySize}
                 onChange={handleInputChange}
-                className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               >
                 <option value="">Select Size</option>
                 {COMPANY_SIZES.map(size => (
@@ -753,15 +798,18 @@ export default function CompanyProfilePage() {
                 ))}
               </select>
             ) : (
-              <p className="text-xs sm:text-sm text-gray-900">{formData.companySize || '-'}</p>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Users size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{formData.companySize || 'Not provided'}</span>
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
-              <Calendar size={12} />
-              Founded
-            </label>
+          {/* Founded */}
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Founded</label>
             {isEditing ? (
               <input
                 type="text"
@@ -769,130 +817,182 @@ export default function CompanyProfilePage() {
                 value={formData.founded}
                 onChange={handleInputChange}
                 placeholder="2018"
-                className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
               />
             ) : (
-              <p className="text-xs sm:text-sm text-gray-900">{formData.founded || '-'}</p>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Calendar size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{formData.founded || 'Not provided'}</span>
+              </div>
             )}
           </div>
         </div>
       </div>
 
       {/* Company Details */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-          <Briefcase size={18} />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-4 group transition-all hover:shadow-md">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="p-1.5 bg-purple-50 rounded-lg">
+            <Info className="text-purple-600" size={18} />
+          </div>
           Company Details
         </h2>
 
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block ml-1">Company Description</label>
             {isEditing ? (
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                rows={3}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                rows={4}
+                className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none outline-none"
               />
             ) : (
-              <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-line line-clamp-4">{formData.description || '-'}</p>
+              <div className="bg-gray-50/50 rounded-2xl p-4 sm:p-5 border border-gray-100">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{formData.description || 'Add a short description about your company.'}</p>
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Internship Program</label>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block ml-1 flex items-center gap-2">
+              <Rocket size={14} className="text-primary" /> Internship Program
+            </label>
             {isEditing ? (
               <textarea
                 name="about"
                 value={formData.about}
                 onChange={handleInputChange}
-                rows={3}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                rows={4}
+                className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none outline-none"
               />
             ) : (
-              <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-line line-clamp-4">{formData.about || '-'}</p>
+              <div className="bg-blue-50/30 rounded-2xl p-4 sm:p-5 border border-blue-100/50">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{formData.about || 'Describe what makes your internship program unique.'}</p>
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Benefits</label>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block ml-1 flex items-center gap-2">
+              <Gift size={14} className="text-green-600" /> Company Benefits
+            </label>
             {isEditing ? (
               <textarea
                 name="benefits"
                 value={formData.benefits}
                 onChange={handleInputChange}
-                rows={2}
-                placeholder="Benefits offered..."
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                rows={3}
+                placeholder="List key benefits (stipend, certificates, mentorship, etc.)"
+                className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none outline-none"
               />
             ) : (
-              <p className="text-xs sm:text-sm text-gray-700 whitespace-pre-line">{formData.benefits || '-'}</p>
+              <div className="bg-green-50/30 rounded-2xl p-4 sm:p-5 border border-green-100/50">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{formData.benefits || 'List the perks and benefits of interning at your company.'}</p>
+              </div>
             )}
           </div>
         </div>
       </div>
 
       {/* Social Links */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Social Media</h2>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-4 group transition-all hover:shadow-md">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="p-1.5 bg-sky-50 rounded-lg">
+            <ExternalLink className="text-sky-600" size={18} />
+          </div>
+          Social Media
+        </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">LinkedIn</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">LinkedIn</label>
             {isEditing ? (
-              <input
-                type="url"
-                value={formData.socialLinks.linkedin}
-                onChange={(e) => handleSocialLinkChange('linkedin', e.target.value)}
-                placeholder="linkedin.com/..."
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-            ) : formData.socialLinks.linkedin ? (
-              <a href={formData.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-xs sm:text-sm text-primary hover:underline truncate block">
-                {formData.socialLinks.linkedin}
-              </a>
+              <div className="relative">
+                <Linkedin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="url"
+                  value={formData.socialLinks.linkedin}
+                  onChange={(e) => handleSocialLinkChange('linkedin', e.target.value)}
+                  placeholder="linkedin.com/..."
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+              </div>
             ) : (
-              <p className="text-xs sm:text-sm text-gray-500">-</p>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Linkedin size={14} />
+                </div>
+                {formData.socialLinks.linkedin ? (
+                  <a href={formData.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5">
+                    LinkedIn <ExternalLink size={12} />
+                  </a>
+                ) : (
+                  <span className="text-sm font-semibold text-gray-400 italic font-normal">Not provided</span>
+                )}
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Twitter</label>
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Twitter (X)</label>
             {isEditing ? (
-              <input
-                type="url"
-                value={formData.socialLinks.twitter}
-                onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
-                placeholder="twitter.com/..."
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-            ) : formData.socialLinks.twitter ? (
-              <a href={formData.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-xs sm:text-sm text-primary hover:underline truncate block">
-                {formData.socialLinks.twitter}
-              </a>
+              <div className="relative">
+                <Twitter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="url"
+                  value={formData.socialLinks.twitter}
+                  onChange={(e) => handleSocialLinkChange('twitter', e.target.value)}
+                  placeholder="twitter.com/..."
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+              </div>
             ) : (
-              <p className="text-xs sm:text-sm text-gray-500">-</p>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Twitter size={14} />
+                </div>
+                {formData.socialLinks.twitter ? (
+                  <a href={formData.socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5">
+                    Twitter <ExternalLink size={12} />
+                  </a>
+                ) : (
+                  <span className="text-sm font-semibold text-gray-400 italic font-normal">Not provided</span>
+                )}
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Instagram</label>
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Instagram</label>
             {isEditing ? (
-              <input
-                type="url"
-                value={formData.socialLinks.instagram}
-                onChange={(e) => handleSocialLinkChange('instagram', e.target.value)}
-                placeholder="instagram.com/..."
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-            ) : formData.socialLinks.instagram ? (
-              <a href={formData.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-xs sm:text-sm text-primary hover:underline truncate block">
-                {formData.socialLinks.instagram}
-              </a>
+              <div className="relative">
+                <Instagram size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="url"
+                  value={formData.socialLinks.instagram}
+                  onChange={(e) => handleSocialLinkChange('instagram', e.target.value)}
+                  placeholder="instagram.com/..."
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+              </div>
             ) : (
-              <p className="text-xs sm:text-sm text-gray-500">-</p>
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Instagram size={14} />
+                </div>
+                {formData.socialLinks.instagram ? (
+                  <a href={formData.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5">
+                    Instagram <ExternalLink size={12} />
+                  </a>
+                ) : (
+                  <span className="text-sm font-semibold text-gray-400 italic font-normal">Not provided</span>
+                )}
+              </div>
             )}
           </div>
         </div>

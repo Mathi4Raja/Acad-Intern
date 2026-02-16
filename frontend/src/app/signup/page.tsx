@@ -10,6 +10,7 @@ type UserRole = 'student' | 'company' | null
 import { useAuth } from '@/lib/AuthContext'
 import { useSettings } from '@/lib/SettingsContext'
 import { DEPARTMENTS } from '@/lib/constants'
+import { ensureHttps } from '@/lib/formatters'
 
 declare global {
   interface Window {
@@ -86,7 +87,7 @@ export default function SignupPage() {
         payload.semester = formData.semester;
       } else if (selectedRole === 'company') {
         payload.companyName = formData.companyName;
-        payload.website = formData.website;
+        payload.website = ensureHttps(formData.website);
         payload.cin = formData.cin;
         payload.description = formData.description;
       }

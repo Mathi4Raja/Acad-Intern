@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Upload, Save, Plus, X, User, GraduationCap, FileText, Award, Loader2, ExternalLink, CheckCircle, Download, Trash2, AlertTriangle, Camera, Users, MapPin, Edit2 } from 'lucide-react'
+import { Upload, Save, Plus, X, User, GraduationCap, FileText, Award, Loader2, ExternalLink, CheckCircle, Download, Trash2, AlertTriangle, Camera, Users, MapPin, Edit2, Phone, Mail, Github, Linkedin, Calendar, Hash, Target, ClipboardList } from 'lucide-react'
 import api, { settingsApi } from '@/lib/api' // Import settingsApi
 import { useAuth } from '@/lib/AuthContext'
 import toast from 'react-hot-toast'
 import { DEPARTMENTS } from '@/lib/constants'
+import { ensureHttps } from '@/lib/formatters'
 
 interface StudentProfile {
   _id?: string
@@ -285,7 +286,8 @@ export default function StudentProfile() {
 
       const requestData = {
         ...cleanProfileData,
-        ...cleanProfileData,
+        linkedIn: ensureHttps(profile.linkedIn),
+        github: ensureHttps(profile.github),
         resumeUrl: updatedResumeUrl,
         profilePicture: updatedProfilePicUrl,
         bannerImage: updatedBannerUrl,
@@ -631,121 +633,192 @@ export default function StudentProfile() {
       </div>
 
       {/* Personal Information */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-3 sm:mb-4">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 ml-1 flex items-center gap-2">
-          <User className="text-primary" size={18} />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-4 group transition-all hover:shadow-md">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 ml-1 flex items-center gap-2">
+          <div className="p-1.5 bg-blue-50 rounded-lg">
+            <User className="text-primary" size={18} />
+          </div>
           Personal Information
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1 ml-1">Full Name</label>
-            <input
-              type="text"
-              value={user?.name || ''}
-              disabled
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-            />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Full Name</label>
+            {isEditing ? (
+              <input
+                type="text"
+                value={user?.name || ''}
+                disabled
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+              />
+            ) : (
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <User size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{user?.name || 'Not provided'}</span>
+              </div>
+            )}
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1 ml-1">Email</label>
-            <input
-              type="email"
-              value={user?.email || ''}
-              disabled
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-            />
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Email</label>
+            {isEditing ? (
+              <input
+                type="email"
+                value={user?.email || ''}
+                disabled
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+              />
+            ) : (
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Mail size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{user?.email || 'Not provided'}</span>
+              </div>
+            )}
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1 ml-1">Phone Number</label>
-            <input
-              type="tel"
-              value={profile.phone || ''}
-              onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-              disabled={!isEditing}
-              placeholder="+91 9876543210"
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
-            />
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Phone Number</label>
+            {isEditing ? (
+              <input
+                type="tel"
+                value={profile.phone || ''}
+                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                placeholder="+91 9876543210"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            ) : (
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Phone size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{profile.phone || 'Not provided'}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Academic Information */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-3 sm:mb-4">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 ml-1 flex items-center gap-2">
-          <GraduationCap className="text-primary" size={18} />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-4 transition-all hover:shadow-md">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 ml-1 flex items-center gap-2">
+          <div className="p-1.5 bg-indigo-50 rounded-lg">
+            <GraduationCap className="text-indigo-600" size={18} />
+          </div>
           Academic Information
         </h2>
-        <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3 sm:gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Department</label>
-            <select
-              value={profile.department}
-              onChange={(e) => setProfile({ ...profile, department: e.target.value })}
-              disabled={!isEditing}
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50"
-            >
-              <option value="">Select</option>
-              {DEPARTMENTS.map((dept) => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
+        <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-4 sm:gap-6">
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Department</label>
+            {isEditing ? (
+              <select
+                value={profile.department}
+                onChange={(e) => setProfile({ ...profile, department: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                <option value="">Select</option>
+                {DEPARTMENTS.map((dept) => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <ClipboardList size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{profile.department || 'Not provided'}</span>
+              </div>
+            )}
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Semester</label>
-            <select
-              value={profile.semester || ''}
-              onChange={(e) => setProfile({ ...profile, semester: parseInt(e.target.value) || null })}
-              disabled={!isEditing}
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50"
-            >
-              <option value="">Select</option>
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                <option key={sem} value={sem}>Sem {sem}</option>
-              ))}
-            </select>
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Semester</label>
+            {isEditing ? (
+              <select
+                value={profile.semester || ''}
+                onChange={(e) => setProfile({ ...profile, semester: parseInt(e.target.value) || null })}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                <option value="">Select</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                  <option key={sem} value={sem}>Sem {sem}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Calendar size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{profile.semester ? `Semester ${profile.semester}` : 'Not provided'}</span>
+              </div>
+            )}
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">CGPA</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              max="10"
-              value={profile.cgpa || ''}
-              onChange={(e) => setProfile({ ...profile, cgpa: parseFloat(e.target.value) || null })}
-              disabled={!isEditing}
-              placeholder="8.5"
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50"
-            />
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">CGPA</label>
+            {isEditing ? (
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="10"
+                value={profile.cgpa || ''}
+                onChange={(e) => setProfile({ ...profile, cgpa: parseFloat(e.target.value) || null })}
+                placeholder="8.5"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            ) : (
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Hash size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{profile.cgpa ? profile.cgpa.toFixed(2) : 'Not provided'}</span>
+              </div>
+            )}
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Hours Required</label>
-            <input
-              type="number"
-              value={profile.hoursRequired || ''}
-              onChange={(e) => setProfile({ ...profile, hoursRequired: parseInt(e.target.value) || undefined })}
-              disabled={!isEditing}
-              placeholder="120"
-              className="w-full px-2 sm:px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50"
-            />
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Hours Required</label>
+            {isEditing ? (
+              <input
+                type="number"
+                value={profile.hoursRequired || ''}
+                onChange={(e) => setProfile({ ...profile, hoursRequired: parseInt(e.target.value) || undefined })}
+                placeholder="120"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            ) : (
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Target size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{profile.hoursRequired ? `${profile.hoursRequired} Hours` : 'Not provided'}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Bio */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-5 mb-3 sm:mb-5">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-          <FileText className="text-primary" size={18} />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-4 transition-all hover:shadow-md">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="p-1.5 bg-purple-50 rounded-lg">
+            <FileText className="text-purple-600" size={18} />
+          </div>
           About Me
         </h2>
-        <textarea
-          value={profile.bio}
-          onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-          disabled={!isEditing}
-          rows={3}
-          placeholder="Tell companies about yourself..."
-          className="w-full px-3 py-2 !text-xs sm:!text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50 resize-none"
-        />
+        {isEditing ? (
+          <textarea
+            value={profile.bio}
+            onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+            rows={4}
+            placeholder="Tell companies about yourself..."
+            className="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none outline-none"
+          />
+        ) : (
+          <div className="bg-gray-50/50 rounded-2xl p-4 sm:p-5 border border-gray-100">
+            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+              {profile.bio || 'Add a bio to tell companies more about yourself and your career goals.'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Skills */}
@@ -885,30 +958,69 @@ export default function StudentProfile() {
       </div>
 
       {/* Social Links */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3">Social Links</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">LinkedIn</label>
-            <input
-              type="url"
-              value={profile.linkedIn}
-              onChange={(e) => setProfile({ ...profile, linkedIn: e.target.value })}
-              disabled={!isEditing}
-              placeholder="linkedin.com/in/..."
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50"
-            />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 mb-4 group transition-all hover:shadow-md">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <div className="p-1.5 bg-sky-50 rounded-lg">
+            <ExternalLink className="text-sky-600" size={18} />
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">GitHub</label>
-            <input
-              type="url"
-              value={profile.github}
-              onChange={(e) => setProfile({ ...profile, github: e.target.value })}
-              disabled={!isEditing}
-              placeholder="github.com/..."
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50"
-            />
+          Social Links
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">LinkedIn</label>
+            {isEditing ? (
+              <div className="relative">
+                <Linkedin size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="url"
+                  value={profile.linkedIn}
+                  onChange={(e) => setProfile({ ...profile, linkedIn: e.target.value })}
+                  placeholder="linkedin.com/in/..."
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Linkedin size={14} />
+                </div>
+                {profile.linkedIn ? (
+                  <a href={profile.linkedIn} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5">
+                    LinkedIn Profile <ExternalLink size={12} />
+                  </a>
+                ) : (
+                  <span className="text-sm font-semibold text-gray-400 italic font-normal">Not provided</span>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">GitHub</label>
+            {isEditing ? (
+              <div className="relative">
+                <Github size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="url"
+                  value={profile.github}
+                  onChange={(e) => setProfile({ ...profile, github: e.target.value })}
+                  placeholder="github.com/..."
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <Github size={14} />
+                </div>
+                {profile.github ? (
+                  <a href={profile.github} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-primary hover:underline flex items-center gap-1.5">
+                    GitHub Profile <ExternalLink size={12} />
+                  </a>
+                ) : (
+                  <span className="text-sm font-semibold text-gray-400 italic font-normal">Not provided</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

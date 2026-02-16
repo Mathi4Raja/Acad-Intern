@@ -35,3 +35,13 @@ export const getSiteInitials = (name: string) => {
     }
     return name.substring(0, 2).toUpperCase();
 };
+
+export const ensureHttps = (url?: string | null) => {
+    if (!url) return '';
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) return '';
+    if (/^https?:\/\//i.test(trimmedUrl)) {
+        return trimmedUrl;
+    }
+    return `https://${trimmedUrl}`;
+};
