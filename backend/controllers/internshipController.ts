@@ -402,7 +402,7 @@ export const incrementViews = async (req: AuthRequest, res: Response, next: Next
         const internship = await Internship.findByIdAndUpdate(
             req.params.id,
             { $inc: { views: 1 } },
-            { new: true }
+            { new: true, timestamps: false }
         );
 
         if (!internship) {

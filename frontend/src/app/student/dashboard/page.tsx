@@ -26,7 +26,6 @@ export default function StudentDashboard() {
 
   // Typed state
   const [recentApplications, setRecentApplications] = useState<Application[]>([])
-  const [savedInternships, setSavedInternships] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -101,15 +100,6 @@ export default function StudentDashboard() {
     }
   }, [user]);
 
-  // Handler for saving internships (Mock functionality here if backend doesn't persist properly on match endpoint yet, but logically same as browse)
-  const handleToggleSave = useCallback((id: string) => {
-    setSavedInternships(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(id)) newSet.delete(id)
-      else newSet.add(id)
-      return newSet
-    })
-  }, [])
 
   if (authLoading || (isLoading && user)) {
     return <div className="min-h-screen flex items-center justify-center text-gray-500">Loading dashboard...</div>

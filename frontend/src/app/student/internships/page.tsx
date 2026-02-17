@@ -19,7 +19,6 @@ export default function InternshipsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<'match' | 'recent' | 'stipend'>('match')
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
 
   const modeOptions = [
     { value: '', label: 'All' },
@@ -82,17 +81,6 @@ export default function InternshipsPage() {
     return () => clearTimeout(timeout)
   }, [fetchInternships])
 
-  const handleToggleSave = useCallback((id: string) => {
-    setSavedIds(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(id)) {
-        newSet.delete(id)
-      } else {
-        newSet.add(id)
-      }
-      return newSet
-    })
-  }, [])
 
   const formatStipend = useCallback((stipend: number) => {
     if (stipend >= 1000) {
@@ -335,8 +323,6 @@ export default function InternshipsPage() {
               <InternshipCard
                 key={internship._id}
                 internship={internship}
-                isSaved={savedIds.has(internship._id)}
-                onToggleSave={handleToggleSave}
                 getCompanyIcon={getCompanyIcon}
                 formatStipend={formatStipend}
                 formatDate={formatDate}

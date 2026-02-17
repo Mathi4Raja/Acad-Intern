@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { MapPin, Clock, IndianRupee, TrendingUp, ExternalLink, Heart, ArrowRight } from 'lucide-react'
+import { MapPin, Clock, IndianRupee, TrendingUp, ExternalLink, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { Internship } from '@/types'
 import { useState } from 'react'
@@ -9,8 +9,6 @@ import { useAlert } from '@/components/ui/AlertProvider'
 
 interface InternshipCardProps {
     internship: Internship
-    isSaved: boolean
-    onToggleSave: (id: string) => void
     getCompanyIcon: (name: string) => React.ReactNode
     formatStipend: (amount: number) => string
     formatDate: (date: string) => string
@@ -19,8 +17,6 @@ interface InternshipCardProps {
 
 const InternshipCard = memo(({
     internship,
-    isSaved,
-    onToggleSave,
     getCompanyIcon,
     formatStipend,
     formatDate,
@@ -84,14 +80,6 @@ const InternshipCard = memo(({
                         </div>
                     </div>
 
-                    {/* Save Button aligned better */}
-                    <button
-                        onClick={() => onToggleSave(internship._id)}
-                        className="p-1.5 rounded-full hover:bg-red-50 text-gray-300 hover:text-red-500 transition-all duration-200 -mt-1 -mr-1"
-                        aria-label={isSaved ? "Unsave internship" : "Save internship"}
-                    >
-                        <Heart size={18} fill={isSaved ? 'currentColor' : 'none'} className={isSaved ? 'text-red-500' : ''} />
-                    </button>
                 </div>
 
                 {/* Key Details Row */}

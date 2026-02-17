@@ -610,16 +610,21 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                                 <button
                                     onClick={() => {
                                         setIsMenuOpen(false);
-                                        if (user?.role === 'student') {
-                                            router.push(`/student/applications/${applicationId}`);
+                                        const internshipId = applicationData?.internshipId?._id || applicationData?.internshipId;
+                                        if (internshipId) {
+                                            if (user?.role === 'student') {
+                                                router.push(`/student/internships/${internshipId}`);
+                                            } else {
+                                                router.push(`/internships/${internshipId}`);
+                                            }
                                         } else {
-                                            router.push(`/company/applications/${applicationId}`);
+                                            showAlert('Internship details not available', 'error');
                                         }
                                     }}
                                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-primary transition-colors text-left"
                                 >
                                     <ExternalLink className="w-4 h-4" />
-                                    <span>View Application</span>
+                                    <span>View Internship</span>
                                 </button>
 
                                 {user?.role === 'company' && (

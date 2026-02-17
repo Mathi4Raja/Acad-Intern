@@ -7,8 +7,6 @@ import InternshipCard from '@/components/internships/InternshipCard'
 interface RecommendedWidgetProps {
     internships: Internship[]
     // These props are needed for InternshipCard
-    isSaved: (id: string) => boolean
-    onToggleSave: (id: string) => void
     formatStipend: (amount: number) => string
     formatDate: (date: string) => string
     getModeLabel: (mode: string) => string
@@ -20,8 +18,6 @@ import { CompanyLogo } from '@/components/common'
 
 const RecommendedWidget = memo(({
     internships,
-    isSaved, // Required prop now
-    onToggleSave,
     formatStipend,
     formatDate,
     getModeLabel
@@ -51,8 +47,6 @@ const RecommendedWidget = memo(({
                         <div key={internship._id} className="h-full">
                             <InternshipCard
                                 internship={internship}
-                                isSaved={isSaved(internship._id)}
-                                onToggleSave={onToggleSave}
                                 getCompanyIcon={(name) => <CompanyLogo name={name} size="sm" />}
                                 formatStipend={formatStipend}
                                 formatDate={formatDate}
