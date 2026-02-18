@@ -29,7 +29,8 @@ describe('Reports API', () => {
                 .set('Cookie', student.cookie)
                 .send({
                     internshipId: internshipRes.body.data._id,
-                    reason: 'This internship has misleading information'
+                    subject: 'Report: Misleading Info',
+                    body: 'This internship has misleading information'
                 });
 
             expect(res.status).toBe(201);
@@ -58,7 +59,8 @@ describe('Reports API', () => {
                 .set('Cookie', student.cookie)
                 .send({
                     internshipId: internshipRes.body.data._id,
-                    reason: 'Bad' // Too short (< 5 chars)
+                    subject: 'Short',
+                    body: 'Bad' // Too short (< 5 chars)
                 });
 
             // Zod validation errors go through error handler
