@@ -24,6 +24,7 @@ interface InternshipDetail {
         _id: string
         companyName: string
         verified: boolean
+        logo?: string
     }
     skillsRequired: string[]
     durationWeeks: number
@@ -77,7 +78,7 @@ export default function PublicInternshipDetailPage() {
     }
 
     const handleLoginToApply = () => {
-        router.push(`/login?redirect=/internships/${id}`)
+        router.push(`/login?redirect=/student/internships/${id}`)
     }
 
     const formatDate = (dateString: string) => {
@@ -149,7 +150,7 @@ export default function PublicInternshipDetailPage() {
                                 </div>
                             </div>
                             <div className="hidden sm:block">
-                                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
+                                <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-xl font-bold border border-gray-100 uppercase text-primary">
                                     {internship.companyId.companyName.charAt(0)}
                                 </div>
                             </div>
@@ -254,7 +255,7 @@ export default function PublicInternshipDetailPage() {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                         <h3 className="text-sm font-bold text-gray-900 mb-3">About Company</h3>
                         <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg font-bold text-gray-600">
+                            <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-lg font-bold border border-gray-100 uppercase text-gray-600">
                                 {internship.companyId.companyName.charAt(0)}
                             </div>
                             <div>

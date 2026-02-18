@@ -76,9 +76,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             // Redirect based on role
             const role = res.data.data.user.role;
-            if (role === 'admin') router.push('/admin/dashboard');
-            else if (role === 'company') router.push('/company/dashboard');
-            else router.push('/student/dashboard');
+            const searchParams = new URLSearchParams(window.location.search);
+            const redirectUrl = searchParams.get('redirect');
+
+            if (redirectUrl) {
+                router.push(redirectUrl);
+            } else if (role === 'admin') {
+                router.push('/admin/dashboard');
+            } else if (role === 'company') {
+                router.push('/company/dashboard');
+            } else {
+                router.push('/student/dashboard');
+            }
 
         } catch (error) {
             throw error;
@@ -99,9 +108,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             await checkAuthStatus();
 
             const role = res.data.data.user.role;
-            if (role === 'admin') router.push('/admin/dashboard');
-            else if (role === 'company') router.push('/company/dashboard');
-            else router.push('/student/dashboard');
+            const searchParams = new URLSearchParams(window.location.search);
+            const redirectUrl = searchParams.get('redirect');
+
+            if (redirectUrl) {
+                router.push(redirectUrl);
+            } else if (role === 'admin') {
+                router.push('/admin/dashboard');
+            } else if (role === 'company') {
+                router.push('/company/dashboard');
+            } else {
+                router.push('/student/dashboard');
+            }
         } catch (error) {
             throw error;
         }
@@ -120,8 +138,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             await checkAuthStatus();
 
-            // Google OAuth is only for students
-            router.push('/student/dashboard');
+            const searchParams = new URLSearchParams(window.location.search);
+            const redirectUrl = searchParams.get('redirect');
+
+            if (redirectUrl) {
+                router.push(redirectUrl);
+            } else {
+                // Google OAuth is only for students
+                router.push('/student/dashboard');
+            }
         } catch (error) {
             throw error;
         }

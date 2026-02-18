@@ -32,8 +32,8 @@ async function getInternships() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
   try {
-    // Revalidation set to 60 seconds for incremental static regeneration (optional, or use { cache: 'no-store' } for full SSR)
-    const res = await fetch(`${apiUrl}/internships`, { next: { revalidate: 60 } });
+    // Use { cache: 'no-store' } to ensure the list is always fresh and shows newly posted internships immediately
+    const res = await fetch(`${apiUrl}/internships`, { cache: 'no-store' });
 
     if (!res.ok) {
       // Handle error gracefully or return empty array
@@ -49,6 +49,7 @@ async function getInternships() {
       id: item._id,
       title: item.title,
       company: item.companyId?.companyName || 'Unknown Company',
+      logo: item.companyId?.logo,
       location: item.mode === 'onsite' ? 'In-Office' : (item.mode.charAt(0).toUpperCase() + item.mode.slice(1)),
       mode: item.mode === 'onsite' ? 'In-Office' : (item.mode.charAt(0).toUpperCase() + item.mode.slice(1)),
       duration: `${item.durationWeeks} weeks`,

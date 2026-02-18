@@ -37,6 +37,7 @@ interface InternshipDetail {
         industry?: string
         companySize?: string
         location?: string
+        logo?: string
     }
     skillsRequired: string[]
     durationWeeks: number
@@ -132,7 +133,8 @@ export default function InternshipDetailPage() {
 
     const handleShare = async () => {
         try {
-            await navigator.clipboard.writeText(window.location.href)
+            const publicUrl = `${window.location.origin}/internships/${id}`
+            await navigator.clipboard.writeText(publicUrl)
             setCopied(true)
             setTimeout(() => setCopied(false), 2000)
         } catch (err) {
@@ -209,8 +211,16 @@ export default function InternshipDetailPage() {
                                     <Flag size={18} />
                                 </button>
                                 <div className="hidden sm:block">
-                                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
-                                        {internship.companyId.companyName.charAt(0)}
+                                    <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-xl font-bold border border-gray-100 overflow-hidden shadow-sm">
+                                        {internship.companyId.logo ? (
+                                            <img
+                                                src={internship.companyId.logo}
+                                                alt={internship.companyId.companyName}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <span className="text-primary">{internship.companyId.companyName.charAt(0)}</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -372,8 +382,16 @@ export default function InternshipDetailPage() {
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
                         <h3 className="text-sm font-bold text-gray-900 mb-3">About Company</h3>
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg font-bold text-gray-600">
-                                {internship.companyId.companyName.charAt(0)}
+                            <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-lg font-bold border border-gray-100 overflow-hidden shadow-sm">
+                                {internship.companyId.logo ? (
+                                    <img
+                                        src={internship.companyId.logo}
+                                        alt={internship.companyId.companyName}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <span className="text-gray-600">{internship.companyId.companyName.charAt(0)}</span>
+                                )}
                             </div>
                             <div>
                                 <p className="font-bold text-gray-900 text-sm leading-tight">{internship.companyId.companyName}</p>

@@ -37,6 +37,7 @@ interface Internship {
     id: string;
     title: string;
     company: string;
+    logo?: string;
     location: string;
     mode: string;
     duration: string;
@@ -323,13 +324,18 @@ export default function InternshipsClient({ initialInternships }: InternshipsCli
                             >
                                 {/* Header Row */}
                                 <div className="flex items-start justify-between gap-3 mb-4">
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-base font-bold text-gray-900 group-hover:text-primary transition-colors truncate mb-1">
-                                            {internship.title}
-                                        </h3>
-                                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                                            <Building2 className="w-4 h-4" />
-                                            <span className="truncate font-medium">{internship.company}</span>
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        {/* Company Icon (Logo hidden for public) */}
+                                        <div className="w-10 h-10 rounded-lg bg-gray-50 flex-shrink-0 flex items-center justify-center text-xl shadow-sm overflow-hidden border border-gray-100">
+                                            <Building2 className="w-5 h-5 text-gray-400" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-base font-bold text-gray-900 group-hover:text-primary transition-colors truncate mb-1">
+                                                {internship.title}
+                                            </h3>
+                                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                                                <span className="truncate font-medium">{internship.company}</span>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="text-right flex-shrink-0">

@@ -18,7 +18,13 @@ const internshipSchema = z.object({
     mode: z.enum(['remote', 'onsite', 'hybrid']),
     openings: z.number().min(1, 'Must have at least 1 opening'),
     location: z.string().optional(),
-    deadline: z.string().or(z.date()).optional(),
+    deadline: z.string().or(z.date()).optional().refine((val) => {
+        if (!val) return true;
+        const deadline = new Date(val);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return deadline >= today;
+    }, { message: 'Deadline cannot be in the past' }),
     requirements: z.string().optional(),
     responsibilities: z.string().optional()
 });
@@ -86,7 +92,7 @@ export const matchInternships = async (req: AuthRequest, res: Response, next: Ne
         }
 
         const internships = await Internship.find(query)
-            .populate('companyId', 'companyName website verified')
+            .populate('companyId', 'companyName website verified logo')
             .lean();
 
         const matches = internships.map(internship => {
@@ -173,7 +179,7 @@ export const getInternships = async (req: AuthRequest, res: Response, next: Next
         }
 
         const internships = await Internship.find(query)
-            .populate('companyId', 'companyName website verified')
+            .populate('companyId', 'companyName website verified logo')
             .sort({ createdAt: -1 })
             .lean();
 
@@ -205,7 +211,7 @@ export const getInternships = async (req: AuthRequest, res: Response, next: Next
 export const getInternship = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         const internship = await Internship.findById(req.params.id)
-            .populate('companyId', 'companyName website description verified userId industry companySize location');
+            .populate('companyId', 'companyName website description verified userId industry companySize location logo');
 
         if (!internship) {
             res.status(404).json({
@@ -383,7 +389,9 @@ export const updateInternship = async (req: AuthRequest, res: Response, next: Ne
             return;
         }
 
-        internship = await Internship.findByIdAndUpdate(req.params.id, req.body, {
+        const validatedData = internshipSchema.partial().parse(req.body);
+
+        internship = await Internship.findByIdAndUpdate(req.params.id, validatedData, {
             new: true,
             runValidators: true
         });

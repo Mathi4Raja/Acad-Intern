@@ -205,6 +205,29 @@ export const startScheduler = async () => {
     } catch (error) {
         console.error('[Scheduler] ❌ Error scheduling database backups:', error);
     }
+
+    // 5. Automated Internship Expiry (Run every day at 1 AM)
+    const expiryTask = cron.schedule('0 1 * * *', async () => {
+        try {
+            const now = new Date();
+            const result = await Internship.updateMany(
+                {
+                    status: 'active',
+                    deadline: { $lt: now }
+                },
+                { status: 'expired' }
+            );
+
+            if (result.modifiedCount > 0) {
+                console.log(`[Scheduler] ⏳ Marked ${result.modifiedCount} internships as expired.`);
+            }
+        } catch (error) {
+            console.error('[Scheduler] ❌ Error in internship expiry task:', error);
+        }
+    }, {
+        timezone
+    });
+    scheduledTasks.push(expiryTask);
 };
 
 export const restartScheduler = async () => {

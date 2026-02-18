@@ -32,6 +32,7 @@ export interface CompanyProfile {
 export interface Company {
     _id: string
     companyName: string
+    logo?: string
     logoUrl?: string
     userId?: string
 }

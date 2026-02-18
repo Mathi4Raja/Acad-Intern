@@ -14,6 +14,7 @@ interface InternshipCardProps {
     formatStipend: (amount: number) => string
     formatDate: (date: string) => string
     getModeLabel: (mode: string) => string
+    showLogo?: boolean
 }
 
 const InternshipCard = memo(({
@@ -21,7 +22,8 @@ const InternshipCard = memo(({
     getCompanyIcon,
     formatStipend,
     formatDate,
-    getModeLabel
+    getModeLabel,
+    showLogo = true
 }: InternshipCardProps) => {
     const { showAlert } = useAlert()
     const [applying, setApplying] = useState(false)
@@ -57,8 +59,21 @@ const InternshipCard = memo(({
                 <div className="flex items-start justify-between mb-3 gap-3">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                         {/* Smaller Logo */}
-                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gray-50 flex-shrink-0 flex items-center justify-center text-xl shadow-sm group-hover:scale-105 transition-transform duration-300">
-                            {getCompanyIcon(internship.companyId?.companyName || '')}
+                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-gray-50 flex-shrink-0 flex items-center justify-center text-xl shadow-sm group-hover:scale-105 transition-transform duration-300 overflow-hidden border border-gray-100">
+                            {showLogo && internship.companyId?.logo ? (
+                                <img
+                                    src={internship.companyId.logo}
+                                    alt={internship.companyId.companyName}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        // Fallback if image fails to load
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                        (e.target as HTMLImageElement).parentElement!.innerHTML = `<div class="flex items-center justify-center w-full h-full">${getCompanyIcon(internship.companyId?.companyName || '')}</div>`;
+                                    }}
+                                />
+                            ) : (
+                                getCompanyIcon(internship.companyId?.companyName || '')
+                            )}
                         </div>
 
                         {/* Text Content */}

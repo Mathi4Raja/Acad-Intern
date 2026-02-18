@@ -289,6 +289,7 @@ export default function InternshipsPage() {
               formatStipend={formatStipend}
               formatDate={formatDate}
               getModeLabel={getModeLabel}
+              showLogo={true}
             />
           ))}
         </div>
