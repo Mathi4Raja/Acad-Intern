@@ -15,6 +15,7 @@ interface DashboardLayoutProps {
     userName?: string;
     userEmail?: string;
     userIcon?: LucideIcon;
+    userAvatar?: string;
     notificationHref?: string;
     portalLabel?: string;
     quickStats?: {
@@ -39,6 +40,7 @@ export function DashboardLayout({
     userName,
     userEmail,
     userIcon,
+    userAvatar,
     notificationHref,
     portalLabel,
     quickStats,
@@ -63,6 +65,7 @@ export function DashboardLayout({
                 userName={userName}
                 userEmail={userEmail}
                 userIcon={userIcon}
+                userAvatar={userAvatar}
                 notificationHref={notificationHref}
                 isSidebarOpen={sidebarOpen}
                 onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}

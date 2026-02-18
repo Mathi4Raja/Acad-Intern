@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import api from '@/lib/api'
 import { StatCard } from '@/components/analytics/StatCard'
+import { StudentAvatar } from '@/components/common'
 
 // Utility function to format dates
 const formatDate = (dateString: string) => {
@@ -108,6 +109,7 @@ export default function CompanyDashboard() {
           return {
             id: app._id,
             applicantName: app.studentId?.name || 'Unknown',
+            applicantAvatar: app.studentId?.profilePicture,
             role: app.internshipTitle,
             status: app.status,
             appliedDate: app.appliedAt,
@@ -236,9 +238,11 @@ export default function CompanyDashboard() {
                   <div key={app.id} className="p-3 hover:bg-gray-50 transition-colors">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold border border-gray-200 text-xs">
-                          {app.applicantName.charAt(0)}
-                        </div>
+                        <StudentAvatar
+                          name={app.applicantName}
+                          logoUrl={app.applicantAvatar}
+                          size="sm"
+                        />
                         <div>
                           <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{app.applicantName}</h3>
                           <p className="text-xs text-gray-500 line-clamp-1">{app.role}</p>

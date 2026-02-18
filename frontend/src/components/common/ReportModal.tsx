@@ -230,7 +230,7 @@ export function ReportModal({
                                 type="button"
                                 variant="outline"
                                 onClick={onClose}
-                                className="bg-white border-gray-100 rounded-xl h-10 px-6 text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900"
+                                className="bg-gray-50 border-gray-200 rounded-xl h-10 px-6 text-[11px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors shadow-sm"
                             >
                                 Cancel
                             </Button>

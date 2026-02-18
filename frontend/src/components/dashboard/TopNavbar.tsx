@@ -17,6 +17,7 @@ interface TopNavbarProps {
     userName?: string;
     userEmail?: string;
     userIcon?: LucideIcon;
+    userAvatar?: string;
     notificationHref?: string;
     isSidebarOpen: boolean;
     onToggleSidebar: () => void;
@@ -54,6 +55,7 @@ export function TopNavbar({
     userName = "User",
     userEmail,
     userIcon: UserIcon,
+    userAvatar,
     notificationHref,
     isSidebarOpen,
     onToggleSidebar,
@@ -147,7 +149,18 @@ export function TopNavbar({
                                     config.gradient
                                 )}
                             >
-                                {userName.charAt(0).toUpperCase()}
+                                {userAvatar ? (
+                                    <img
+                                        src={userAvatar}
+                                        alt={userName}
+                                        className="w-full h-full object-cover rounded-full"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                        }}
+                                    />
+                                ) : (
+                                    userName.charAt(0).toUpperCase()
+                                )}
                             </div>
                             <div className="hidden lg:block">
                                 <p className="text-[12px] font-black text-gray-900 leading-none">{userName}</p>

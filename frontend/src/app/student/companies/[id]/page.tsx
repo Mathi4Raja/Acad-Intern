@@ -25,6 +25,7 @@ import {
 import { companyApi } from '@/lib/api'
 import api from '@/lib/api'
 import { ReportModal } from '@/components/common/ReportModal'
+import CompanyLogo from '@/components/common/CompanyLogo'
 
 interface CompanyProfile {
     _id: string
@@ -38,6 +39,8 @@ interface CompanyProfile {
     about?: string
     benefits?: string
     verified: boolean
+    logo?: string
+    banner?: string
     socialLinks?: {
         linkedin?: string
         twitter?: string
@@ -132,15 +135,31 @@ export default function CompanyProfilePage() {
                             {/* Shortened Mesh Banner */}
                             <div className="h-24 sm:h-32 relative overflow-hidden">
                                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 animate-gradient-x"></div>
-                                <div className="absolute inset-0 opacity-25 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat"></div>
+                                {company?.banner && (
+                                    <img
+                                        src={company.banner}
+                                        alt={`${company.companyName} banner`}
+                                        className="absolute inset-0 w-full h-full object-cover z-10"
+                                    />
+                                )}
+                                <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat z-20 pointer-events-none"></div>
                             </div>
 
                             {/* Info Area */}
-                            <div className="px-5 sm:px-6 pb-6 relative">
+                            <div className="px-5 sm:px-6 pb-6 relative z-30">
                                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 -mt-8 sm:-mt-10 mb-4">
                                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] bg-white p-2 shadow-lg border border-gray-50 shrink-0">
-                                        <div className="w-full h-full rounded-[16px] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center text-2xl font-black text-gray-300 relative overflow-hidden">
-                                            {loading ? <Skeleton className="w-full h-full" /> : company?.companyName.charAt(0)}
+                                        <div className="w-full h-full rounded-[16px] relative overflow-hidden">
+                                            {loading ? (
+                                                <Skeleton className="w-full h-full" />
+                                            ) : (
+                                                <CompanyLogo
+                                                    name={company?.companyName || ''}
+                                                    logoUrl={company?.logo}
+                                                    size="xl"
+                                                    className="!w-full !h-full !rounded-[16px] !shadow-none !border-none"
+                                                />
+                                            )}
                                         </div>
                                     </div>
 
@@ -180,35 +199,26 @@ export default function CompanyProfilePage() {
                                                     </div>
                                                 </div>
 
-                                                {company?.website && (
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => setIsReportModalOpen(true)}
-                                                            className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95 shrink-0 border border-gray-100"
-                                                            title="Report Company"
-                                                        >
-                                                            <Flag size={14} />
-                                                        </button>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    {company?.website && (
                                                         <a
                                                             href={company.website}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="px-4 py-1.5 bg-gray-900 text-white rounded-xl font-black text-[10px] flex items-center gap-1.5 hover:bg-primary transition-all shadow-sm active:scale-95 shrink-0"
+                                                            className="px-4 py-1.5 bg-gray-900 text-white rounded-xl font-black text-[10px] flex items-center gap-1.5 hover:bg-primary transition-all shadow-sm active:scale-95"
                                                         >
                                                             Visit Site
                                                             <ExternalLink size={12} />
                                                         </a>
-                                                    </div>
-                                                )}
-                                                {!company?.website && (
+                                                    )}
                                                     <button
                                                         onClick={() => setIsReportModalOpen(true)}
-                                                        className="px-4 py-1.5 bg-white text-gray-500 border border-gray-100 rounded-xl font-black text-[10px] flex items-center gap-1.5 hover:text-red-500 hover:border-red-100 hover:bg-red-50 transition-all shadow-sm active:scale-95 shrink-0"
+                                                        className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95 border border-gray-100 bg-white shadow-sm"
+                                                        title="Report Company"
                                                     >
-                                                        <Flag size={12} />
-                                                        Report
+                                                        <Flag size={14} />
                                                     </button>
-                                                )}
+                                                </div>
                                             </div>
                                         )}
                                     </div>

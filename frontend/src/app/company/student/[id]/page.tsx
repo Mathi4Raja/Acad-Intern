@@ -23,6 +23,7 @@ interface StudentProfile {
     location?: string
     profilePicture?: string
     phone?: string
+    bannerImage?: string
 }
 
 interface Application {
@@ -126,25 +127,37 @@ export default function StudentProfilePage() {
             </button>
 
             {/* Profile Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                {/* Header with gradient */}
-                <div className="h-24 bg-gradient-to-r from-primary/20 via-primary/10 to-secondary/20" />
+            <div className="bg-white rounded-[24px] shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-gray-50 overflow-hidden">
+                {/* Mesh Banner */}
+                <div className="h-24 sm:h-32 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 animate-gradient-x"></div>
+                    {profile.bannerImage && (
+                        <img
+                            src={profile.bannerImage}
+                            alt={`${profile.name} banner`}
+                            className="absolute inset-0 w-full h-full object-cover z-10"
+                        />
+                    )}
+                    <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] bg-repeat z-20 pointer-events-none"></div>
+                </div>
 
                 {/* Profile Content */}
-                <div className="px-6 pb-6">
+                <div className="px-5 sm:px-6 pb-6 relative z-30">
                     {/* Avatar */}
-                    <div className="-mt-12 mb-4">
-                        <div className="w-24 h-24 bg-gradient-to-br from-primary/30 to-primary/10 rounded-full flex items-center justify-center border-4 border-white shadow-lg">
-                            {profile.profilePicture ? (
-                                <img src={profile.profilePicture} alt={profile.name} className="w-full h-full rounded-full object-cover" />
-                            ) : (
-                                <User size={40} className="text-primary" />
-                            )}
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 -mt-8 sm:-mt-10 mb-4">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] bg-white p-2 shadow-lg border border-gray-50 shrink-0">
+                            <div className="w-full h-full rounded-[16px] relative overflow-hidden bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
+                                {profile.profilePicture ? (
+                                    <img src={profile.profilePicture} alt={profile.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <User size={32} className="text-primary" />
+                                )}
+                            </div>
                         </div>
                     </div>
 
                     {/* Name and Basic Info */}
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 pt-2">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900 mb-2">{profile.name}</h1>
                             <div className="flex flex-wrap gap-4 text-sm text-gray-600">
@@ -329,6 +342,17 @@ export default function StudentProfilePage() {
                     email: profile.email
                 }}
             />
+            <style jsx global>{`
+                @keyframes gradient-x {
+                    0% { background-position: 0% 50%; }
+                    50% { background-position: 100% 50%; }
+                    100% { background-position: 0% 50%; }
+                }
+                .animate-gradient-x {
+                    background-size: 200% 200%;
+                    animation: gradient-x 15s ease infinite;
+                }
+            `}</style>
         </div>
     )
 }

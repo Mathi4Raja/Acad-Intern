@@ -212,7 +212,7 @@ export const getInternships = async (req: AuthRequest, res: Response, next: Next
 export const getInternship = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         const internship = await Internship.findById(req.params.id)
-            .populate('companyId', 'companyName website description verified userId industry companySize location logo');
+            .populate('companyId', 'companyName website description verified userId industry companySize location logo banner');
 
         if (!internship) {
             res.status(404).json({

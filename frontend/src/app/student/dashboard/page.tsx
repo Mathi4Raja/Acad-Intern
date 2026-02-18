@@ -55,7 +55,7 @@ export default function StudentDashboard() {
           internshipTitle: app.internshipId?.title || 'Unknown Title',
           company: app.internshipId?.companyId?.companyName || 'Unknown Company',
           companyUserId: app.internshipId?.companyId?.userId,
-          logo: '', // Handled by component
+          logo: app.internshipId?.companyId?.logo || '', // Handled by component
           status: app.status as ApplicationStatus,
           appliedDate: app.appliedAt,
           lastUpdate: app.updatedAt,

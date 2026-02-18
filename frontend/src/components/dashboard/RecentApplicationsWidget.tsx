@@ -40,7 +40,7 @@ const RecentApplicationsWidget = memo(({ applications, formatDate }: RecentAppli
                             >
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2 sm:gap-3">
-                                        <CompanyLogo name={app.company} size="sm" />
+                                        <CompanyLogo name={app.company} logoUrl={app.logo} size="sm" />
                                         <div>
                                             <h3 className="text-sm font-semibold text-gray-900 group-hover:text-primary transition-colors line-clamp-1">
                                                 {app.internshipTitle}

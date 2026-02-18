@@ -45,7 +45,7 @@ const ApplicationCard = memo(({ application, formatDate, isHighlighted = false }
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
                 {/* Logo Section */}
                 <div className="flex-shrink-0">
-                    <CompanyLogo name={application.company} />
+                    <CompanyLogo name={application.company} logoUrl={application.logo} />
                 </div>
 
                 {/* Content Section */}

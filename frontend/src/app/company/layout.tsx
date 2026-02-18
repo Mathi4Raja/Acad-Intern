@@ -48,6 +48,7 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
       navigation={navigation}
       userName={companyName}
       userEmail={user?.email}
+      userAvatar={(profile as any)?.logo}
       notificationHref="/company/notifications"
       notifications={notifications}
       onMarkNotificationAsRead={markAsRead}

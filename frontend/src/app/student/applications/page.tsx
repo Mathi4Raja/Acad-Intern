@@ -52,8 +52,7 @@ export default function ApplicationsPage() {
             internshipTitle: app.internshipId?.title || 'Unknown Position',
             company: app.internshipId?.companyId?.companyName || 'Unknown Company',
             companyUserId: app.internshipId?.companyId?.userId,
-            // logo logic moved to CompanyLogo component
-            logo: '',
+            logo: app.internshipId?.companyId?.logo || '',
             status: app.status as ApplicationStatus,
             appliedDate: app.appliedAt,
             lastUpdate: app.updatedAt,

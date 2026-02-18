@@ -19,6 +19,8 @@ export interface StudentProfile {
     resumeUrl?: string;
     linkedIn?: string;
     github?: string;
+    profilePicture?: string;
+    bannerImage?: string;
 }
 
 export interface CompanyProfile {
@@ -34,6 +36,7 @@ export interface Company {
     companyName: string
     logo?: string
     logoUrl?: string
+    banner?: string
     userId?: string
 }
 

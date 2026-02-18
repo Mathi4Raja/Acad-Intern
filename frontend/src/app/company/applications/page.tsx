@@ -7,6 +7,7 @@ import api from '@/lib/api'
 import { ScheduleInterviewModal } from '@/components/company/ScheduleInterviewModal'
 import { StatCard } from '@/components/analytics/StatCard'
 import { useAlert } from '@/components/ui/AlertProvider'
+import StudentAvatar from '@/components/common/StudentAvatar'
 
 interface Application {
   id: string
@@ -20,6 +21,7 @@ interface Application {
   matchScore: number
   skills: string[]
   cgpa?: number
+  studentAvatar?: string
 }
 
 interface Internship {
@@ -93,7 +95,8 @@ export default function Applications() {
                 status: app.status,
                 matchScore,
                 skills: app.studentId?.skills || [],
-                cgpa: app.studentId?.cgpa
+                cgpa: app.studentId?.cgpa,
+                studentAvatar: app.studentId?.profilePicture
               })
             })
           } catch (err) {
@@ -408,112 +411,123 @@ export default function Applications() {
                 </div>
 
                 {/* Student Info */}
-                <div className="flex-1">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-3">
-                    <div>
-                      <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-0.5 flex items-center gap-2">
-                        <User size={18} className="text-gray-600" />
-                        {app.studentName}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mb-1 flex items-center gap-2">
-                        <Briefcase size={16} />
-                        Applied for: {app.position}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border bg-opacity-50 border-opacity-20 ${getStatusColor(app.status)}`}>
-                        {app.status}
-                      </span>
-                      <span className="px-2.5 sm:px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold flex items-center gap-1 border border-primary/20">
-                        <Star size={14} />
-                        {app.matchScore}% match
-                      </span>
-                    </div>
+                <div className="flex-grow flex gap-4 min-w-0">
+                  {/* Student Avatar */}
+                  <div className="flex-shrink-0 pt-1">
+                    <StudentAvatar
+                      logoUrl={app.studentAvatar}
+                      name={app.studentName}
+                      size="lg"
+                      className="border-2 border-primary/10 shadow-sm"
+                    />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-gray-600">
-                    <div className="flex items-center gap-1.5">
-                      <Mail size={14} className="text-gray-400" />
-                      {app.studentEmail}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-3">
+                      <div>
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-0.5 truncate">
+                          {app.studentName}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-gray-600 mb-1 flex items-center gap-2">
+                          <Briefcase size={16} />
+                          Applied for: {app.position}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`px-2.5 sm:px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border bg-opacity-50 border-opacity-20 ${getStatusColor(app.status)}`}>
+                          {app.status}
+                        </span>
+                        <span className="px-2.5 sm:px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold flex items-center gap-1 border border-primary/20">
+                          <Star size={14} />
+                          {app.matchScore}% match
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Calendar size={14} className="text-gray-400" />
-                      Applied: {formatDate(app.appliedDate)}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-3 text-xs sm:text-sm text-gray-600">
+                      <div className="flex items-center gap-1.5">
+                        <Mail size={14} className="text-gray-400" />
+                        {app.studentEmail}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Calendar size={14} className="text-gray-400" />
+                        Applied: {formatDate(app.appliedDate)}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-50">
-                    {/* Primary Actions Based on Status */}
-                    {app.status === 'pending' && (
+                    <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-50">
+                      {/* Primary Actions Based on Status */}
+                      {app.status === 'pending' && (
+                        <button
+                          onClick={() => handleUpdateStatus(app.id, 'shortlisted')}
+                          disabled={actionLoading === app.id}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                        >
+                          {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                          Shortlist
+                        </button>
+                      )}
+
+                      {app.status === 'assessment_completed' && (
+                        <button
+                          onClick={() => openInterviewModal(app.id)}
+                          disabled={actionLoading === app.id}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                        >
+                          <Calendar size={14} />
+                          Schedule Interview
+                        </button>
+                      )}
+
+                      {app.status === 'shortlisted' && (
+                        <button
+                          onClick={() => handleUpdateStatus(app.id, 'assessment_completed')}
+                          disabled={actionLoading === app.id}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                        >
+                          {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                          Mark Assessment Done
+                        </button>
+                      )}
+
+                      {(app.status === 'assessment_completed' || app.status === 'interview_scheduled') && (
+                        <button
+                          onClick={() => handleUpdateStatus(app.id, 'accepted')}
+                          disabled={actionLoading === app.id}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                        >
+                          {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                          Accept
+                        </button>
+                      )}
+                      {/* Reject Button - Available at most stages */}
+                      {['pending', 'shortlisted', 'assessment_completed', 'interview_scheduled'].includes(app.status) && (
+                        <button
+                          onClick={() => handleUpdateStatus(app.id, 'rejected')}
+                          disabled={actionLoading === app.id}
+                          className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm rounded-lg"
+                        >
+                          <XCircle size={14} />
+                          Reject
+                        </button>
+                      )}
+
                       <button
-                        onClick={() => handleUpdateStatus(app.id, 'shortlisted')}
-                        disabled={actionLoading === app.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                        onClick={() => router.push(`/company/messages?applicationId=${app.id}`)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-indigo-200 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors text-xs font-bold rounded-lg ml-auto"
                       >
-                        {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                        Shortlist
+                        <MessageCircle size={14} />
+                        Message
                       </button>
-                    )}
 
-                    {app.status === 'assessment_completed' && (
                       <button
-                        onClick={() => openInterviewModal(app.id)}
-                        disabled={actionLoading === app.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                        onClick={() => handleViewProfile(app.studentId)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-blue-200 text-blue-700 bg-blue-50/50 rounded-lg hover:bg-blue-100 transition-colors text-xs font-medium"
                       >
-                        <Calendar size={14} />
-                        Schedule Interview
+                        <User size={14} />
+                        View Profile
                       </button>
-                    )}
-
-                    {app.status === 'shortlisted' && (
-                      <button
-                        onClick={() => handleUpdateStatus(app.id, 'assessment_completed')}
-                        disabled={actionLoading === app.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
-                      >
-                        {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                        Mark Assessment Done
-                      </button>
-                    )}
-
-                    {(app.status === 'assessment_completed' || app.status === 'interview_scheduled') && (
-                      <button
-                        onClick={() => handleUpdateStatus(app.id, 'accepted')}
-                        disabled={actionLoading === app.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
-                      >
-                        {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                        Accept
-                      </button>
-                    )}
-                    {/* Reject Button - Available at most stages */}
-                    {['pending', 'shortlisted', 'assessment_completed', 'interview_scheduled'].includes(app.status) && (
-                      <button
-                        onClick={() => handleUpdateStatus(app.id, 'rejected')}
-                        disabled={actionLoading === app.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm rounded-lg"
-                      >
-                        <XCircle size={14} />
-                        Reject
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => router.push(`/company/messages?applicationId=${app.id}`)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 border border-indigo-200 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors text-xs font-bold rounded-lg ml-auto"
-                    >
-                      <MessageCircle size={14} />
-                      Message
-                    </button>
-
-                    <button
-                      onClick={() => handleViewProfile(app.studentId)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 border border-blue-200 text-blue-700 bg-blue-50/50 rounded-lg hover:bg-blue-100 transition-colors text-xs font-medium"
-                    >
-                      <User size={14} />
-                      View Profile
-                    </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -533,7 +547,6 @@ export default function Applications() {
           </div>
         )}
       </div>
-      {/* Interview Scheduling Modal */}
       {/* Interview Scheduling Modal */}
       <ScheduleInterviewModal
         isOpen={showInterviewModal}

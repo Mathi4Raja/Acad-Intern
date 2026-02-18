@@ -178,7 +178,7 @@ export const getMyApplications = async (req: AuthRequest, res: Response, next: N
                 select: 'title companyId mode stipend durationWeeks location',
                 populate: {
                     path: 'companyId',
-                    select: 'companyName userId'
+                    select: 'companyName userId logo'
                 }
             })
             .sort({ appliedAt: -1 });
@@ -234,7 +234,8 @@ export const getInternshipApplications = async (req: AuthRequest, res: Response,
                 ...app.toObject(),
                 studentId: {
                     ...(app.studentId as any)?.toObject?.() || { _id: app.studentId },
-                    skills: profile?.skills || []
+                    skills: profile?.skills || [],
+                    profilePicture: profile?.profilePicture
                 }
             };
         });
@@ -659,7 +660,7 @@ export const getApplication = async (req: AuthRequest, res: Response, next: Next
                 path: 'internshipId',
                 populate: {
                     path: 'companyId',
-                    select: 'companyName userId website logo'
+                    select: 'companyName userId website logo banner'
                 }
             })
             .populate('studentId', 'name email');

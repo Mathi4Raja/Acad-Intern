@@ -326,63 +326,49 @@ export default function InternshipDetailPage() {
 
                         <button
                             onClick={handleApply}
-                            disabled={applying || hasApplied}
-                            className={`w-full py-2.5 text-white rounded-xl font-semibold shadow-md transition-all text-sm flex items-center justify-center gap-2 active:scale-95 ${hasApplied
-                                ? 'bg-green-600 hover:bg-green-700 shadow-green-500/20'
-                                : 'bg-primary hover:bg-primary/90 shadow-primary/20'
-                                } disabled:opacity-70 disabled:cursor-not-allowed`}
+                            disabled={applying || hasApplied || internship.status !== 'active'}
+                            className={`w-full py-3 px-4 rounded-xl text-sm font-bold transition-all mb-3 flex items-center justify-center gap-2 ${hasApplied
+                                ? 'bg-emerald-500 text-white cursor-default'
+                                : internship.status !== 'active'
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-primary text-white hover:bg-primary/90 active:scale-[0.98] shadow-md shadow-primary/20'
+                                }`}
                         >
                             {applying ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    Applying...
-                                </>
+                                <Loader2 size={16} className="animate-spin" />
                             ) : hasApplied ? (
-                                <>
-                                    <CheckCircle className="w-4 h-4" />
-                                    Applied
-                                </>
-                            ) : (
-                                'Apply Now'
-                            )}
+                                <Check size={16} />
+                            ) : null}
+                            {hasApplied ? 'Applied' : internship.status !== 'active' ? 'Internship Closed' : 'Apply Now'}
                         </button>
-
-                        <div className="mt-4 pt-4 border-t border-gray-100 space-y-2">
-                            <div className="flex items-center justify-between text-xs text-gray-600">
-                                <span>Deadline</span>
-                                <span className="font-medium text-gray-900">
-                                    {internship.deadline ? formatDate(internship.deadline) : 'ASAP'}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between text-xs text-gray-600">
-                                <span>Openings</span>
-                                <span className="font-medium text-gray-900">{internship.openings}</span>
-                            </div>
-                        </div>
 
                         <button
                             onClick={handleShare}
-                            className="w-full mt-4 py-2 flex items-center justify-center gap-2 text-gray-500 hover:text-gray-900 text-xs font-medium border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-200 active:scale-95"
+                            className="w-full py-2.5 px-4 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all flex items-center justify-center gap-2 border border-gray-100"
                         >
-                            {copied ? (
-                                <>
-                                    <Check size={14} className="text-green-600" />
-                                    <span className="text-green-600">Link Copied!</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Share2 size={14} />
-                                    Share this Internship
-                                </>
-                            )}
+                            {copied ? <Check size={16} className="text-emerald-500" /> : <Share2 size={16} />}
+                            {copied ? 'Link copied!' : 'Share this Internship'}
                         </button>
+
+                        <div className="mt-4 pt-4 border-t border-gray-50 space-y-3">
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-500">Deadline</span>
+                                <span className="text-gray-900 font-bold">
+                                    {internship.deadline ? formatDate(internship.deadline) : 'Not specified'}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-500">Openings</span>
+                                <span className="text-gray-900 font-bold">{internship.openings}</span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Company Info */}
+                    {/* Company Card */}
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-                        <h3 className="text-sm font-bold text-gray-900 mb-3">About Company</h3>
+                        <h2 className="text-sm font-bold text-gray-900 mb-3">About Company</h2>
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-lg font-bold border border-gray-100 overflow-hidden shadow-sm">
+                            <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-lg font-bold border border-gray-100 overflow-hidden">
                                 {internship.companyId.logo ? (
                                     <img
                                         src={internship.companyId.logo}
@@ -390,69 +376,76 @@ export default function InternshipDetailPage() {
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
-                                    <span className="text-gray-600">{internship.companyId.companyName.charAt(0)}</span>
+                                    <span className="text-primary">{internship.companyId.companyName.charAt(0)}</span>
                                 )}
                             </div>
                             <div>
-                                <p className="font-bold text-gray-900 text-sm leading-tight">{internship.companyId.companyName}</p>
+                                <h3 className="text-sm font-bold text-gray-900">{internship.companyId.companyName}</h3>
                                 {internship.companyId.website && (
                                     <a
                                         href={internship.companyId.website}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5"
+                                        className="text-[11px] text-primary hover:underline flex items-center gap-1"
                                     >
-                                        <Globe size={10} />
-                                        Visit Website
+                                        Visit Website <Globe size={10} />
                                     </a>
                                 )}
                             </div>
                         </div>
-
-                        <div className="grid grid-cols-1 gap-2.5 mb-4 border-y border-gray-50 py-3">
-                            {internship.companyId.industry && (
-                                <div className="flex items-center gap-2 text-[11px]">
-                                    <Briefcase size={12} className="text-gray-400" />
-                                    <span className="text-gray-500 font-medium">Industry:</span>
-                                    <span className="text-gray-900 font-semibold">{internship.companyId.industry}</span>
+                        {internship.companyId.industry && (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2 text-xs text-gray-600">
+                                    <Briefcase size={14} className="text-gray-400" />
+                                    <span>{internship.companyId.industry}</span>
                                 </div>
-                            )}
-                            {internship.companyId.companySize && (
-                                <div className="flex items-center gap-2 text-[11px]">
-                                    <Users size={12} className="text-gray-400" />
-                                    <span className="text-gray-500 font-medium">Size:</span>
-                                    <span className="text-gray-900 font-semibold">{internship.companyId.companySize} employees</span>
+                                <div className="flex items-center gap-2 text-xs text-gray-600">
+                                    <Users size={14} className="text-gray-400" />
+                                    <span>{internship.companyId.companySize || 'Unknown size'}</span>
                                 </div>
-                            )}
-                            {internship.companyId.location && (
-                                <div className="flex items-center gap-2 text-[11px]">
-                                    <MapPin size={12} className="text-gray-400" />
-                                    <span className="text-gray-500 font-medium">Headquarters:</span>
-                                    <span className="text-gray-900 font-semibold">{internship.companyId.location}</span>
+                                <div className="flex items-center gap-2 text-xs text-gray-600">
+                                    <MapPin size={14} className="text-gray-400" />
+                                    <span>{internship.companyId.location || 'Remote'}</span>
                                 </div>
-                            )}
-                        </div>
-
+                            </div>
+                        )}
                         {internship.companyId.description && (
-                            <p className="text-xs text-gray-500 line-clamp-4 leading-relaxed">
+                            <p className="mt-4 text-[11px] text-gray-500 leading-relaxed line-clamp-3">
                                 {internship.companyId.description}
                             </p>
                         )}
                     </div>
                 </div>
+                <ReportModal
+                    isOpen={isReportModalOpen}
+                    onClose={() => setIsReportModalOpen(false)}
+                    internshipId={internship._id}
+                    reportedUserId={internship.companyId.userId}
+                    subjectPrefix={`Report Internship: ${internship.title}`}
+                    contextSnapshot={{
+                        internshipTitle: internship.title,
+                        companyName: internship.companyId.companyName,
+                        location: internship.location
+                    }}
+                />
             </div>
-            <ReportModal
-                isOpen={isReportModalOpen}
-                onClose={() => setIsReportModalOpen(false)}
-                internshipId={internship._id}
-                reportedUserId={internship.companyId.userId}
-                subjectPrefix={`Report Internship: ${internship.title}`}
-                contextSnapshot={{
-                    internshipTitle: internship.title,
-                    companyName: internship.companyId.companyName,
-                    location: internship.location
-                }}
-            />
+            <StyleTag />
         </div>
     )
+}
+
+const styles = `
+@keyframes gradient-x {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.animate-gradient-x {
+    background-size: 200% 200%;
+    animation: gradient-x 15s ease infinite;
+}
+`
+
+function StyleTag() {
+    return <style dangerouslySetInnerHTML={{ __html: styles }} />
 }

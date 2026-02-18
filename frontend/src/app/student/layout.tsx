@@ -17,7 +17,7 @@ const navigation = [
 ]
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout, isLoading: authLoading } = useAuth()
+  const { user, profile, logout, isLoading: authLoading } = useAuth()
   const { notifications, markAsRead, markAllAsRead } = useNotifications()
   const pathname = usePathname()
   const router = useRouter()
@@ -46,6 +46,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       navigation={navigation}
       userName={user?.name || 'Student'}
       userEmail={user?.email}
+      userAvatar={(profile as any)?.profilePicture}
       notificationHref="/student/notifications"
       notifications={notifications}
       onMarkNotificationAsRead={markAsRead}
