@@ -325,6 +325,22 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
             }
         }
 
+        // MODERATION: Scan for keywords
+        if (content) {
+            const { scanContent, createAutomatedFlag } = require('../utils/moderationService');
+            const contentScan = scanContent(content);
+            if (contentScan.flagged) {
+                await createAutomatedFlag({
+                    reportedUserId: userId,
+                    applicationId: applicationId as any,
+                    category: 'spam',
+                    subject: 'Potentially Prohibited Message Content',
+                    body: `Message in application context triggered automated flag.`,
+                    metadata: { matches: contentScan.matches, sample: content.substring(0, 100) }
+                });
+            }
+        }
+
         // Create message
         const message = await Message.create({
             applicationId,
@@ -379,15 +395,19 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
         const isMuted = preferences && preferences.mutedUntil && preferences.mutedUntil > new Date();
 
         if (!isMuted) {
+            // Determine display name for notification
+            const senderName = (isCompany && companyDoc?.companyName) ? companyDoc.companyName : req.user?.name;
+
             // Create notification for receiver
             await createNotification({
                 userId: receiverId,
                 type: 'general',
                 title: 'New Message',
-                message: `You have a new message from ${req.user?.name}`,
+                message: `You have a new message from ${senderName}`,
                 payload: {
                     applicationId,
-                    messageId: message._id
+                    messageId: message._id,
+                    senderName
                 }
             });
         }

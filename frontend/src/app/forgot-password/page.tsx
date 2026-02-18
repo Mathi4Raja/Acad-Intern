@@ -102,7 +102,7 @@ export default function ForgotPasswordPage() {
                             />
                         </div>
                     </CardContent>
-                    <CardFooter className="flex flex-col gap-6 pt-2">
+                    <CardFooter className="flex flex-col gap-6 pt-6">
                         <Button
                             type="submit"
                             className="w-full h-11 text-base font-semibold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all hover:-translate-y-0.5"

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, User, MapPin, Linkedin, Github, FileText, Mail, GraduationCap, BookOpen, ExternalLink, Loader2, Briefcase, Calendar, CheckCircle } from 'lucide-react'
+import { ArrowLeft, User, MapPin, Linkedin, Github, FileText, Mail, GraduationCap, BookOpen, ExternalLink, Loader2, Briefcase, Calendar, CheckCircle, Flag } from 'lucide-react'
 import api from '@/lib/api'
+import { ReportModal } from '@/components/common/ReportModal'
 
 interface StudentProfile {
     _id: string
@@ -46,6 +47,7 @@ export default function StudentProfilePage() {
     const [profile, setProfile] = useState<StudentProfile | null>(null)
     const [applications, setApplications] = useState<Application[]>([])
     const [error, setError] = useState<string | null>(null)
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false)
 
     useEffect(() => {
         if (studentId) {
@@ -168,7 +170,14 @@ export default function StudentProfilePage() {
                         </div>
 
                         {/* Quick Links */}
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 items-center">
+                            <button
+                                onClick={() => setIsReportModalOpen(true)}
+                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all active:scale-95 border border-gray-100"
+                                title="Report Student"
+                            >
+                                <Flag size={18} />
+                            </button>
                             {profile.linkedIn && (
                                 <a
                                     href={profile.linkedIn}
@@ -308,6 +317,18 @@ export default function StudentProfilePage() {
                     </div>
                 </div>
             </div>
+
+            <ReportModal
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                reportedUserId={profile.userId}
+                subjectPrefix={`Report Student: ${profile.name}`}
+                contextSnapshot={{
+                    studentName: profile.name,
+                    department: profile.department,
+                    email: profile.email
+                }}
+            />
         </div>
     )
 }

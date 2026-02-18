@@ -245,7 +245,8 @@ async function seedAdminData() {
             { key: 'backupFrequency', value: 'daily', group: 'database' },
             { key: 'autoApproveCompanies', value: 'true', group: 'enterprise' },
             { key: 'requireCompanyVerification', value: 'true', group: 'enterprise' },
-            { key: 'maxActiveInternshipListings', value: '20', group: 'enterprise' }
+            { key: 'maxActiveInternshipListings', value: '20', group: 'enterprise' },
+            { key: 'maxInternshipPostsPerDay', value: '5', group: 'enterprise' }
         ];
 
         for (const setting of defaultSettings) {

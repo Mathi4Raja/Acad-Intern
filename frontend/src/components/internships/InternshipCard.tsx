@@ -6,6 +6,7 @@ import { useState } from 'react'
 import api from '@/lib/api'
 import { Loader2, CheckCircle } from 'lucide-react'
 import { useAlert } from '@/components/ui/AlertProvider'
+import { ReportModal } from '../common/ReportModal'
 
 interface InternshipCardProps {
     internship: Internship
@@ -159,6 +160,7 @@ const InternshipCard = memo(({
                     </div>
                 </div>
             </div>
+
         </div>
     )
 })

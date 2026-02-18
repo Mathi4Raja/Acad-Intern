@@ -9,6 +9,8 @@ import Report from '../models/Report';
 import SystemSetting from '../models/SystemSetting';
 import { AuthRequest, IUser, ICompany, IInternship, IReport } from '../types';
 import { restartScheduler } from '../utils/scheduler';
+import { sendEmail } from '../utils/emailService';
+import { getReportResolvedTemplate } from '../utils/reportEmailTemplates';
 
 // Validation schemas
 const updateUserStatusSchema = z.object({
@@ -521,12 +523,135 @@ export const updateReportStatus = async (req: AuthRequest, res: Response, next: 
             return;
         }
 
-        report.status = status as 'open' | 'under_review' | 'resolved' | 'dismissed';
+        const oldStatus = report.status;
+        report.status = status as any;
         if (resolution) report.adminNotes = resolution;
-        if (status === 'resolved' || status === 'dismissed') report.reviewedAt = new Date();
+
+        if (status === 'resolved' || status === 'dismissed') {
+            report.reviewedAt = new Date();
+            report.reviewedBy = req.user?._id;
+
+            // CLEANUP: Delete screenshots from R2 when resolved/dismissed to save space
+            if (report.screenshots && report.screenshots.length > 0) {
+                const { deleteFromR2, getKeyFromUrl } = require('../utils/r2Storage');
+                for (const url of report.screenshots) {
+                    const key = getKeyFromUrl(url);
+                    if (key) {
+                        try {
+                            await deleteFromR2(key);
+                        } catch (err) {
+                            console.error(`Failed to delete report screenshot ${key}:`, err);
+                        }
+                    }
+                }
+                report.screenshots = []; // Clear URLs after deletion
+            }
+
+            // EMAIL NOTIFICATION: Notify reporter when resolved
+            if (status === 'resolved') {
+                const emailSetting = await SystemSetting.findOne({ key: 'reportStatusEmail' });
+                const shouldSendEmail = emailSetting ? (emailSetting.value === true || emailSetting.value === 'true') : true;
+
+                if (shouldSendEmail) {
+                    await report.populate('reporterId', 'name email');
+                    const reporter = report.reporterId as any;
+
+                    if (reporter?.email) {
+                        try {
+                            await sendEmail({
+                                to: reporter.email,
+                                subject: `Update on your report: ${report.subject}`,
+                                text: `Your report regarding "${report.subject}" has been resolved. Resolution: ${resolution || 'Appropriate action has been taken.'}`,
+                                html: getReportResolvedTemplate(reporter.name || 'User', report.subject, resolution || '')
+                            });
+                        } catch (emailErr) {
+                            console.error('Failed to send report resolution email:', emailErr);
+                            // Non-blocking
+                        }
+                    }
+                }
+            }
+        }
 
         await report.save();
         res.status(200).json({ success: true, message: `Report ${status}`, data: report });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Temporarily suspend user
+// @route   POST /api/admin/users/:id/suspend
+// @access  Private (Admin)
+export const tempSuspendUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { durationDays, reason } = z.object({
+            durationDays: z.number().min(1),
+            reason: z.string().min(5)
+        }).parse(req.body);
+
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+
+        const suspendUntil = new Date();
+        suspendUntil.setDate(suspendUntil.getDate() + durationDays);
+
+        user.status = 'suspended';
+        user.suspendedUntil = suspendUntil;
+        if (reason) {
+            if (!user.moderatorNotes) user.moderatorNotes = [];
+            user.moderatorNotes.push(`[SUSPENSION] ${reason} (Days: ${durationDays}, By: ${req.user?.name})`);
+        }
+
+        await user.save();
+        res.status(200).json({ success: true, message: `User suspended for ${durationDays} days`, data: user });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Toggle shadow ban
+// @route   POST /api/admin/users/:id/shadow-ban
+// @access  Private (Admin)
+export const toggleShadowBan = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+
+        user.isShadowBanned = !user.isShadowBanned;
+        if (!user.moderatorNotes) user.moderatorNotes = [];
+        user.moderatorNotes.push(`[SHADOW_BAN] ${user.isShadowBanned ? 'Enabled' : 'Disabled'} by ${req.user?.name}`);
+
+        await user.save();
+        res.status(200).json({ success: true, message: `Shadow ban ${user.isShadowBanned ? 'enabled' : 'disabled'}`, data: user });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Add moderator note to user
+// @route   POST /api/admin/users/:id/notes
+// @access  Private (Admin)
+export const addModeratorNote = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { note } = z.object({ note: z.string().min(1) }).parse(req.body);
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+
+        if (!user.moderatorNotes) user.moderatorNotes = [];
+        user.moderatorNotes.push(`[NOTE] ${note} (By: ${req.user?.name}, Date: ${new Date().toLocaleDateString()})`);
+
+        await user.save();
+        res.status(200).json({ success: true, message: 'Note added', data: user.moderatorNotes });
     } catch (error) {
         next(error);
     }

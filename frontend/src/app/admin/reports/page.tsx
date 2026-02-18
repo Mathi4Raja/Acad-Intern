@@ -18,7 +18,18 @@ interface Report {
   reportedBy: string
   reporterId?: string
   reporterEmail?: string
-  reason: string
+  reason: string // maps to subject
+  subject?: string
+  body?: string
+  category?: string
+  context?: any
+  screenshots?: string[]
+  reportedUserId?: string
+  reportedUserName?: string
+  reportedUserEmail?: string
+  reportedUserRole?: string
+  isAutomatedFlag?: boolean
+  flagMetadata?: any
   reportedDate: string
   status: 'open' | 'under_review' | 'resolved' | 'dismissed'
   priority: 'high' | 'medium' | 'low'
@@ -47,6 +58,44 @@ export default function ManageReports() {
     resolved: 0,
     highPriority: 0
   })
+
+  // Moderation Action States
+  const [isSuspending, setIsSuspending] = useState(false)
+  const [isTogglingShadowBan, setIsTogglingShadowBan] = useState(false)
+  const [suspensionDuration, setSuspensionDuration] = useState(7)
+  const [moderationReason, setModerationReason] = useState('')
+
+  const handleTempSuspend = async (userId: string) => {
+    if (!moderationReason) {
+      showAlert('Please provide a reason for suspension', 'error')
+      return
+    }
+    setIsSuspending(true)
+    try {
+      await api.post(`/admin/users/${userId}/suspend`, {
+        durationDays: suspensionDuration,
+        reason: moderationReason
+      })
+      showAlert(`User suspended for ${suspensionDuration} days`, 'success')
+      setModerationReason('')
+    } catch (error: any) {
+      showAlert(error.response?.data?.message || 'Failed to suspend user', 'error')
+    } finally {
+      setIsSuspending(false)
+    }
+  }
+
+  const handleToggleShadowBan = async (userId: string) => {
+    setIsTogglingShadowBan(true)
+    try {
+      const res = await api.post(`/admin/users/${userId}/toggle-shadow-ban`)
+      showAlert(`Shadow ban ${res.data.data.isShadowBanned ? 'enabled' : 'disabled'}`, 'success')
+    } catch (error: any) {
+      showAlert(error.response?.data?.message || 'Failed to toggle shadow ban', 'error')
+    } finally {
+      setIsTogglingShadowBan(false)
+    }
+  }
 
   // Debounce search
   useEffect(() => {
@@ -125,6 +174,23 @@ export default function ManageReports() {
         }
       }
     })
+  }
+
+  const handleSelectDetailedReport = async (report: Report) => {
+    setLoading(true)
+    try {
+      const res = await api.get(`/admin/reports/${report.id}`)
+      if (res.data.success) {
+        setSelectedReport(res.data.data)
+      } else {
+        setSelectedReport(report)
+      }
+    } catch (error) {
+      console.error('Error fetching report details:', error)
+      setSelectedReport(report)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSelectReport = (id: string) => {
@@ -262,114 +328,213 @@ export default function ManageReports() {
       </div>
 
 
-      {/* Audit Modal */}
       {selectedReport && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[110] p-4 sm:p-6 animate-in fade-in duration-300">
-          <div className="bg-white rounded-2xl shadow-2xl w-fit max-w-[95vw] sm:max-w-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col h-auto max-h-[95vh]">
-            {/* Premium Header Pattern */}
-            <div className="bg-white/80 backdrop-blur-sm border-b border-gray-100 p-3 sm:px-4 sm:py-3.5 flex items-center justify-between overflow-hidden relative group/modal-header shrink-0">
-              <div className="absolute -right-16 -top-16 w-32 h-32 bg-primary/5 rounded-full blur-2xl group-hover/modal-header:bg-primary/10 transition-colors duration-700" />
-              <div className="relative flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center transform group-hover/modal-header:scale-105 transition-all duration-500 shadow-md">
-                  <Flag className="w-5 h-5 text-white" />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[110] p-4 sm:p-6 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[40px] shadow-2xl w-full max-w-4xl overflow-hidden animate-in zoom-in-95 duration-300 border border-gray-100 flex flex-col h-auto max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="bg-white border-b border-gray-100 p-6 sm:px-8 sm:py-6 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-4">
+                <div className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transform rotate-3",
+                  selectedReport.priority === 'high' ? "bg-red-500 text-white shadow-red-200" : "bg-gray-900 text-white shadow-gray-200"
+                )}>
+                  <Flag className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-[14px] font-black text-gray-900 leading-normal tracking-tight uppercase px-1">Incident Profile</h2>
-                  <p className="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest px-1">Ref: {selectedReport?.id?.slice(-6).toUpperCase()}</p>
+                  <h2 className="text-xl font-black text-gray-900 tracking-tight uppercase leading-none">Incident Report</h2>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+                      Case #{selectedReport.id.slice(-8).toUpperCase()}
+                    </span>
+                    <div className="w-1 h-1 rounded-full bg-gray-300" />
+                    <span className={cn(
+                      "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md border",
+                      getPriorityColor(selectedReport.priority)
+                    )}>
+                      {selectedReport.priority} Priority
+                    </span>
+                  </div>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedReport(null)}
-                className="relative z-10 text-gray-400 hover:text-gray-900 p-2 rounded-xl hover:bg-gray-100 transition-all active:scale-90"
+                className="text-gray-400 hover:text-gray-900 p-2.5 rounded-2xl hover:bg-gray-100 transition-all active:scale-90"
               >
-                <X size={18} />
+                <X size={24} />
               </button>
             </div>
 
-            <div className="p-3 sm:p-4 overflow-y-visible space-y-4 scrollbar-hide bg-gray-50/20 flex-1">
-              {/* Profile Header Block */}
-              <div className="flex flex-col items-center text-center gap-2 bg-white p-3 rounded-2xl border border-gray-100 shadow-xs">
-                <div className={cn(
-                  "w-10 h-10 rounded-[12px] border flex items-center justify-center text-gray-300 font-black text-lg shrink-0",
-                  selectedReport.priority === 'high' ? "bg-red-50 border-red-100 text-red-500" : "bg-gray-50 border-gray-100"
-                )}>
-                  {getTypeIcon(selectedReport.type)}
-                </div>
-                <div className="min-w-0 w-full">
-                  <h3 className="text-[16px] font-black text-gray-900 mb-0.5 leading-tight tracking-tight px-2">{selectedReport.reason}</h3>
-                  <div className="flex flex-wrap items-center justify-center gap-1.5">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border flex items-center gap-1",
-                      selectedReport?.status ? getStatusColor(selectedReport.status) : ""
-                    )}>
-                      <div className={cn("w-1 h-1 rounded-full", selectedReport?.status === 'open' ? 'bg-red-500' : 'bg-green-500')} />
-                      {selectedReport?.status}
-                    </span>
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border flex items-center gap-1",
-                      selectedReport?.priority ? getPriorityColor(selectedReport.priority) : ""
-                    )}>
-                      {selectedReport?.priority} Priority
-                    </span>
-                  </div>
-                </div>
-              </div>
+            <div className="p-0 overflow-y-auto flex-1 bg-gray-50/30">
+              <div className="grid grid-cols-1 lg:grid-cols-2">
+                {/* Left Column: Evidence & Details */}
+                <div className="p-6 sm:p-8 space-y-8 border-r border-gray-100">
+                  {/* Automated Flag Warning */}
+                  {selectedReport.isAutomatedFlag && (
+                    <div className="bg-orange-50/50 border border-orange-200 p-4 rounded-3xl flex items-start gap-3">
+                      <div className="p-2 bg-orange-100 text-orange-600 rounded-xl">
+                        <Activity size={18} />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-orange-700 uppercase tracking-widest mb-1">Automated Security Flag</h4>
+                        <p className="text-[11px] font-bold text-orange-600/80 leading-relaxed">
+                          This report was automatically generated by the safety system due to suspicious patterns or prohibited keywords.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-              {/* Data Grid Section */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30 text-center">
-                  <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Origin of Report</span>
-                  <div className="space-y-0.5">
-                    <p className="text-[13px] font-black text-gray-900 truncate">By {selectedReport.reportedBy}</p>
-                    <p className="text-[11px] font-bold text-gray-400 truncate tracking-tight">{selectedReport.reporterEmail || 'No Email'}</p>
-                  </div>
-                </div>
-                <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm shadow-gray-100/30 flex flex-col items-center justify-center text-center">
-                  <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Timestamp</span>
-                  <div className="flex items-center gap-1.5">
-                    <Calendar size={12} className="text-gray-400" />
-                    <p className="text-[13px] font-black text-gray-900 tracking-tight">{formatDate(selectedReport?.reportedDate)}</p>
-                  </div>
-                </div>
-              </div>
+                  <section className="space-y-4">
+                    <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Details</h4>
+                    <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-sm space-y-4">
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Subject</p>
+                        <p className="text-sm font-black text-gray-900 tracking-tight leading-tight">
+                          {selectedReport.subject || selectedReport.reason}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Description</p>
+                        <p className="text-[13px] font-bold text-gray-600 leading-relaxed">
+                          {selectedReport.body || 'No detailed description provided.'}
+                        </p>
+                      </div>
+                    </div>
+                  </section>
 
-              {/* Subject Entity */}
-              {/* Subject Entity - Centered */}
-              <div className="space-y-3">
-                <div className="bg-white p-2.5 rounded-2xl border border-gray-100 text-center">
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 border-b border-gray-50 pb-1">Context</h4>
-                  <div className="space-y-0.5">
-                    <p className="text-[13px] font-black text-gray-900 tracking-tight">{selectedReport.internshipTitle || 'Platform Interaction'}</p>
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{selectedReport.companyName || 'General Context'}</p>
-                  </div>
+                  {/* Screenshots */}
+                  {selectedReport.screenshots && selectedReport.screenshots.length > 0 && (
+                    <section className="space-y-4">
+                      <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Evidence (Screenshots)</h4>
+                      <div className="grid grid-cols-3 gap-3">
+                        {selectedReport.screenshots.map((url, idx) => (
+                          <a
+                            key={idx}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="aspect-square bg-white rounded-2xl border border-gray-100 overflow-hidden hover:ring-2 hover:ring-primary/20 transition-all shadow-sm group"
+                          >
+                            <img src={url} alt={`Evidence ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          </a>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Technical Context */}
+                  {selectedReport.context && (
+                    <section className="space-y-4">
+                      <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Technical Context</h4>
+                      <div className="bg-gray-900 rounded-[32px] p-5 shadow-xl shadow-gray-200/50 relative overflow-hidden">
+                        <div className="absolute right-0 top-0 p-6 opacity-[0.03]">
+                          <Activity size={80} className="text-white" />
+                        </div>
+                        <pre className="text-[12px] font-mono text-gray-400 overflow-x-auto scrollbar-hide relative z-10 whitespace-pre-wrap">
+                          {typeof selectedReport.context === 'string'
+                            ? selectedReport.context
+                            : JSON.stringify(selectedReport.context, null, 2)}
+                        </pre>
+                      </div>
+                    </section>
+                  )}
                 </div>
 
-                {selectedReport.resolution && (
-                  <div className="bg-emerald-50/50 p-2.5 rounded-2xl border border-emerald-100/50 text-center">
-                    <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest border-b border-emerald-100/30 pb-0.5 mb-1.5">Resolution</h4>
-                    <p className="text-[12px] font-medium text-emerald-800 leading-snug italic">"{selectedReport.resolution}"</p>
-                  </div>
-                )}
-              </div>
+                {/* Right Column: Parties & Actions */}
+                <div className="p-6 sm:p-8 space-y-8 bg-gray-50/30">
+                  {/* Reporting Parties */}
+                  <section className="space-y-4">
+                    <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Investigation Targets</h4>
+                    <div className="grid gap-3">
+                      {/* Reporter */}
+                      <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <User size={20} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5">Reporter</p>
+                          <p className="text-[13px] font-bold text-gray-900 truncate">{selectedReport.reportedBy}</p>
+                          <p className="text-[10px] font-bold text-gray-400 truncate">{selectedReport.reporterEmail}</p>
+                        </div>
+                      </div>
 
-              {/* Unique Identifier Area */}
-              <div className="bg-gray-900 rounded-2xl p-4 shadow-xl shadow-gray-200/50 ring-1 ring-white/10 relative overflow-hidden group">
-                <div className="absolute right-0 top-0 p-4 opacity-[0.05] group-hover:opacity-10 transition-opacity">
-                  <Shield size={64} className="text-white" />
+                      {/* Reported User */}
+                      {selectedReport.reportedUserId && (
+                        <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 ring-1 ring-red-50">
+                          <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                            <Shield size={20} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[8px] font-black text-red-400 uppercase tracking-[0.2em] mb-0.5">Reported User</p>
+                            <p className="text-[13px] font-bold text-gray-900 truncate">{selectedReport.reportedUserName || 'System ID: ' + selectedReport.reportedUserId.slice(-6)}</p>
+                            <p className="text-[10px] font-bold text-gray-400 truncate uppercase mt-0.5 tracking-tighter">
+                              Role: {selectedReport.reportedUserRole || 'Unknown'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+                  {/* Moderation Actions */}
+                  <section className="space-y-4 pt-4 border-t border-gray-100">
+                    <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Enforcement Panel</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Case Notes / Reason</label>
+                        <textarea
+                          value={moderationReason}
+                          onChange={(e) => setModerationReason(e.target.value)}
+                          placeholder="Provide reasoning for suspension or resolution..."
+                          className="w-full min-h-[80px] p-4 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:ring-2 focus:ring-primary/10 outline-none transition-all resize-none"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Suspend Period</label>
+                          <select
+                            value={suspensionDuration}
+                            onChange={(e) => setSuspensionDuration(Number(e.target.value))}
+                            className="w-full h-11 px-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-primary/10 outline-none transition-all appearance-none"
+                          >
+                            <option value={7}>7 Days</option>
+                            <option value={15}>15 Days</option>
+                            <option value={30}>30 Days</option>
+                            <option value={90}>90 Days</option>
+                          </select>
+                        </div>
+
+                        <div className="flex items-end">
+                          <button
+                            onClick={() => handleTempSuspend(selectedReport.reportedUserId || '')}
+                            disabled={!selectedReport.reportedUserId || isSuspending}
+                            className="w-full h-11 bg-red-50 text-red-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-100 transition-all active:scale-95 disabled:opacity-50"
+                          >
+                            {isSuspending ? 'Processing...' : 'Temp Suspend'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleToggleShadowBan(selectedReport.reportedUserId || '')}
+                        disabled={!selectedReport.reportedUserId || isTogglingShadowBan}
+                        className="w-full h-11 bg-gray-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all active:scale-95 shadow-md shadow-gray-200"
+                      >
+                        {isTogglingShadowBan ? 'Processing...' : 'Toggle Shadow Ban'}
+                      </button>
+                    </div>
+                  </section>
                 </div>
-                <span className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Internal Incident ID</span>
-                <code className="text-[13px] font-mono text-gray-300 break-all leading-relaxed relative z-10">
-                  {selectedReport?.id}
-                </code>
               </div>
             </div>
 
-            <div className="px-4 py-2.5 bg-white border-t border-gray-100 flex justify-center gap-2 shrink-0">
+            {/* Modal Footer Actions */}
+            <div className="p-6 bg-white border-t border-gray-100 flex justify-end gap-4 shrink-0">
               <button
                 onClick={() => setSelectedReport(null)}
-                className="px-6 py-2.5 bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-500 rounded-xl hover:bg-gray-100 hover:text-gray-900 transition-all border border-gray-100"
+                className="px-8 py-3 bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-500 rounded-2xl hover:bg-gray-100 hover:text-gray-900 transition-all border border-gray-100"
               >
-                Exit Audit
+                Close Profile
               </button>
               {selectedReport.status !== 'resolved' && (
                 <button
@@ -377,9 +542,9 @@ export default function ManageReports() {
                     handleAction(selectedReport.id, 'resolved');
                     setSelectedReport(null);
                   }}
-                  className="px-6 py-2.5 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200 active:scale-95 flex items-center gap-2"
+                  className="px-8 py-3 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-200 active:scale-95 flex items-center gap-2"
                 >
-                  <CheckCircle size={14} /> Finalize Resolution
+                  <CheckCircle size={14} /> Resolve & Close Case
                 </button>
               )}
             </div>
@@ -550,7 +715,7 @@ export default function ManageReports() {
               <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setSelectedReport(report)}
+                    onClick={() => handleSelectDetailedReport(report)}
                     className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest flex items-center gap-1"
                   >
                     <Eye size={12} /> Audit Log

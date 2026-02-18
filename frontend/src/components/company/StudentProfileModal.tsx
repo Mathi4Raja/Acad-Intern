@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, User, MapPin, Linkedin, Github, FileText, Mail, GraduationCap, Award, BookOpen, ExternalLink, Loader2 } from 'lucide-react'
 import api from '@/lib/api'
+import { StudentAvatar } from '../common'
 
 interface StudentProfileModalProps {
     studentId: string | null
@@ -81,13 +82,11 @@ export function StudentProfileModal({ studentId, isOpen, onClose }: StudentProfi
                         <div className="space-y-3">
                             {/* Profile Header */}
                             <div className="flex gap-3 items-start">
-                                <div className="w-14 h-14 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center border-2 border-white shadow-sm flex-shrink-0">
-                                    {profile.profilePicture ? (
-                                        <img src={profile.profilePicture} alt={profile.name} className="w-full h-full rounded-full object-cover" />
-                                    ) : (
-                                        <User size={24} className="text-primary" />
-                                    )}
-                                </div>
+                                <StudentAvatar
+                                    name={profile.name}
+                                    logoUrl={profile.profilePicture}
+                                    size="lg"
+                                />
 
                                 <div className="flex-1 min-w-0">
                                     <h3 className="text-lg font-bold text-gray-900 truncate">{profile.name}</h3>

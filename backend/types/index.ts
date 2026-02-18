@@ -10,6 +10,9 @@ export type ApplicationStatus = 'pending' | 'shortlisted' | 'interview_scheduled
 // Report status enum
 export type ReportStatus = 'open' | 'under_review' | 'resolved' | 'dismissed';
 
+// Report priority enum
+export type ReportPriority = 'low' | 'medium' | 'high';
+
 // User status enum
 export type UserStatus = 'active' | 'pending' | 'suspended';
 
@@ -25,6 +28,9 @@ export interface IUser extends Document {
     name: string;
     createdAt: Date;
     status: UserStatus;
+    suspendedUntil?: Date;
+    isShadowBanned?: boolean;
+    moderatorNotes?: string[];
     googleId?: string;
     resetPasswordToken?: string;
     resetPasswordExpires?: Date;
@@ -128,7 +134,14 @@ export interface IReport extends Document {
     applicationId?: Types.ObjectId; // Linked chat context
     reporterId: Types.ObjectId;
     reportedUserId?: Types.ObjectId;
-    reason: string;
+    subject: string;
+    body: string;
+    context?: any;
+    screenshots?: string[];
+    isAutomatedFlag: boolean;
+    flagMetadata?: Record<string, any>;
+    category: string;
+    priority: ReportPriority;
     status: ReportStatus;
     createdAt: Date;
     reviewedAt?: Date;

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Upload, Save, Plus, X, User, GraduationCap, FileText, Award, Loader2, ExternalLink, CheckCircle, Download, Trash2, AlertTriangle, Camera, Users, MapPin, Edit2, Phone, Mail, Github, Linkedin, Calendar, Hash, Target, ClipboardList } from 'lucide-react'
-import api, { settingsApi } from '@/lib/api' // Import settingsApi
+import api, { settingsApi } from '@/lib/api'
+import { StudentAvatar } from '@/components/common'
 import { useAuth } from '@/lib/AuthContext'
 import toast from 'react-hot-toast'
 import { DEPARTMENTS } from '@/lib/constants'
@@ -48,6 +49,7 @@ export default function StudentProfile() {
   const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+  const [bannerError, setBannerError] = useState(false)
   const [maxFileSizeMB, setMaxFileSizeMB] = useState<number>(5) // Default to 5MB
   const [allowResumeUpload, setAllowResumeUpload] = useState<boolean>(true)
 
@@ -119,9 +121,11 @@ export default function StudentProfile() {
     if (bannerFile) {
       const url = URL.createObjectURL(bannerFile)
       setBannerPreview(url)
+      setBannerError(false)
       return () => URL.revokeObjectURL(url)
     } else {
       setBannerPreview(null)
+      setBannerError(false)
     }
   }, [bannerFile])
 
@@ -164,6 +168,7 @@ export default function StudentProfile() {
           profilePicture: data.profilePicture || null,
           bannerImage: data.bannerImage || null
         })
+        setBannerError(false)
         setSkills(data.skills || [])
       }
     } catch (err: any) {
@@ -481,11 +486,12 @@ export default function StudentProfile() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6 relative group">
         {/* Banner Area */}
         <div className="h-32 sm:h-48 bg-gray-100 relative">
-          {profile.bannerImage || bannerPreview ? (
+          {(profile.bannerImage || bannerPreview) && !bannerError ? (
             <img
               src={bannerPreview || (profile.bannerImage ? `${profile.bannerImage}?t=${resumeVersion}` : '')}
               alt="Banner"
               className="w-full h-full object-cover"
+              onError={() => setBannerError(true)}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-r from-blue-500 to-indigo-600 opacity-20" />
@@ -521,40 +527,33 @@ export default function StudentProfile() {
 
             {/* Profile Picture */}
             <div className="relative group/pfp shrink-0">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white bg-white shadow-md overflow-hidden relative">
-                {profile.profilePicture || profilePicPreview ? (
-                  <img
-                    src={profilePicPreview || (profile.profilePicture ? `${profile.profilePicture}?t=${resumeVersion}` : '')}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300">
-                    <Users size={40} />
-                  </div>
-                )}
+              <StudentAvatar
+                name={user?.name}
+                logoUrl={profilePicPreview || (profile.profilePicture ? `${profile.profilePicture}?t=${resumeVersion}` : null)}
+                size="xl"
+                className="border-4 border-white"
+              />
 
-                {/* PFP Upload Overlay */}
-                {isEditing && (
-                  <label
-                    htmlFor="pfp-upload"
-                    className="absolute inset-0 bg-black/30 hover:bg-black/50 flex items-center justify-center cursor-pointer opacity-0 group-hover/pfp:opacity-100 transition-opacity"
-                  >
-                    {/* Camera icon always visible, no loading spinner needed here since it's instant preview */}
-                    <Camera size={24} className="text-white" />
-                  </label>
-                )}
-                <input
-                  type="file"
-                  id="pfp-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleFileSelect(file, 'profilePicture');
-                  }}
-                />
-              </div>
+              {/* PFP Upload Overlay */}
+              {isEditing && (
+                <label
+                  htmlFor="pfp-upload"
+                  className="absolute inset-0 bg-black/30 hover:bg-black/50 flex items-center justify-center cursor-pointer opacity-0 group-hover/pfp:opacity-100 transition-opacity"
+                >
+                  {/* Camera icon always visible, no loading spinner needed here since it's instant preview */}
+                  <Camera size={24} className="text-white" />
+                </label>
+              )}
+              <input
+                type="file"
+                id="pfp-upload"
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFileSelect(file, 'profilePicture');
+                }}
+              />
             </div>
 
             {/* Name and Info */}
@@ -599,19 +598,6 @@ export default function StudentProfile() {
           </div>
         </div>
       </div>
-
-      {/* Success/Error Messages */}
-      {successMessage && (
-        <div className="bg-green-50 text-green-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2">
-          <CheckCircle size={18} />
-          {successMessage}
-        </div>
-      )}
-      {error && (
-        <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-6">
-          {error}
-        </div>
-      )}
 
       {/* Profile Completion Card */}
       <div className="bg-gradient-to-r from-primary/10 to-blue-50 rounded-xl p-3 sm:p-4 mb-2 sm:mb-3 border border-primary/20">
@@ -770,7 +756,7 @@ export default function StudentProfile() {
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
                   <Hash size={14} />
                 </div>
-                <span className="text-sm font-semibold text-gray-800">{profile.cgpa ? profile.cgpa.toFixed(2) : 'Not provided'}</span>
+                <span className="text-sm font-semibold text-gray-800">{profile.cgpa !== null && profile.cgpa !== undefined ? profile.cgpa.toFixed(2) : 'Not provided'}</span>
               </div>
             )}
           </div>
@@ -888,7 +874,7 @@ export default function StudentProfile() {
             <div className="flex items-center gap-2 mb-2">
               <FileText className="text-green-600 flex-shrink-0" size={16} />
               <span className="text-xs sm:text-sm font-medium text-gray-900 truncate max-w-[180px] sm:max-w-none">
-                {resumeFile ? resumeFile.name : getResumeFileName(profile.resumeUrl)}
+                {resumeFile ? resumeFile.name : (profile.resumeUrl ? getResumeFileName(profile.resumeUrl) : 'resume.pdf')}
               </span>
               {resumeFile && (
                 <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium">
@@ -1044,62 +1030,64 @@ export default function StudentProfile() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertTriangle className="text-red-600" size={20} />
+      {
+        showDeleteModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="text-red-600" size={20} />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">Delete Account</h3>
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Delete Account</h3>
-            </div>
-            <p className="text-gray-600 mb-4">
-              This action cannot be undone. This will permanently delete your account and remove all your data including:
-            </p>
-            <ul className="text-sm text-gray-600 mb-4 list-disc list-inside">
-              <li>Your profile information</li>
-              <li>All your applications</li>
-              <li>Your messages</li>
-              <li>Your notifications</li>
-            </ul>
-            <p className="text-sm text-gray-700 mb-2">
-              Type <span className="font-bold text-red-600">DELETE</span> to confirm:
-            </p>
-            <input
-              type="text"
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              placeholder="Type DELETE"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setDeleteConfirmText('');
-                }}
-                className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                disabled={deleteConfirmText !== 'DELETE' || isDeleting}
-                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  'Delete Account'
-                )}
-              </button>
+              <p className="text-gray-600 mb-4">
+                This action cannot be undone. This will permanently delete your account and remove all your data including:
+              </p>
+              <ul className="text-sm text-gray-600 mb-4 list-disc list-inside">
+                <li>Your profile information</li>
+                <li>All your applications</li>
+                <li>Your messages</li>
+                <li>Your notifications</li>
+              </ul>
+              <p className="text-sm text-gray-700 mb-2">
+                Type <span className="font-bold text-red-600">DELETE</span> to confirm:
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Type DELETE"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmText('');
+                  }}
+                  className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete Account'
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
     </div>
   )
 }

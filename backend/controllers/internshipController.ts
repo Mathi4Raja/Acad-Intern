@@ -4,6 +4,7 @@ import Internship from '../models/Internship';
 import Company from '../models/Company';
 import StudentProfile from '../models/StudentProfile';
 import Application from '../models/Application';
+import User from '../models/User';
 import SystemSetting from '../models/SystemSetting';
 import { AuthRequest } from '../types';
 
@@ -29,7 +30,8 @@ interface InternshipQuery {
     stipend?: { $gte: number };
     durationWeeks?: { $lte: number };
     skillsRequired?: { $in: string[] };
-    companyId?: string;
+    companyId?: string | { $nin: any[] };
+    deadline?: { $gt: Date };
 }
 
 // @desc    Get internships sorted by skill match for student
@@ -47,7 +49,14 @@ export const matchInternships = async (req: AuthRequest, res: Response, next: Ne
 
         const { search, mode, minStipend, duration, skills } = req.query;
 
-        const query: InternshipQuery = { status: 'active' };
+        // Find companies that are NOT shadow-banned
+        const shadowBannedCompanies = await User.find({ role: 'company', isShadowBanned: true }).distinct('_id');
+        const shadowBannedProfileIds = await Company.find({ userId: { $in: shadowBannedCompanies } }).distinct('_id');
+
+        const query: any = {
+            status: 'active',
+            companyId: { $nin: shadowBannedProfileIds }
+        };
 
         // Use regex for partial matching (e.g., "nihi" matches "nihilist")
         if (search && typeof search === 'string') {
@@ -116,14 +125,21 @@ export const matchInternships = async (req: AuthRequest, res: Response, next: Ne
     }
 };
 
-// @desc    Get all internships with filtering and search
+// @desc    Get all internships for students
 // @route   GET /api/internships
-// @access  Public
+// @access  Private (Student)
 export const getInternships = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { search, mode, minStipend, duration, skills, companyId } = req.query;
+        const { search, mode, minStipend, duration, skills, companyId, page = '1', limit = '10' } = req.query;
 
-        const query: InternshipQuery = { status: 'active' };
+        // Find companies that are NOT shadow-banned
+        const shadowBannedCompanies = await User.find({ role: 'company', isShadowBanned: true }).distinct('_id');
+        const shadowBannedProfileIds = await Company.find({ userId: { $in: shadowBannedCompanies } }).distinct('_id');
+
+        const query: any = {
+            status: 'active',
+            companyId: { $nin: shadowBannedProfileIds }
+        };
 
         // Use regex for partial matching (e.g., "nihi" matches "nihilist")
         if (search && typeof search === 'string') {
@@ -254,19 +270,71 @@ export const createInternship = async (req: AuthRequest, res: Response, next: Ne
             return;
         }
 
-        // DYNAMIC SETTINGS: Max Active Internship Listings
-        const maxListingsSetting = await SystemSetting.findOne({ key: 'maxActiveInternshipListings' });
-        // If setting is missing, allow unlimited listings (Infinity)
-        const maxListings = maxListingsSetting?.value ? Number(maxListingsSetting.value) : Infinity;
+        // DYNAMIC SETTINGS: Daily Internship Post Limit
+        const limitSetting = await SystemSetting.findOne({ key: 'maxInternshipPostsPerDay' });
+        const maxPostsPerDay = limitSetting?.value ? Number(limitSetting.value) : 10;
 
-        const currentCount = await Internship.countDocuments({ companyId: company._id, status: 'active' });
+        // DYNAMIC TIMEZONE: Get Start of Day
+        const timezoneSetting = await SystemSetting.findOne({ key: 'timezone' });
+        const timezone = timezoneSetting?.value || 'Asia/Kolkata';
 
-        if (currentCount >= maxListings) {
+        // Use MongoDB to calculate start of day
+        const dateResult = await Internship.aggregate([
+            {
+                $project: {
+                    startOfDay: {
+                        $dateTrunc: {
+                            date: new Date(),
+                            unit: "day",
+                            timezone: timezone
+                        }
+                    }
+                }
+            },
+            { $limit: 1 }
+        ]);
+
+        let startOfDay;
+        if (dateResult.length > 0) {
+            startOfDay = dateResult[0].startOfDay;
+        } else {
+            const now = new Date();
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const offset = timezone === 'Asia/Kolkata' ? 5.5 : 0;
+            const localTime = new Date(utcTime + (offset * 3600000));
+            localTime.setHours(0, 0, 0, 0);
+            startOfDay = new Date(localTime.getTime() - (offset * 3600000));
+        }
+
+        const dailyCount = await Internship.countDocuments({
+            companyId: company._id,
+            createdAt: { $gte: startOfDay }
+        });
+
+        if (dailyCount >= maxPostsPerDay) {
             res.status(403).json({
                 success: false,
-                message: `You have reached the maximum limit of ${maxListings} active internship listings.`
+                message: `You have reached your daily internship posting limit (${maxPostsPerDay}). Please try again tomorrow.`
             });
             return;
+        }
+
+        // MODERATION: Scan for keywords
+        const { scanContent, createAutomatedFlag } = require('../utils/moderationService');
+        const titleScan = scanContent(validatedData.title);
+        const descScan = scanContent(validatedData.description);
+
+        if (titleScan.flagged || descScan.flagged) {
+            await createAutomatedFlag({
+                reportedUserId: req.user?._id,
+                category: 'spam',
+                subject: 'Potential Spam Internship',
+                body: `Internship "${validatedData.title}" triggered automated flag.`,
+                metadata: {
+                    titleMatches: titleScan.matches,
+                    descMatches: descScan.matches
+                }
+            });
         }
 
         const internship = await Internship.create({

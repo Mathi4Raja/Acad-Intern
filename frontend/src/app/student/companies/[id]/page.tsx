@@ -19,10 +19,12 @@ import {
     Briefcase,
     Search,
     ChevronRight,
-    Award
+    Award,
+    Flag
 } from 'lucide-react'
 import { companyApi } from '@/lib/api'
 import api from '@/lib/api'
+import { ReportModal } from '@/components/common/ReportModal'
 
 interface CompanyProfile {
     _id: string
@@ -63,6 +65,7 @@ export default function CompanyProfilePage() {
     const [internships, setInternships] = useState<Internship[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false)
 
     useEffect(() => {
         if (id) {
@@ -178,15 +181,33 @@ export default function CompanyProfilePage() {
                                                 </div>
 
                                                 {company?.website && (
-                                                    <a
-                                                        href={company.website}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="px-4 py-1.5 bg-gray-900 text-white rounded-xl font-black text-[10px] flex items-center gap-1.5 hover:bg-primary transition-all shadow-sm active:scale-95 shrink-0"
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => setIsReportModalOpen(true)}
+                                                            className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95 shrink-0 border border-gray-100"
+                                                            title="Report Company"
+                                                        >
+                                                            <Flag size={14} />
+                                                        </button>
+                                                        <a
+                                                            href={company.website}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="px-4 py-1.5 bg-gray-900 text-white rounded-xl font-black text-[10px] flex items-center gap-1.5 hover:bg-primary transition-all shadow-sm active:scale-95 shrink-0"
+                                                        >
+                                                            Visit Site
+                                                            <ExternalLink size={12} />
+                                                        </a>
+                                                    </div>
+                                                )}
+                                                {!company?.website && (
+                                                    <button
+                                                        onClick={() => setIsReportModalOpen(true)}
+                                                        className="px-4 py-1.5 bg-white text-gray-500 border border-gray-100 rounded-xl font-black text-[10px] flex items-center gap-1.5 hover:text-red-500 hover:border-red-100 hover:bg-red-50 transition-all shadow-sm active:scale-95 shrink-0"
                                                     >
-                                                        Visit Site
-                                                        <ExternalLink size={12} />
-                                                    </a>
+                                                        <Flag size={12} />
+                                                        Report
+                                                    </button>
                                                 )}
                                             </div>
                                         )}
@@ -372,6 +393,18 @@ export default function CompanyProfilePage() {
                     </div>
                 </div>
             </div>
+
+            <ReportModal
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                reportedUserId={company?._id}
+                subjectPrefix={`Report Company: ${company?.companyName}`}
+                contextSnapshot={{
+                    companyName: company?.companyName,
+                    website: company?.website,
+                    location: company?.location
+                }}
+            />
 
             <style jsx global>{`
                 @keyframes gradient-x {

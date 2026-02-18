@@ -115,8 +115,11 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
             return;
         }
 
-        // Get existing URL for replacement (delete old file)
+        // Determine the base name for the file (e.g., student name or company name)
+        let profileName = req.user?.name || 'user';
         let existingUrl: string | undefined;
+
+        // 3. Get existing URL for replacement (delete old file)
         if (req.user) {
             // Handle student file types
             if (type === 'resume' || type === 'profilePicture' || type === 'bannerImage') {
@@ -133,13 +136,18 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
                 if (company) {
                     if (type === 'companyLogo') existingUrl = company.logo;
                     else if (type === 'companyBanner') existingUrl = company.banner;
+
+                    // Use company name for filename if available
+                    if (company.companyName) {
+                        profileName = company.companyName;
+                    }
                 }
             }
         }
 
-        // Sanitize username for filename (remove special chars, spaces)
-        const sanitizedName = req.user?.name
-            ?.toLowerCase()
+        // Sanitize name for filename (remove special chars, spaces)
+        const sanitizedName = profileName
+            .toLowerCase()
             .replace(/[^a-z0-9]/g, '_')
             .replace(/_+/g, '_')
             .substring(0, 30) || 'user';
@@ -148,7 +156,7 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
             req.file.buffer,
             req.file.originalname,
             req.file.mimetype,
-            sanitizedName, // Use sanitized username for consistent naming
+            sanitizedName, // Use sanitized name for consistent naming
             existingUrl, // Pass existing URL to delete old file
             type // Pass file type for folder selection
         );

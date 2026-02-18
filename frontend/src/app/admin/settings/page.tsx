@@ -27,6 +27,7 @@ interface SettingsData {
   applicationStatusEmail: boolean;
   messageAlertEmail: boolean;
   reminderEmail: boolean;
+  reportStatusEmail: boolean;
   passwordResetExpiry: number;
   passwordMinLength: number;
   sessionTimeout: number;
@@ -34,7 +35,7 @@ interface SettingsData {
   timezone: string;
   autoApproveCompanies: boolean;
   requireCompanyVerification: boolean;
-  maxActiveInternshipListings: number;
+  maxInternshipPostsPerDay: number;
   maxApplicationsPerDay: number;
   allowResumeUpload: boolean;
   maxResumeSize: number;
@@ -67,6 +68,7 @@ const defaultSettings: SettingsData = {
   applicationStatusEmail: true,
   messageAlertEmail: true,
   reminderEmail: true,
+  reportStatusEmail: true,
 
   // Security Settings
   timezone: 'Asia/Kolkata',
@@ -79,7 +81,7 @@ const defaultSettings: SettingsData = {
   // Company Settings
   autoApproveCompanies: false,
   requireCompanyVerification: true,
-  maxActiveInternshipListings: 10,
+  maxInternshipPostsPerDay: 10,
 
   // Student Settings
   maxApplicationsPerDay: 30,
@@ -601,6 +603,7 @@ function AdminSettingsContent() {
                       { key: 'welcomeEmail', label: 'Welcome & Verification', desc: 'Onboarding & account activation', icon: Users, color: 'text-orange-600', bg: 'bg-orange-50' },
                       { key: 'applicationStatusEmail', label: 'Application Status Updates', desc: 'Shortlisted, Selected, Rejected & Interview alerts', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
                       { key: 'messageAlertEmail', label: 'Message Alerts', desc: '3+ unread message warnings', icon: Bell, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                      { key: 'reportStatusEmail', label: 'Report Status Updates', desc: 'Notify reporters when their report is resolved', icon: ShieldAlert, color: 'text-red-600', bg: 'bg-red-50' },
                       { key: 'reminderEmail', label: 'System Reminders', desc: 'Automated nudges for pending applications & deadlines', icon: Activity, color: 'text-cyan-600', bg: 'bg-cyan-50' }
                     ].map((item) => (
                       <div key={item.key} className="p-3.5 bg-white border border-gray-100 rounded-2xl flex items-center justify-between group hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300">
@@ -632,7 +635,8 @@ function AdminSettingsContent() {
                               item.key === 'welcomeEmail' ? "peer-checked:bg-orange-600" :
                                 item.key === 'applicationStatusEmail' ? "peer-checked:bg-emerald-600" :
                                   item.key === 'messageAlertEmail' ? "peer-checked:bg-indigo-600" :
-                                    "peer-checked:bg-cyan-600"
+                                    item.key === 'reportStatusEmail' ? "peer-checked:bg-red-600" :
+                                      "peer-checked:bg-cyan-600"
                             )}></div>
                           </label>
                         </div>
@@ -776,11 +780,11 @@ function AdminSettingsContent() {
                           </label>
                         </div>
                         <div className="max-w-xs space-y-1">
-                          <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Max Active Internship Listings</label>
+                          <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Max Internship Posts (Per Day)</label>
                           <input
                             type="number"
-                            value={settings.maxActiveInternshipListings}
-                            onChange={(e) => setSettings({ ...settings, maxActiveInternshipListings: parseInt(e.target.value) })}
+                            value={settings.maxInternshipPostsPerDay}
+                            onChange={(e) => setSettings({ ...settings, maxInternshipPostsPerDay: parseInt(e.target.value) })}
                             className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                           />
                         </div>

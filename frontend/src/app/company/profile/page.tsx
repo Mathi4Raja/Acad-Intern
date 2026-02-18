@@ -73,6 +73,8 @@ export default function CompanyProfilePage() {
   const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+  const [logoError, setLogoError] = useState(false)
+  const [bannerError, setBannerError] = useState(false)
 
   const [profile, setProfile] = useState<CompanyProfile | null>(null)
   const [formData, setFormData] = useState({
@@ -106,9 +108,11 @@ export default function CompanyProfilePage() {
     if (logoFile) {
       const url = URL.createObjectURL(logoFile)
       setLogoPreview(url)
+      setLogoError(false)
       return () => URL.revokeObjectURL(url)
     } else {
       setLogoPreview(null)
+      setLogoError(false)
     }
   }, [logoFile])
 
@@ -117,9 +121,11 @@ export default function CompanyProfilePage() {
     if (bannerFile) {
       const url = URL.createObjectURL(bannerFile)
       setBannerPreview(url)
+      setBannerError(false)
       return () => URL.revokeObjectURL(url)
     } else {
       setBannerPreview(null)
+      setBannerError(false)
     }
   }, [bannerFile])
 
@@ -150,6 +156,8 @@ export default function CompanyProfilePage() {
             instagram: p.socialLinks?.instagram || ''
           }
         })
+        setLogoError(false)
+        setBannerError(false)
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -385,11 +393,12 @@ export default function CompanyProfilePage() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4 relative group">
         {/* Banner Area */}
         <div className="h-32 sm:h-48 bg-gray-100 relative">
-          {bannerPreview || profile?.banner ? (
+          {(bannerPreview || profile?.banner) && !bannerError ? (
             <img
               src={bannerPreview || profile?.banner || ''}
               alt="Banner"
               className="w-full h-full object-cover"
+              onError={() => setBannerError(true)}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-r from-primary/10 to-secondary/10" />
@@ -422,15 +431,16 @@ export default function CompanyProfilePage() {
             {/* Company Logo */}
             <div className="relative group/logo shrink-0">
               <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl border-4 border-white bg-white shadow-md overflow-hidden relative">
-                {logoPreview || profile?.logo ? (
+                {(logoPreview || profile?.logo) && !logoError ? (
                   <img
                     src={logoPreview || profile?.logo || ''}
                     alt="Company Logo"
                     className="w-full h-full object-cover"
+                    onError={() => setLogoError(true)}
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold">
-                    {formData.companyName.charAt(0) || 'C'}
+                    {formData.companyName?.charAt(0) || 'C'}
                   </div>
                 )}
 

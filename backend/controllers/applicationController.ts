@@ -86,6 +86,19 @@ export const applyForInternship = async (req: AuthRequest, res: Response, next: 
             return;
         }
 
+        // MODERATION: Check activity limits
+        const { checkActivityLimits, createAutomatedFlag } = require('../utils/moderationService');
+        const activityCheck = await checkActivityLimits(studentId, 'application');
+        if (activityCheck.flagged) {
+            await createAutomatedFlag({
+                reportedUserId: studentId,
+                category: 'suspicious_activity',
+                subject: 'Excessive Application Volume',
+                body: activityCheck.reason,
+                metadata: { count: dailyAppCount }
+            });
+        }
+
         const internship = await Internship.findById(internshipId);
         if (!internship) {
             res.status(404).json({
@@ -277,11 +290,12 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
             userId: application.studentId,
             type: 'status_update',
             title: 'Application Status Updated',
-            message: `Your application status for ${internship.title} was updated to ${status}`,
+            message: `Your application status for ${internship.title} was updated to ${status} by ${company.companyName}`,
             payload: {
                 applicationId: application._id,
                 internshipId: internship._id,
                 status: status,
+                companyName: company.companyName,
                 interviewDetails: status === 'interview_scheduled' ? application.interviewDetails : undefined
             }
         });

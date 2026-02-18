@@ -151,7 +151,7 @@ export default function ApplicationsPage() {
       )}
 
       {/* Stats Cards / Filters */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-4 sm:mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 mb-4 sm:mb-6">
         {[
           { id: 'all', label: 'Total Applications', count: statusCounts.all, color: 'text-gray-900', border: 'border-primary', ring: 'ring-primary/20' },
           { id: 'pending', label: 'Pending', count: statusCounts.pending, color: 'text-yellow-600', border: 'border-yellow-500', ring: 'ring-yellow-100' },
@@ -165,14 +165,14 @@ export default function ApplicationsPage() {
             key={stat.id}
             onClick={() => handleFilterChange(stat.id)}
             className={`
-              relative overflow-hidden rounded-xl p-3 text-left transition-all duration-200 group
+              relative overflow-hidden rounded-xl p-2.5 text-left transition-all duration-200 group
               ${filterStatus === stat.id
                 ? 'bg-white shadow-md ring-1 ring-primary border-primary'
                 : 'bg-white shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200'}
             `}
           >
-            <div className={`mb-0.5 text-xl font-bold ${stat.color} leading-tight`}>{stat.count}</div>
-            <div className="text-xs font-medium text-gray-500 group-hover:text-gray-700">{stat.label}</div>
+            <div className={`mb-0.5 text-lg font-bold ${stat.color} leading-tight`}>{stat.count}</div>
+            <div className="text-[10px] font-black uppercase tracking-tight text-gray-400 group-hover:text-gray-600 truncate">{stat.label}</div>
 
             {/* Active Indicator */}
             {filterStatus === stat.id && (

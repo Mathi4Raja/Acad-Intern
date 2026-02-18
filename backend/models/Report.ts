@@ -22,10 +22,39 @@ const reportSchema = new Schema<IReport>({
         ref: 'User',
         default: null
     },
-    reason: {
+    subject: {
         type: String,
-        required: [true, 'Reason for reporting is required'],
+        required: [true, 'Subject is required'],
         trim: true
+    },
+    body: {
+        type: String,
+        required: [true, 'Body is required'],
+        trim: true
+    },
+    context: {
+        type: Schema.Types.Mixed,
+        default: null
+    },
+    screenshots: [{
+        type: String
+    }],
+    isAutomatedFlag: {
+        type: Boolean,
+        default: false
+    },
+    flagMetadata: {
+        type: Schema.Types.Mixed,
+        default: null
+    },
+    category: {
+        type: String,
+        default: 'other'
+    },
+    priority: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+        default: 'medium'
     },
     status: {
         type: String,
@@ -52,6 +81,8 @@ const reportSchema = new Schema<IReport>({
 
 // Index for admin queries
 reportSchema.index({ status: 1, createdAt: -1 });
+reportSchema.index({ reporterId: 1 });
+reportSchema.index({ reportedUserId: 1 });
 
 const Report: Model<IReport> = mongoose.model<IReport>('Report', reportSchema);
 

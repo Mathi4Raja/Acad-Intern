@@ -64,16 +64,23 @@ const auth = async (req: AuthRequest, res: Response, next: NextFunction): Promis
 
             // 1.5 ENFORCE ACCOUNT STATUS (Active/Suspended/Pending)
             if (user.status !== 'active' && user.role !== 'admin') {
-                const statusMessages: Record<string, string> = {
-                    'suspended': 'Your account has been suspended by the administrator.',
-                    'pending': 'Your account is currently pending approval.'
-                };
+                // Check if suspension has expired
+                if (user.status === 'suspended' && user.suspendedUntil && new Date() > user.suspendedUntil) {
+                    user.status = 'active';
+                    user.suspendedUntil = undefined;
+                    await user.save();
+                } else {
+                    const statusMessages: Record<string, string> = {
+                        'suspended': `Your account is suspended ${user.suspendedUntil ? 'until ' + user.suspendedUntil.toLocaleDateString() : 'permanently'}.`,
+                        'pending': 'Your account is currently pending approval.'
+                    };
 
-                res.status(403).json({
-                    success: false,
-                    message: statusMessages[user.status] || 'Your account is not active.'
-                });
-                return;
+                    res.status(403).json({
+                        success: false,
+                        message: statusMessages[user.status] || 'Your account is not active.'
+                    });
+                    return;
+                }
             }
 
             // 2. IMPLEMENT SLIDING SESSION (Dynamic Soft Limit)

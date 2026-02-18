@@ -37,6 +37,18 @@ const userSchema = new Schema<IUser>({
         enum: ['active', 'pending', 'suspended'],
         default: 'active'
     },
+    suspendedUntil: {
+        type: Date,
+        default: null
+    },
+    isShadowBanned: {
+        type: Boolean,
+        default: false
+    },
+    moderatorNotes: [{
+        type: String,
+        trim: true
+    }],
     googleId: {
         type: String,
         unique: true,

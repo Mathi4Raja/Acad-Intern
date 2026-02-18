@@ -16,10 +16,12 @@ import {
     Loader2,
     Check,
     Briefcase,
-    Users
+    Users,
+    Flag
 } from 'lucide-react'
 import api from '@/lib/api'
 import { useAlert } from '@/components/ui/AlertProvider'
+import { ReportModal } from '@/components/common/ReportModal'
 
 interface InternshipDetail {
     _id: string
@@ -57,6 +59,7 @@ export default function InternshipDetailPage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const viewIncrementedRef = useRef(false)
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false)
 
     useEffect(() => {
         if (id) {
@@ -197,9 +200,18 @@ export default function InternshipDetailPage() {
                                     )}
                                 </div>
                             </div>
-                            <div className="hidden sm:block">
-                                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
-                                    {internship.companyId.companyName.charAt(0)}
+                            <div className="flex items-start gap-2">
+                                <button
+                                    onClick={() => setIsReportModalOpen(true)}
+                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all active:scale-95 border border-gray-100"
+                                    title="Report Internship"
+                                >
+                                    <Flag size={18} />
+                                </button>
+                                <div className="hidden sm:block">
+                                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-xl font-bold text-primary">
+                                        {internship.companyId.companyName.charAt(0)}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -411,6 +423,18 @@ export default function InternshipDetailPage() {
                     </div>
                 </div>
             </div>
+            <ReportModal
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                internshipId={internship._id}
+                reportedUserId={internship.companyId.userId}
+                subjectPrefix={`Report Internship: ${internship.title}`}
+                contextSnapshot={{
+                    internshipTitle: internship.title,
+                    companyName: internship.companyId.companyName,
+                    location: internship.location
+                }}
+            />
         </div>
     )
 }
