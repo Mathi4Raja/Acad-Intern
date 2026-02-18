@@ -26,7 +26,8 @@ const internshipSchema = z.object({
         return deadline >= today;
     }, { message: 'Deadline cannot be in the past' }),
     requirements: z.string().optional(),
-    responsibilities: z.string().optional()
+    responsibilities: z.string().optional(),
+    status: z.enum(['active', 'inactive', 'completed', 'in_progress', 'rejected', 'expired']).optional()
 });
 
 interface InternshipQuery {
