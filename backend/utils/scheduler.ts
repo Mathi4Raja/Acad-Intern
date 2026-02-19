@@ -32,12 +32,15 @@ export const startScheduler = async () => {
     // 1. Cleanup Expired Applications (Run every day at midnight)
     const cleanupTask = cron.schedule('0 0 * * *', async () => {
         try {
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            const setting = await SystemSetting.findOne({ key: 'expiredApplicationCleanupDays' });
+            const cleanupDays = Number(setting?.value) || 7;
+
+            const cleanupDate = new Date();
+            cleanupDate.setDate(cleanupDate.getDate() - cleanupDays);
 
             const result = await Application.deleteMany({
                 status: 'expired',
-                updatedAt: { $lt: sevenDaysAgo }
+                updatedAt: { $lt: cleanupDate }
             });
 
             if (result.deletedCount > 0) {
@@ -54,12 +57,15 @@ export const startScheduler = async () => {
     // 2. Stale Application Reminders (Run every day at 9 AM)
     const staleReminderTask = cron.schedule('0 9 * * *', async () => {
         try {
-            const fiveDaysAgo = new Date();
-            fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+            const setting = await SystemSetting.findOne({ key: 'staleApplicationReminderDays' });
+            const reminderDays = Number(setting?.value) || 5;
+
+            const staleDate = new Date();
+            staleDate.setDate(staleDate.getDate() - reminderDays);
 
             const staleApplications = await Application.find({
                 status: 'pending',
-                createdAt: { $lt: fiveDaysAgo }
+                createdAt: { $lt: staleDate }
             }).populate('internshipId');
 
             if (staleApplications.length === 0) return;
@@ -88,10 +94,10 @@ export const startScheduler = async () => {
                     await sendEmail({
                         to: user.email,
                         subject: 'Action Required: You have pending applications',
-                        text: `Hi ${company.companyName}, you have ${data.count} applications that have been pending for more than 5 days. Please review them on {{SITE_NAME}}.`,
+                        text: `Hi ${company.companyName}, you have ${data.count} applications that have been pending for more than ${reminderDays} days. Please review them on AcadIntern.`,
                         html: `
 <p>Hi ${company.companyName},</p>
-<p>You have <strong>${data.count}</strong> applications that have been pending for more than 5 days. High-quality candidates appreciate timely feedback!</p>
+<p>You have <strong>${data.count}</strong> applications that have been pending for more than ${reminderDays} days. High-quality candidates appreciate timely feedback!</p>
 <p>Promptly reviewing applications improves your company's visibility and candidate experience.</p>
 <div style="margin: 24px 0;">
     <a href="${(process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim()}/company/dashboard" 
@@ -115,13 +121,16 @@ export const startScheduler = async () => {
     // 3. Internship Closing Soon Reminder (Run every day at 10 AM)
     const closingReminderTask = cron.schedule('0 10 * * *', async () => {
         try {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
+            const setting = await SystemSetting.findOne({ key: 'internshipClosingSoonDays' });
+            const closingDays = Number(setting?.value) || 1;
+
+            const closingDate = new Date();
+            closingDate.setDate(closingDate.getDate() + closingDays);
             const now = new Date();
 
             const closingSoon = await Internship.find({
                 status: 'active',
-                deadline: { $gt: now, $lte: tomorrow }
+                deadline: { $gt: now, $lte: closingDate }
             }).populate('companyId');
 
             if (closingSoon.length === 0) return;
@@ -149,10 +158,10 @@ export const startScheduler = async () => {
                     await sendEmail({
                         to: user.email,
                         subject: `Closing Soon: ${internship.title} at ${company.companyName}`,
-                        text: `The application deadline for ${internship.title} at ${company.companyName} is in less than 24 hours. Apply now!`,
+                        text: `The application deadline for ${internship.title} at ${company.companyName} is in less than ${closingDays * 24} hours. Apply now!`,
                         html: `
 <p>Hi ${user.name},</p>
-<p>Clock is ticking! The application deadline for <strong>${internship.title}</strong> at <strong>${company.companyName}</strong> is approaching in less than 24 hours.</p>
+<p>Clock is ticking! The application deadline for <strong>${internship.title}</strong> at <strong>${company.companyName}</strong> is approaching soon.</p>
 <p>Don't miss this opportunity to accelerate your career.</p>
 <div style="margin: 24px 0;">
     <a href="${(process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim()}/internships/${internship._id}" 
@@ -228,6 +237,34 @@ export const startScheduler = async () => {
         timezone
     });
     scheduledTasks.push(expiryTask);
+
+    // 6. Automated Assessment Expiry (Run every day at 1:30 AM)
+    const assessmentExpiryTask = cron.schedule('30 1 * * *', async () => {
+        try {
+            const setting = await SystemSetting.findOne({ key: 'assessmentExpiryDays' });
+            const expiryDays = Number(setting?.value) || 7;
+
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() - expiryDays);
+
+            const result = await Application.updateMany(
+                {
+                    status: 'shortlisted', // This represents the 'Assessment' stage in the timeline
+                    updatedAt: { $lt: expiryDate }
+                },
+                { status: 'expired' }
+            );
+
+            if (result.modifiedCount > 0) {
+                console.log(`[Scheduler] ⏳ Marked ${result.modifiedCount} applications as expired due to assessment inactivity (>${expiryDays} days).`);
+            }
+        } catch (error) {
+            console.error('[Scheduler] ❌ Error in assessment expiry task:', error);
+        }
+    }, {
+        timezone
+    });
+    scheduledTasks.push(assessmentExpiryTask);
 };
 
 export const restartScheduler = async () => {

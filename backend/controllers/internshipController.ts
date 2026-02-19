@@ -392,6 +392,33 @@ export const updateInternship = async (req: AuthRequest, res: Response, next: Ne
 
         const validatedData = internshipSchema.partial().parse(req.body);
 
+        // If deadline is being updated, check if we should reset 'expired' status to 'active'
+        if (validatedData.deadline) {
+            const newDeadline = new Date(validatedData.deadline);
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            if (newDeadline >= now && internship.status === 'expired') {
+                validatedData.status = 'active';
+            }
+        }
+
+        // Block manual activation if the effective deadline is in the past
+        if (validatedData.status === 'active') {
+            const effectiveDeadline = validatedData.deadline ? new Date(validatedData.deadline) : internship.deadline;
+            if (effectiveDeadline) {
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+                if (new Date(effectiveDeadline) < now) {
+                    res.status(400).json({
+                        success: false,
+                        message: 'Cannot activate an internship with a past deadline'
+                    });
+                    return;
+                }
+            }
+        }
+
         internship = await Internship.findByIdAndUpdate(req.params.id, validatedData, {
             new: true,
             runValidators: true

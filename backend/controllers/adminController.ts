@@ -694,7 +694,15 @@ export const updateSystemSettings = async (req: AuthRequest, res: Response, next
 
         const updates = [];
         for (const [key, value] of Object.entries(settings)) {
-            if (key === 'timezone' || key === 'autoBackup' || key === 'backupFrequency') {
+            if (
+                key === 'timezone' ||
+                key === 'autoBackup' ||
+                key === 'backupFrequency' ||
+                key === 'expiredApplicationCleanupDays' ||
+                key === 'staleApplicationReminderDays' ||
+                key === 'internshipClosingSoonDays' ||
+                key === 'assessmentExpiryDays'
+            ) {
                 shouldRestartScheduler = true;
             }
             updates.push(
@@ -1023,7 +1031,9 @@ const getGroupForKey = (key: string): string => {
     if (key === 'timezone' || key.startsWith('security') || key.includes('Pass') || key.includes('login') || key.includes('Auth')) return 'security';
     if (key.startsWith('site') || key.includes('maintenance')) return 'general';
     if (key.startsWith('company') || key.includes('Internship') || key.includes('Approve')) return 'companies';
-    if (key.startsWith('student') || key.includes('Application')) return 'students';
+    if (key.startsWith('student') || key.includes('Application') || key.includes('assessment') || key.includes('Assessment')) return 'students';
     if (key.startsWith('maxFile') || key.startsWith('maxMessage') || key.includes('Upload')) return 'files';
+    if (key.includes('Reminder') || key.includes('Alert') || key.includes('Notification')) return 'notifications';
+    if (key.includes('Backup') || key.includes('retention') || key.includes('Cleanup')) return 'database';
     return 'other';
 };

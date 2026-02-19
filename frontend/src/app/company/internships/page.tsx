@@ -137,8 +137,21 @@ export default function ManageInternships() {
     }
   }
 
-  const handleToggleStatus = async (id: string, currentStatus: string) => {
+  const handleToggleStatus = async (id: string, currentStatus: string, deadline?: string) => {
     const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+
+    // Check if trying to activate an expired internship
+    if (newStatus === 'active' && deadline) {
+      const deadlineDate = new Date(deadline);
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      if (deadlineDate < now) {
+        showAlert('This internship has expired. Please update the deadline before activating it.', 'error');
+        return;
+      }
+    }
+
     try {
       const response = await api.put(`/internships/${id}`, { status: newStatus });
       if (response.data.success) {
@@ -351,7 +364,7 @@ export default function ManageInternships() {
                   </Link>
                   {/* Edit/Delete actions disabled for MVP/Demo safely */}
                   <button
-                    onClick={() => handleToggleStatus(internship._id, internship.status)}
+                    onClick={() => handleToggleStatus(internship._id, internship.status, internship.deadline)}
                     className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs sm:text-sm font-medium"
                   >
                     {internship.status === 'active' ? <ToggleRight size={16} className="text-green-600" /> : <ToggleLeft size={16} className="text-gray-400" />}

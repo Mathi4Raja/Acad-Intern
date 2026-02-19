@@ -41,6 +41,14 @@ interface SettingsData {
   maxResumeSize: number;
   maxFileSize: number;
   maxMessageSize: number;
+  // Notification Thresholds
+  staleApplicationReminderDays: number;
+  internshipClosingSoonDays: number;
+  unreadMessageAlertCount: number;
+  // Student Policies
+  assessmentExpiryDays: number;
+  // Data Retention
+  expiredApplicationCleanupDays: number;
   autoBackup: boolean;
   backupFrequency: string;
   retentionDays: number;
@@ -69,6 +77,9 @@ const defaultSettings: SettingsData = {
   messageAlertEmail: true,
   reminderEmail: true,
   reportStatusEmail: true,
+  staleApplicationReminderDays: 5,
+  internshipClosingSoonDays: 1,
+  unreadMessageAlertCount: 3,
 
   // Security Settings
   timezone: 'Asia/Kolkata',
@@ -89,11 +100,13 @@ const defaultSettings: SettingsData = {
   maxResumeSize: 2,
   maxFileSize: 5,
   maxMessageSize: 15,
+  assessmentExpiryDays: 7,
 
   // Database Settings
   autoBackup: true,
   backupFrequency: 'daily',
-  retentionDays: 30
+  retentionDays: 30,
+  expiredApplicationCleanupDays: 7
 }
 
 function AdminSettingsContent() {
@@ -602,7 +615,7 @@ function AdminSettingsContent() {
                     {[
                       { key: 'welcomeEmail', label: 'Welcome & Verification', desc: 'Onboarding & account activation', icon: Users, color: 'text-orange-600', bg: 'bg-orange-50' },
                       { key: 'applicationStatusEmail', label: 'Application Status Updates', desc: 'Shortlisted, Selected, Rejected & Interview alerts', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                      { key: 'messageAlertEmail', label: 'Message Alerts', desc: '3+ unread message warnings', icon: Bell, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                      { key: 'messageAlertEmail', label: 'Message Alerts', desc: 'Unread message warnings', icon: Bell, color: 'text-indigo-600', bg: 'bg-indigo-50' },
                       { key: 'reportStatusEmail', label: 'Report Status Updates', desc: 'Notify reporters when their report is resolved', icon: ShieldAlert, color: 'text-red-600', bg: 'bg-red-50' },
                       { key: 'reminderEmail', label: 'System Reminders', desc: 'Automated nudges for pending applications & deadlines', icon: Activity, color: 'text-cyan-600', bg: 'bg-cyan-50' }
                     ].map((item) => (
@@ -642,6 +655,34 @@ function AdminSettingsContent() {
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Notification Thresholds */}
+                  <div className="pt-4 border-t border-gray-100">
+                    <h3 className="text-[13px] font-black text-gray-900 mb-3 flex items-center gap-2">
+                      <Clock size={16} className="text-gray-400" />
+                      Reminders & Thresholds
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {[
+                        { key: 'staleApplicationReminderDays', label: 'Stale Application Reminder', unit: 'DAYS' },
+                        { key: 'internshipClosingSoonDays', label: 'Internship Closing Soon', unit: 'DAYS' },
+                        { key: 'unreadMessageAlertCount', label: 'Unread Message Alert', unit: 'MSGS' }
+                      ].map((f) => (
+                        <div key={f.key} className="space-y-1.5 p-3.5 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                          <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">{f.label}</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={settings[f.key as keyof typeof settings] as number}
+                              onChange={(e) => setSettings({ ...settings, [f.key]: parseInt(e.target.value) })}
+                              className="w-full pr-12 pl-1 py-1 bg-transparent border-none focus:ring-0 font-black text-gray-900 text-[18px]"
+                            />
+                            <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400">{f.unit}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -820,6 +861,27 @@ function AdminSettingsContent() {
                             className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                           />
                         </div>
+
+                        {/* Student Policies */}
+                        <div className="pt-4 border-t border-gray-100">
+                          <h3 className="text-[13px] font-black text-gray-900 mb-3 flex items-center gap-2">
+                            <ShieldCheck size={16} className="text-gray-400" />
+                            Application Policies
+                          </h3>
+                          <div className="space-y-1 cursor-help group" title="Applications in 'Shortlisted' (Assessment) stage will expire if left incomplete for this many days.">
+                            <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest block">Assessment Expiry Delay</label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                value={settings.assessmentExpiryDays}
+                                onChange={(e) => setSettings({ ...settings, assessmentExpiryDays: parseInt(e.target.value) })}
+                                className="w-32 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
+                              />
+                              <span className="text-[11px] font-black text-gray-400">DAYS</span>
+                            </div>
+                            <p className="text-[10px] text-gray-400 font-bold italic mt-1">Automatic expiration for incomplete assessments</p>
+                          </div>
+                        </div>
                       </>
                     )}
                   </div>
@@ -915,6 +977,31 @@ function AdminSettingsContent() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Data Policy */}
+                  <div className="pt-4 border-t border-gray-100">
+                    <h3 className="text-[13px] font-black text-gray-900 mb-3 flex items-center gap-2">
+                      <ShieldCheck size={16} className="text-gray-400" />
+                      Data Retention
+                    </h3>
+                    <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <p className="text-[13px] font-black text-gray-900 leading-tight">Expired Application Cleanup</p>
+                          <p className="text-[11px] text-gray-500 font-bold">Delete applications older than threshold</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={settings.expiredApplicationCleanupDays}
+                            onChange={(e) => setSettings({ ...settings, expiredApplicationCleanupDays: parseInt(e.target.value) })}
+                            className="w-24 px-3 py-2 bg-white border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
+                          />
+                          <span className="text-[11px] font-black text-gray-400">DAYS</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -934,7 +1021,7 @@ function AdminSettingsContent() {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   )
 }
 

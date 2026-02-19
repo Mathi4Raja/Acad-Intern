@@ -412,18 +412,25 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
             });
         }
 
-        // Message Count Alert (Send email when they have exactly 3 unread messages)
+        // Message Count Alert (Send email when they reach the unread message threshold)
+        const countSetting = await SystemSetting.findOne({ key: 'unreadMessageAlertCount' });
+        const alertThreshold = Number(countSetting?.value) || 3;
+
         const unreadCount = await Message.countDocuments({
             receiverId: receiverId,
             status: { $ne: 'seen' }
         });
 
-        if (unreadCount === 3) {
+        if (unreadCount === alertThreshold) {
             const receiver = await User.findById(receiverId);
             if (receiver && receiver.email) {
                 const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
                 const rolePath = receiver.role === 'company' ? 'company' : 'student';
                 const messagesUrl = `${frontendUrl}/${rolePath}/messages`;
+
+                // Get site name for email
+                const siteNameSetting = await SystemSetting.findOne({ key: 'siteName' });
+                const siteName = siteNameSetting?.value || 'AcadIntern';
 
                 const alertHtml = `
 <!DOCTYPE html>
@@ -453,12 +460,12 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
             </div>
             <div class="content">
                 <p>Hi ${receiver.name},</p>
-                <p>You have new messages waiting for you on {{SITE_NAME}}.</p>
+                <p>You have new messages waiting for you on ${siteName}.</p>
                 
                 <div class="alert-box">
-                    <div class="alert-text">3+ New Messages</div>
+                    <div class="alert-text">${alertThreshold}+ New Messages</div>
                 </div>
-
+ 
                 <p>Don't miss out on important updates or questions from your connections.</p>
                 
                 <div class="button-wrapper">
@@ -466,7 +473,7 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
                 </div>
             </div>
             <div class="footer">
-                <p>&copy; {{CURRENT_YEAR}} {{SITE_NAME}}. All rights reserved.</p>
+                <p>&copy; ${new Date().getFullYear()} ${siteName}. All rights reserved.</p>
             </div>
         </div>
     </div>
@@ -477,8 +484,8 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
                 try {
                     await sendEmail({
                         to: receiver.email,
-                        subject: 'You have new unread messages on {{SITE_NAME}}',
-                        text: `Hi ${receiver.name}, you have 3 unread messages on {{SITE_NAME}}. Visit ${messagesUrl} to view them.`,
+                        subject: `You have new unread messages on ${siteName}`,
+                        text: `Hi ${receiver.name}, you have ${alertThreshold} unread messages on ${siteName}. Visit ${messagesUrl} to view them.`,
                         html: alertHtml,
                         type: 'message_alert'
                     });
