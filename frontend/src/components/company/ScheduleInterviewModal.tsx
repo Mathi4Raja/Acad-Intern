@@ -93,6 +93,8 @@ export function ScheduleInterviewModal({ isOpen, onClose, onSchedule, studentNam
                                         type="date"
                                         value={date}
                                         onChange={(e) => setDate(e.target.value)}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        max={`${new Date().getFullYear() + 2}-12-31`}
                                         className="w-full rounded-xl border-gray-200 bg-gray-50 p-2.5 text-sm font-medium focus:border-indigo-500 focus:ring-indigo-500 transition-all outline-none"
                                         required
                                     />
