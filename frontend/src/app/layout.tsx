@@ -50,6 +50,9 @@ export const metadata: Metadata = {
       "Connect with leading companies and find your perfect internship opportunity.",
   },
   robots: { index: true, follow: true },
+  verification: {
+    google: "ISY1u8Z8RhyvfE8hbLGqWvdKtEb9oOs0DuOQ-0qffPI",
+  },
 };
 
 export default function RootLayout({
