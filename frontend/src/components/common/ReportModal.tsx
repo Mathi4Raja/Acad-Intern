@@ -91,10 +91,19 @@ export function ReportModal({
             formData.append('subject', subject);
             formData.append('body', body);
             formData.append('category', category);
+
+            // Enhance context with source URL
+            const enrichedContext = {
+                ...contextSnapshot,
+                sourceUrl: typeof window !== 'undefined' ? window.location.href : 'unknown',
+                sourcePath: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+                timestamp: new Date().toISOString()
+            };
+
             if (internshipId) formData.append('internshipId', internshipId);
             if (applicationId) formData.append('applicationId', applicationId);
             if (reportedUserId) formData.append('reportedUserId', reportedUserId);
-            if (contextSnapshot) formData.append('context', JSON.stringify(contextSnapshot));
+            if (enrichedContext) formData.append('context', JSON.stringify(enrichedContext));
 
             files.forEach(file => {
                 formData.append('screenshots', file);

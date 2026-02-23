@@ -88,8 +88,14 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                     // Set profile picture based on user role
                     if (user?.role === 'student') {
                         setOtherPartyProfilePic(res.data.companyLogo || null);
+                        if (res.data.data.internshipId?.companyId?.userId) {
+                            setOtherPartyId(res.data.data.internshipId.companyId.userId);
+                        }
                     } else {
                         setOtherPartyProfilePic(res.data.studentProfilePicture || null);
+                        if (res.data.data.studentId?._id) {
+                            setOtherPartyId(res.data.data.studentId._id);
+                        }
                     }
                 }
             } catch (err) {
@@ -497,7 +503,9 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
         try {
             const res = await reportsApi.createReport({
                 applicationId,
-                reason: reportReason
+                reportedUserId: otherPartyId || undefined,
+                subject: `Chat Report: ${otherPartyName}`,
+                body: reportReason
             });
             if (res.data.success) {
                 showAlert('Report submitted successfully', 'success');

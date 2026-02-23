@@ -123,7 +123,10 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
                 })),
                 pendingReports: pendingReportsList.map((report: any) => ({
                     id: report._id, internshipTitle: report.internshipId?.title || 'Unknown',
-                    reportedBy: report.reporterId?.name || 'Unknown', reason: report.reason,
+                    reportedBy: report.reporterId?.name || 'Unknown',
+                    subject: report.subject,
+                    body: report.body,
+                    reason: report.subject || report.reason || 'No Subject',
                     reportedDate: report.createdAt, priority: report.priority || 'medium', status: report.status
                 }))
             }
@@ -487,23 +490,59 @@ export const getAllReports = async (req: AuthRequest, res: Response, next: NextF
         if (priority && priority !== 'all' && typeof priority === 'string') query.priority = priority;
 
         const reports = await Report.find(query)
-            .populate({ path: 'internshipId', select: 'title companyId', populate: { path: 'companyId', select: 'companyName' } })
+            .populate({
+                path: 'internshipId',
+                select: 'title companyId',
+                populate: { path: 'companyId', select: 'companyName' }
+            })
+            .populate({
+                path: 'applicationId',
+                populate: {
+                    path: 'internshipId',
+                    select: 'title companyId',
+                    populate: { path: 'companyId', select: 'companyName' }
+                }
+            })
             .populate('reporterId', 'name email')
+            .populate('reportedUserId', 'name email role isShadowBanned')
             .sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true, count: reports.length,
-            data: reports.map((report: any) => ({
-                id: report._id, type: report.applicationId ? 'chat' : 'internship',
-                internshipTitle: report.internshipId?.title || 'Unknown',
-                internshipId: report.internshipId?._id,
-                applicationId: report.applicationId?._id || report.applicationId,
-                companyName: report.internshipId?.companyId?.companyName || 'Unknown',
-                reportedBy: report.reporterId?.name || 'Unknown', reporterEmail: report.reporterId?.email,
-                reporterId: report.reporterId?._id, reason: report.reason, status: report.status,
-                priority: report.priority || 'medium', resolution: report.resolution,
-                reportedDate: report.createdAt, reviewedAt: report.reviewedAt
-            }))
+            data: reports.map((report: any) => {
+                const internship = report.internshipId || report.applicationId?.internshipId;
+                const company = internship?.companyId;
+
+                return {
+                    id: report._id,
+                    type: report.applicationId ? 'chat' : 'internship',
+                    internshipTitle: internship?.title,
+                    internshipId: internship?._id || report.internshipId,
+                    applicationId: report.applicationId?._id || report.applicationId,
+                    companyName: company?.companyName,
+                    reportedBy: report.reporterId?.name || 'Unknown',
+                    reporterEmail: report.reporterId?.email,
+                    reporterId: report.reporterId?._id,
+                    subject: report.subject,
+                    body: report.body,
+                    reason: report.subject || report.reason || 'No Subject',
+                    status: report.status,
+                    priority: report.priority || 'medium',
+                    resolution: report.resolution,
+                    reportedDate: report.createdAt,
+                    reviewedAt: report.reviewedAt,
+                    reportedUserId: report.reportedUserId?._id || report.reportedUserId,
+                    reportedUserName: report.reportedUserId?.name,
+                    reportedUserEmail: report.reportedUserId?.email,
+                    reportedUserRole: report.reportedUserId?.role,
+                    reportedUserShadowBanned: report.reportedUserId?.isShadowBanned || false,
+                    origin: report.context?.sourcePath ||
+                        (report.context?.sourceUrl ? new URL(report.context.sourceUrl).pathname : undefined) ||
+                        (report.applicationId ? "/messages (Chat)" :
+                            report.internshipId ? "/internships/details" :
+                                report.subject?.includes("Report Student:") ? "/company/student/profile" : "Legacy Report")
+                };
+            })
         });
     } catch (error) {
         next(error);
@@ -613,24 +652,32 @@ export const tempSuspendUser = async (req: AuthRequest, res: Response, next: Nex
     }
 };
 
-// @desc    Toggle shadow ban
+// @desc    Toggle shadow ban (set state)
 // @route   POST /api/admin/users/:id/shadow-ban
 // @access  Private (Admin)
 export const toggleShadowBan = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
+        const { shadowBanned } = z.object({
+            shadowBanned: z.boolean()
+        }).parse(req.body);
+
         const user = await User.findById(req.params.id);
         if (!user) {
             res.status(404).json({ success: false, message: 'User not found' });
             return;
         }
 
-        user.isShadowBanned = !user.isShadowBanned;
+        user.isShadowBanned = shadowBanned;
         if (!user.moderatorNotes) user.moderatorNotes = [];
-        user.moderatorNotes.push(`[SHADOW_BAN] ${user.isShadowBanned ? 'Enabled' : 'Disabled'} by ${req.user?.name}`);
+        user.moderatorNotes.push(`[SHADOW_BAN] ${shadowBanned ? 'Enabled' : 'Disabled'} by ${req.user?.name}`);
 
         await user.save();
-        res.status(200).json({ success: true, message: `Shadow ban ${user.isShadowBanned ? 'enabled' : 'disabled'}`, data: user });
+        res.status(200).json({ success: true, message: `Shadow ban ${shadowBanned ? 'enabled' : 'disabled'}`, data: user });
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            res.status(400).json({ success: false, message: 'Validation error', errors: error.errors });
+            return;
+        }
         next(error);
     }
 };

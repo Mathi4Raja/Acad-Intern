@@ -88,6 +88,10 @@ describe('Reports API', () => {
 
             expect(res.status).toBe(200);
             expect(res.body.success).toBe(true);
+            if (res.body.data.length > 0) {
+                expect(res.body.data[0]).toHaveProperty('subject');
+                expect(res.body.data[0]).toHaveProperty('body');
+            }
         });
 
         it('should reject student access', async () => {
@@ -98,6 +102,31 @@ describe('Reports API', () => {
                 .set('Cookie', student.cookie);
 
             expect(res.status).toBe(403);
+        });
+
+        it('should return a single report with mapped id for admin', async () => {
+            const admin = await createTestAdmin('singlereportadmin');
+
+            // Create a report first
+            const report = await Report.create({
+                reporterId: admin.id,
+                subject: 'Test Subject',
+                body: 'Test Body',
+                category: 'other',
+                priority: 'medium',
+                status: 'open'
+            });
+
+            const res = await request(app)
+                .get(`/api/reports/${report._id}`)
+                .set('Cookie', admin.cookie);
+
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(res.body.data).toHaveProperty('id');
+            expect(res.body.data.id.toString()).toBe(report._id.toString());
+            expect(res.body.data).toHaveProperty('type');
+            expect(res.body.data).toHaveProperty('reportedBy');
         });
 
         it('should reject company access', async () => {

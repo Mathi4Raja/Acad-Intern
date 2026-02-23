@@ -92,9 +92,15 @@ export const studentApi = {
 };
 
 export const reportsApi = {
-    // Create a report
-    createReport: (data: { internshipId?: string; applicationId?: string; reason: string }) =>
-        api.post('/reports', data),
+    createReport: (data: {
+        internshipId?: string;
+        applicationId?: string;
+        reportedUserId?: string;
+        subject: string;
+        body: string;
+        category?: string;
+        priority?: string
+    }) => api.post('/reports', data),
 };
 
 export const applicationsApi = {

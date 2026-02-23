@@ -36,6 +36,8 @@ interface Report {
   resolution?: string
   reviewedAt?: string
   applicationId?: string
+  reportedUserShadowBanned?: boolean
+  origin?: string
 }
 
 export default function ManageReports() {
@@ -85,13 +87,31 @@ export default function ManageReports() {
     }
   }
 
-  const handleToggleShadowBan = async (userId: string) => {
+  const handleToggleShadowBan = async (userId: string, currentState: boolean) => {
     setIsTogglingShadowBan(true)
+    const targetState = !currentState
     try {
-      const res = await api.post(`/admin/users/${userId}/toggle-shadow-ban`)
-      showAlert(`Shadow ban ${res.data.data.isShadowBanned ? 'enabled' : 'disabled'}`, 'success')
+      const res = await api.post(`/admin/users/${userId}/shadow-ban`, {
+        shadowBanned: targetState
+      })
+      showAlert(`Shadow ban ${targetState ? 'enabled' : 'disabled'}`, 'success')
+
+      // Update selected report state locally
+      if (selectedReport && selectedReport.reportedUserId === userId) {
+        setSelectedReport({
+          ...selectedReport,
+          reportedUserShadowBanned: targetState
+        })
+      }
+
+      // Also update in reports list
+      setReports(prev => prev.map(r =>
+        r.reportedUserId === userId
+          ? { ...r, reportedUserShadowBanned: targetState }
+          : r
+      ))
     } catch (error: any) {
-      showAlert(error.response?.data?.message || 'Failed to toggle shadow ban', 'error')
+      showAlert(error.response?.data?.message || 'Failed to update shadow ban', 'error')
     } finally {
       setIsTogglingShadowBan(false)
     }
@@ -398,6 +418,16 @@ export default function ManageReports() {
                           {selectedReport.body || 'No detailed description provided.'}
                         </p>
                       </div>
+                      {selectedReport.origin && (
+                        <div className="pt-3 border-t border-gray-50">
+                          <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                            <Activity size={10} /> Originating Path
+                          </p>
+                          <code className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md">
+                            {selectedReport.origin}
+                          </code>
+                        </div>
+                      )}
                     </div>
                   </section>
 
@@ -516,11 +546,20 @@ export default function ManageReports() {
                       </div>
 
                       <button
-                        onClick={() => handleToggleShadowBan(selectedReport.reportedUserId || '')}
+                        onClick={() => handleToggleShadowBan(selectedReport.reportedUserId || '', !!selectedReport.reportedUserShadowBanned)}
                         disabled={!selectedReport.reportedUserId || isTogglingShadowBan}
-                        className="w-full h-11 bg-gray-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all active:scale-95 shadow-md shadow-gray-200"
+                        className={cn(
+                          "w-full h-11 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-md",
+                          selectedReport.reportedUserShadowBanned
+                            ? "bg-red-600 text-white hover:bg-red-700 shadow-red-100"
+                            : "bg-gray-900 text-white hover:bg-gray-800 shadow-gray-200"
+                        )}
                       >
-                        {isTogglingShadowBan ? 'Processing...' : 'Toggle Shadow Ban'}
+                        {isTogglingShadowBan ? 'Processing...' : (
+                          <div className="flex items-center justify-center gap-2">
+                            <span>SHADOW BAN: {selectedReport.reportedUserShadowBanned ? 'ON' : 'OFF'}</span>
+                          </div>
+                        )}
                       </button>
                     </div>
                   </section>
@@ -702,6 +741,13 @@ export default function ManageReports() {
                     <p className="text-[10px] font-black text-primary shrink-0 ml-2 uppercase tracking-tighter">View Context</p>
                   </div>
                 </div>
+
+                {report.origin && (
+                  <div className="bg-blue-50/30 rounded-xl p-2 border border-blue-100/50 group-hover:bg-white transition-colors">
+                    <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Report Origin</p>
+                    <p className="text-[10px] font-bold text-blue-600 truncate">{report.origin}</p>
+                  </div>
+                )}
 
                 {report.resolution && (
                   <div className="bg-emerald-50/20 rounded-xl p-2.5 border border-emerald-100/50">

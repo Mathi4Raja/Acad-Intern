@@ -130,6 +130,50 @@ describe('Admin API', () => {
         });
     });
 
+    describe('POST /api/admin/users/:id/shadow-ban', () => {
+        it('should update user shadow ban state', async () => {
+            const admin = await createTestAdmin('shadowadmin');
+            const user = await createTestUser('student', 'shadowstudent');
+
+            // Initially false
+            expect(user.id).toBeDefined();
+            const initialUser = await User.findById(user.id);
+            expect(initialUser?.isShadowBanned).toBe(false);
+
+            // Enable shadow ban
+            const res1 = await request(app)
+                .post(`/api/admin/users/${user.id}/shadow-ban`)
+                .set('Cookie', admin.cookie)
+                .send({ shadowBanned: true });
+
+            expect(res1.status).toBe(200);
+            expect(res1.body.success).toBe(true);
+            expect(res1.body.data.isShadowBanned).toBe(true);
+
+            // Disable shadow ban
+            const res2 = await request(app)
+                .post(`/api/admin/users/${user.id}/shadow-ban`)
+                .set('Cookie', admin.cookie)
+                .send({ shadowBanned: false });
+
+            expect(res2.status).toBe(200);
+            expect(res2.body.data.isShadowBanned).toBe(false);
+        });
+
+        it('should validate shadowBanned boolean', async () => {
+            const admin = await createTestAdmin('valshadow');
+            const user = await createTestUser('student', 'valshadowuser');
+
+            const res = await request(app)
+                .post(`/api/admin/users/${user.id}/shadow-ban`)
+                .set('Cookie', admin.cookie)
+                .send({ shadowBanned: 'not a boolean' });
+
+            expect(res.status).toBe(400);
+            expect(res.body.success).toBe(false);
+        });
+    });
+
     describe('DELETE /api/admin/users/:id', () => {
         it('should delete user', async () => {
             const admin = await createTestAdmin('deleteuser');
