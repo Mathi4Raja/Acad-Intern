@@ -26,18 +26,6 @@ interface StudentProfile {
     bannerImage?: string
 }
 
-interface Application {
-    _id: string
-    internshipId: {
-        _id: string
-        title: string
-        companyId: {
-            companyName: string
-        }
-    }
-    status: string
-    appliedAt: string
-}
 
 export default function StudentProfilePage() {
     const params = useParams()
@@ -46,7 +34,6 @@ export default function StudentProfilePage() {
 
     const [loading, setLoading] = useState(true)
     const [profile, setProfile] = useState<StudentProfile | null>(null)
-    const [applications, setApplications] = useState<Application[]>([])
     const [error, setError] = useState<string | null>(null)
     const [isReportModalOpen, setIsReportModalOpen] = useState(false)
 
@@ -62,14 +49,6 @@ export default function StudentProfilePage() {
         try {
             const res = await api.get(`/students/profile/${studentId}`)
             setProfile(res.data.data)
-
-            // Fetch applications for this student (if available)
-            try {
-                const appsRes = await api.get(`/students/${studentId}/applications`)
-                setApplications(appsRes.data.data || [])
-            } catch {
-                // Applications endpoint may not exist or student has no applications
-            }
         } catch (err) {
             console.error('Failed to fetch profile:', err)
             setError('Failed to load profile details')
@@ -296,36 +275,7 @@ export default function StudentProfilePage() {
                                 </div>
                             </div>
 
-                            {/* Application History */}
-                            {applications.length > 0 && (
-                                <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                        <Briefcase size={14} className="text-secondary" />
-                                        Activity
-                                    </h3>
-                                    <div className="space-y-2">
-                                        {applications.slice(0, 3).map((app) => (
-                                            <div
-                                                key={app._id}
-                                                className="p-2 bg-gray-50/50 rounded-lg border border-gray-100 group hover:border-primary/20 transition-all"
-                                            >
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <p className="text-xs font-bold text-gray-900 truncate leading-tight group-hover:text-primary transition-colors">
-                                                        {app.internshipId?.title || 'Unknown Position'}
-                                                    </p>
-                                                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase border shrink-0 ${getStatusColor(app.status)}`}>
-                                                        {app.status}
-                                                    </span>
-                                                </div>
-                                                <p className="text-[9px] text-gray-400 font-bold flex items-center gap-1 uppercase tracking-wider">
-                                                    <Calendar size={10} />
-                                                    {new Date(app.appliedAt).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+
                         </div>
                     </div>
                 </div>

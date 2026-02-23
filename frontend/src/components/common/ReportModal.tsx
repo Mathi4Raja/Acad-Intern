@@ -5,6 +5,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useAlert } from '../ui/AlertProvider';
+import api from '@/lib/api';
 
 interface ReportModalProps {
     isOpen: boolean;
@@ -109,13 +110,8 @@ export function ReportModal({
                 formData.append('screenshots', file);
             });
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports`, {
-                method: 'POST',
-                body: formData,
-                headers: {}
-            });
-
-            const data = await response.json();
+            const response = await api.post('/reports', formData);
+            const data = response.data;
 
             if (data.success) {
                 showAlert('Report submitted successfully. Our moderators will review it.', 'success');
@@ -123,9 +119,10 @@ export function ReportModal({
             } else {
                 showAlert(data.message || 'Failed to submit report', 'error');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Report submission error:', error);
-            showAlert('Something went wrong. Please try again later.', 'error');
+            const errorMessage = error.response?.data?.message || 'Something went wrong. Please try again later.';
+            showAlert(errorMessage, 'error');
         } finally {
             setIsSubmitting(false);
         }

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, User, Briefcase, Star, Mail, Calendar, CheckCircle, XCircle, Clock, Loader2, Users, FileText, MessageCircle, ExternalLink } from 'lucide-react'
+import { Search, Filter, User, Briefcase, Star, Mail, Calendar, CheckCircle, XCircle, Clock, Loader2, Users, FileText, MessageCircle, ExternalLink, Link as LinkIcon, Video } from 'lucide-react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import api from '@/lib/api'
+import { cn } from '@/lib/utils'
 import { ScheduleInterviewModal } from '@/components/company/ScheduleInterviewModal'
 import { StatCard } from '@/components/analytics/StatCard'
 import { useAlert } from '@/components/ui/AlertProvider'
@@ -22,6 +23,11 @@ interface Application {
   skills: string[]
   cgpa?: number
   studentAvatar?: string
+  interviewDetails?: {
+    date: string
+    time: string
+    meetingLink: string
+  }
 }
 
 interface Internship {
@@ -49,6 +55,19 @@ export default function Applications() {
   const handleViewProfile = (studentId: string) => {
     router.push(`/company/student/${studentId}`)
   }
+
+  // Handle highlighting and scrolling
+  useEffect(() => {
+    const highlightId = searchParams.get('highlight')
+    if (highlightId && !loading && applications.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(`app-${highlightId}`)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 500)
+    }
+  }, [loading, applications, searchParams])
 
   // Fetch internships and their applications
   useEffect(() => {
@@ -96,7 +115,8 @@ export default function Applications() {
                 matchScore,
                 skills: app.studentId?.skills || [],
                 cgpa: app.studentId?.cgpa,
-                studentAvatar: app.studentId?.profilePicture
+                studentAvatar: app.studentId?.profilePicture,
+                interviewDetails: app.interviewDetails
               })
             })
           } catch (err) {
@@ -126,7 +146,7 @@ export default function Applications() {
 
       // Update local state
       setApplications(prev => prev.map(app =>
-        app.id === applicationId ? { ...app, status } : app
+        app.id === applicationId ? { ...app, status, ...(interviewDetails && { interviewDetails }) } : app
       ))
       if (status === 'interview_scheduled') {
         showAlert('Interview scheduled successfully!', 'success')
@@ -162,6 +182,8 @@ export default function Applications() {
         return 'bg-green-100 text-green-700'
       case 'assessment_completed':
         return 'bg-purple-100 text-purple-700'
+      case 'interview_scheduled':
+        return 'bg-indigo-100 text-indigo-700'
       case 'accepted':
         return 'bg-blue-100 text-blue-700'
       case 'rejected':
@@ -213,6 +235,8 @@ export default function Applications() {
     total: applications.length,
     pending: applications.filter(a => a.status === 'pending').length,
     shortlisted: applications.filter(a => a.status === 'shortlisted').length,
+    interview_scheduled: applications.filter(a => a.status === 'interview_scheduled').length,
+    assessment_completed: applications.filter(a => a.status === 'assessment_completed').length,
     accepted: applications.filter(a => a.status === 'accepted').length,
     rejected: applications.filter(a => a.status === 'rejected').length
   }
@@ -268,13 +292,15 @@ export default function Applications() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 mb-6">
         <StatCard
           title="Total"
           value={stats.total}
           icon={Users}
           iconColor="text-gray-600"
           iconBg="bg-gray-100"
+          onClick={() => setFilterStatus('all')}
+          active={filterStatus === 'all'}
         />
         <StatCard
           title="Pending"
@@ -282,6 +308,8 @@ export default function Applications() {
           icon={Clock}
           iconColor="text-yellow-600"
           iconBg="bg-yellow-50"
+          onClick={() => setFilterStatus('pending')}
+          active={filterStatus === 'pending'}
         />
         <StatCard
           title="Shortlisted"
@@ -289,6 +317,26 @@ export default function Applications() {
           icon={Star}
           iconColor="text-green-600"
           iconBg="bg-green-50"
+          onClick={() => setFilterStatus('shortlisted')}
+          active={filterStatus === 'shortlisted'}
+        />
+        <StatCard
+          title="Interview"
+          value={stats.interview_scheduled}
+          icon={Video}
+          iconColor="text-indigo-600"
+          iconBg="bg-indigo-50"
+          onClick={() => setFilterStatus('interview_scheduled')}
+          active={filterStatus === 'interview_scheduled'}
+        />
+        <StatCard
+          title="Assessment"
+          value={stats.assessment_completed}
+          icon={CheckCircle}
+          iconColor="text-purple-600"
+          iconBg="bg-purple-50"
+          onClick={() => setFilterStatus('assessment_completed')}
+          active={filterStatus === 'assessment_completed'}
         />
         <StatCard
           title="Accepted"
@@ -296,6 +344,8 @@ export default function Applications() {
           icon={CheckCircle}
           iconColor="text-blue-600"
           iconBg="bg-blue-50"
+          onClick={() => setFilterStatus('accepted')}
+          active={filterStatus === 'accepted'}
         />
         <StatCard
           title="Rejected"
@@ -303,13 +353,15 @@ export default function Applications() {
           icon={XCircle}
           iconColor="text-red-600"
           iconBg="bg-red-50"
+          onClick={() => setFilterStatus('rejected')}
+          active={filterStatus === 'rejected'}
         />
       </div>
 
       {/* Search and Filters */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4">
-          <div className="relative sm:col-span-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
@@ -324,7 +376,7 @@ export default function Applications() {
             <select
               value={filterInternship}
               onChange={(e) => setFilterInternship(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none appearance-none bg-white cursor-pointer"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none appearance-none bg-white cursor-pointer pr-10"
             >
               <option value="all">All Internships</option>
               {internships.map(internship => (
@@ -332,21 +384,6 @@ export default function Applications() {
                   {internship.title}
                 </option>
               ))}
-            </select>
-          </div>
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none appearance-none bg-white cursor-pointer"
-            >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="shortlisted">Shortlisted</option>
-              <option value="assessment_completed">Assessment Done</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
             </select>
           </div>
         </div>
@@ -398,7 +435,16 @@ export default function Applications() {
       <div className="space-y-4">
         {filteredApplications.length > 0 ? (
           filteredApplications.map((app) => (
-            <div key={app.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 hover:shadow-md transition-shadow">
+            <div
+              key={app.id}
+              id={`app-${app.id}`}
+              className={cn(
+                "bg-white rounded-xl shadow-sm border p-3 sm:p-4 hover:shadow-md transition-all duration-500",
+                searchParams.get('highlight') === app.id
+                  ? "border-primary ring-2 ring-primary/20 bg-primary/5 scale-[1.02] shadow-indigo-100"
+                  : "border-gray-100"
+              )}
+            >
               <div className="flex flex-col lg:flex-row gap-4">
                 {/* Checkbox */}
                 <div className="flex items-start pt-1">
@@ -454,6 +500,34 @@ export default function Applications() {
                         Applied: {formatDate(app.appliedDate)}
                       </div>
                     </div>
+
+                    {app.status === 'interview_scheduled' && app.interviewDetails && (
+                      <div className="mb-4 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-white rounded-lg shadow-sm">
+                            <Calendar className="w-4 h-4 text-indigo-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">
+                              {new Date(app.interviewDetails.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </p>
+                            <div className="flex items-center gap-1.5 text-xs text-gray-600 mt-0.5">
+                              <Clock className="w-3.5 h-3.5" />
+                              {app.interviewDetails.time}
+                            </div>
+                          </div>
+                        </div>
+                        <a
+                          href={app.interviewDetails.meetingLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-50 rounded-lg text-xs font-bold transition-colors shadow-sm w-full sm:w-auto"
+                        >
+                          <LinkIcon className="w-3.5 h-3.5" />
+                          Join Meeting
+                        </a>
+                      </div>
+                    )}
 
                     <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-50">
                       {/* Primary Actions Based on Status */}

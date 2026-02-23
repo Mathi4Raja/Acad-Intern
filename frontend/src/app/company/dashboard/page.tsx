@@ -113,7 +113,8 @@ export default function CompanyDashboard() {
             role: app.internshipTitle,
             status: app.status,
             appliedDate: app.appliedAt,
-            match: matchScore
+            match: matchScore,
+            internshipId: app.internshipId?._id || app.internshipId
           };
         }));
 
@@ -255,7 +256,7 @@ export default function CompanyDashboard() {
                           </span>
                           <p className="text-[9px] text-gray-400 mt-0.5">Applied {formatDate(app.appliedDate)}</p>
                         </div>
-                        <Link href={`/company/applications/${app.id}`} className="p-1 hover:bg-gray-200 rounded-lg transition-colors">
+                        <Link href={`/company/applications?internship=${app.internshipId}&highlight=${app.id}`} className="p-1 hover:bg-gray-200 rounded-lg transition-colors">
                           <ChevronRight className="text-gray-400" size={14} />
                         </Link>
                       </div>
