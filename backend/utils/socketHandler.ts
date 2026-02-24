@@ -150,7 +150,7 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
 
                 console.log(`🔍 [DEBUG] Final authorization - isStudent: ${isStudent}, isCompany: ${isCompany}`);
 
-                if (!isStudent && !isCompany) {
+                if (!isStudent && !isCompany && socket.userRole !== 'admin') {
                     console.log(`❌ [DEBUG] Authorization failed for user ${socket.userId}`);
                     socket.emit('error', { message: 'Not authorized to access this conversation' });
                     return;
@@ -383,7 +383,7 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
                     isCompany = !!company;
                 }
 
-                if (!isStudent && !isCompany) {
+                if (!isStudent && !isCompany && socket.userRole !== 'admin') {
                     return;
                 }
 

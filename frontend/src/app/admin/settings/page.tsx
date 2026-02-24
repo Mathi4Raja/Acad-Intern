@@ -381,7 +381,7 @@ function AdminSettingsContent() {
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={settings.maintenanceMode}
+                              checked={!!settings.maintenanceMode}
                               onChange={(e) => setSettings({ ...settings, maintenanceMode: e.target.checked })}
                               className="sr-only peer"
                             />
@@ -407,7 +407,7 @@ function AdminSettingsContent() {
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={settings.allowRegistration}
+                              checked={!!settings.allowRegistration}
                               onChange={(e) => setSettings({ ...settings, allowRegistration: e.target.checked })}
                               className="sr-only peer"
                             />
@@ -639,7 +639,7 @@ function AdminSettingsContent() {
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={settings[item.key as keyof SettingsData] as boolean}
+                              checked={!!settings[item.key as keyof SettingsData]}
                               onChange={(e) => setSettings({ ...settings, [item.key]: e.target.checked })}
                               className="sr-only peer"
                             />
@@ -708,7 +708,7 @@ function AdminSettingsContent() {
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={settings.requireEmailVerification}
+                        checked={!!settings.requireEmailVerification}
                         onChange={(e) => setSettings({ ...settings, requireEmailVerification: e.target.checked })}
                         className="sr-only peer"
                       />
@@ -793,7 +793,7 @@ function AdminSettingsContent() {
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={settings.autoApproveCompanies}
+                              checked={!!settings.autoApproveCompanies}
                               onChange={(e) => setSettings({ ...settings, autoApproveCompanies: e.target.checked })}
                               className="sr-only peer"
                             />
@@ -813,7 +813,7 @@ function AdminSettingsContent() {
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={settings.requireCompanyVerification}
+                              checked={!!settings.requireCompanyVerification}
                               onChange={(e) => setSettings({ ...settings, requireCompanyVerification: e.target.checked })}
                               className="sr-only peer"
                             />
@@ -845,7 +845,7 @@ function AdminSettingsContent() {
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={settings.allowResumeUpload}
+                              checked={!!settings.allowResumeUpload}
                               onChange={(e) => setSettings({ ...settings, allowResumeUpload: e.target.checked })}
                               className="sr-only peer"
                             />
@@ -943,7 +943,7 @@ function AdminSettingsContent() {
                     <label className="relative inline-flex items-center cursor-pointer scale-100">
                       <input
                         type="checkbox"
-                        checked={settings.autoBackup}
+                        checked={!!settings.autoBackup}
                         onChange={(e) => setSettings({ ...settings, autoBackup: e.target.checked })}
                         className="sr-only peer"
                       />

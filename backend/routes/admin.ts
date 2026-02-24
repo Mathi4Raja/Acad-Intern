@@ -16,7 +16,8 @@ import {
     getSystemSettings,
     updateSystemSettings,
     getAnalyticsStats,
-    toggleShadowBan
+    toggleShadowBan,
+    suspendUser
 } from '../controllers/adminController';
 import { getReport as getReportDetails } from '../controllers/reportController';
 
@@ -34,6 +35,7 @@ router.get('/analytics', getAnalyticsStats);
 router.get('/users', getAllUsers);
 router.put('/users/:id/status', updateUserStatus);
 router.post('/users/:id/shadow-ban', toggleShadowBan);
+router.post('/users/:id/suspend', suspendUser);
 router.delete('/users/:id', deleteUser);
 
 // Companies management

@@ -187,7 +187,7 @@ export const getMessages = async (req: AuthRequest, res: Response, next: NextFun
             isCompany = !!company;
         }
 
-        if (!isStudent && !isCompany) {
+        if (!isStudent && !isCompany && req.user?.role !== 'admin') {
             res.status(403).json({
                 success: false,
                 message: 'Not authorized to access these messages'
@@ -538,7 +538,7 @@ export const markAsSeen = async (req: AuthRequest, res: Response, next: NextFunc
             isCompany = !!company;
         }
 
-        if (!isStudent && !isCompany) {
+        if (!isStudent && !isCompany && req.user?.role !== 'admin') {
             res.status(403).json({
                 success: false,
                 message: 'Not authorized'

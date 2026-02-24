@@ -52,6 +52,10 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
     const [muting, setMuting] = useState(false);
     const [applicationData, setApplicationData] = useState<any>(null);
     const [otherPartyProfilePic, setOtherPartyProfilePic] = useState<string | null>(null);
+    const [studentUserId, setStudentUserId] = useState<string | null>(null); // For admin view context
+    const [companyUserId, setCompanyUserId] = useState<string | null>(null); // For admin view context
+    const [studentName, setStudentName] = useState<string | null>(null);
+    const [companyName, setCompanyName] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
     // Outside click for menu
@@ -85,16 +89,23 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                 const res = await applicationsApi.get(applicationId);
                 if (res.data.success) {
                     setApplicationData(res.data.data);
-                    // Set profile picture based on user role
+                    const studentId = res.data.data.studentId?._id;
+                    const compUserId = res.data.data.internshipId?.companyId?.userId;
+                    setStudentUserId(studentId);
+                    setCompanyUserId(compUserId);
+                    setStudentName(res.data.data.studentId?.name || 'Student');
+                    setCompanyName(res.data.data.internshipId?.companyId?.name || 'Company');
+
+                    // Set profile picture and other party ID based on user role
                     if (user?.role === 'student') {
                         setOtherPartyProfilePic(res.data.companyLogo || null);
-                        if (res.data.data.internshipId?.companyId?.userId) {
-                            setOtherPartyId(res.data.data.internshipId.companyId.userId);
+                        if (compUserId) {
+                            setOtherPartyId(compUserId);
                         }
-                    } else {
+                    } else if (user?.role === 'company') {
                         setOtherPartyProfilePic(res.data.studentProfilePicture || null);
-                        if (res.data.data.studentId?._id) {
-                            setOtherPartyId(res.data.data.studentId._id);
+                        if (studentId) {
+                            setOtherPartyId(studentId);
                         }
                     }
                 }
@@ -569,34 +580,60 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
 
                 {/* User Info */}
                 <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-                    {otherPartyProfilePic ? (
-                        <img
-                            src={otherPartyProfilePic}
-                            alt={otherPartyName}
-                            className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover shadow-inner flex-shrink-0"
-                            onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = 'none';
-                                target.nextElementSibling?.classList.remove('hidden');
-                            }}
-                        />
-                    ) : null}
-                    <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary font-bold shadow-inner flex-shrink-0 text-sm md:text-base ${otherPartyProfilePic ? 'hidden' : ''}`}>
-                        {otherPartyName.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate text-sm md:text-base">{otherPartyName}</h3>
-                        <p className="text-[10px] md:text-xs text-gray-500 flex items-center gap-1">
-                            {typingUser ? (
-                                <span className="text-primary animate-pulse">typing...</span>
-                            ) : (
-                                <span className={`flex items-center gap-1 ${isOnline ? 'text-green-600' : 'text-gray-400'}`}>
-                                    <span className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                                    {isOnline ? 'Online' : 'Offline'}
-                                </span>
-                            )}
-                        </p>
-                    </div>
+                    {user?.role === 'admin' ? (
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="flex -space-x-3 overflow-hidden shrink-0">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-100 text-blue-600 border-2 border-white flex items-center justify-center font-bold shadow-sm ring-1 ring-blue-50/50">
+                                    <User size={14} className="md:w-4 md:h-4" />
+                                </div>
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-emerald-100 text-emerald-600 border-2 border-white flex items-center justify-center font-bold shadow-sm ring-1 ring-emerald-50/50">
+                                    <Building size={14} className="md:w-4 md:h-4" />
+                                </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="text-[13px] md:text-[15px] font-black text-blue-600 leading-none">{studentName}</span>
+                                    <span className="text-[10px] text-gray-300 font-bold uppercase tracking-tighter">vs</span>
+                                    <span className="text-[13px] md:text-[15px] font-black text-emerald-600 leading-none">{companyName}</span>
+                                </div>
+                                <p className="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mt-1 flex items-center gap-1.5">
+                                    <ShieldAlert size={10} className="text-primary/60" />
+                                    Investigation Context • Neutral View
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {otherPartyProfilePic ? (
+                                <img
+                                    src={otherPartyProfilePic}
+                                    alt={otherPartyName}
+                                    className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover shadow-inner flex-shrink-0"
+                                    onError={(e) => {
+                                        const target = e.target as HTMLImageElement;
+                                        target.style.display = 'none';
+                                        target.nextElementSibling?.classList.remove('hidden');
+                                    }}
+                                />
+                            ) : null}
+                            <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-primary font-bold shadow-inner flex-shrink-0 text-sm md:text-base ${otherPartyProfilePic ? 'hidden' : ''}`}>
+                                {otherPartyName.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-gray-900 truncate text-sm md:text-base">{otherPartyName}</h3>
+                                <p className="text-[10px] md:text-xs text-gray-500 flex items-center gap-1">
+                                    {typingUser ? (
+                                        <span className="text-primary animate-pulse">typing...</span>
+                                    ) : (
+                                        <span className={`flex items-center gap-1 ${isOnline ? 'text-green-600' : 'text-gray-400'}`}>
+                                            <span className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                                            {isOnline ? 'Online' : 'Offline'}
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Options Menu */}
@@ -723,7 +760,10 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                         const prevSenderId = prevMessage ? getSenderId(prevMessage) : null;
                         const nextSenderId = nextMessage ? getSenderId(nextMessage) : null;
 
-                        const isOwn = String(senderId) === String(currentUserId);
+                        // For admin, we put company on the right and student on the left to distinguish
+                        const isOwn = user?.role === 'admin'
+                            ? String(senderId) === String(companyUserId)
+                            : String(senderId) === String(currentUserId);
 
                         // Check if day changed
                         const isDateChanged = !prevMessage ||
@@ -777,6 +817,15 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                                                 >
                                                     <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
                                                 </button>
+                                            )}
+                                            {user?.role === 'admin' && (
+                                                <div className={`text-[9px] font-black uppercase tracking-widest mb-1 pb-1 border-b ${isOwn ? 'text-white/60 border-white/10' : 'text-gray-400 border-gray-50'}`}>
+                                                    {String(senderId) === String(studentUserId) ? (
+                                                        <span className="flex items-center gap-1"><User size={8} /> Student</span>
+                                                    ) : (
+                                                        <span className="flex items-center gap-1"><Building size={8} /> Company</span>
+                                                    )}
+                                                </div>
                                             )}
                                             {message.content && (
                                                 <p className="text-sm leading-snug md:leading-relaxed whitespace-pre-wrap break-words">

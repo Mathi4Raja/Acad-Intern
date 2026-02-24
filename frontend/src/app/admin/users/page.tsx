@@ -142,6 +142,24 @@ function ManageUsersContent() {
     fetchData()
   }, [debouncedSearch, filterRole, filterStatus, currentPage])
 
+  // Handle deep-linking to specific user via ID
+  useEffect(() => {
+    const userId = searchParams.get('id');
+    if (userId && /^[0-9a-fA-F]{24}$/.test(userId)) {
+      const fetchSpecificUser = async () => {
+        try {
+          const res = await api.get('/admin/users', { params: { id: userId } });
+          if (res.data.success && res.data.data.length > 0) {
+            setSelectedUser(res.data.data[0]);
+          }
+        } catch (error) {
+          console.error('Error fetching deep-linked user:', error);
+        }
+      };
+      fetchSpecificUser();
+    }
+  }, [searchParams]);
+
   const { refreshStats } = useAdminStats()
 
   const handleAction = (id: string, action: 'activate' | 'suspend' | 'delete') => {

@@ -32,6 +32,7 @@ const updateReportStatusSchema = z.object({
 });
 
 interface UserQuery {
+    _id?: any;
     role?: string;
     status?: string;
     $or?: Array<{ [key: string]: { $regex: string; $options: string } }>;
@@ -141,11 +142,25 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
 // @access  Private (Admin)
 export const getAllUsers = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { role, status, search, page = '1', limit = '20' } = req.query;
+        const { id, role, status, search, page = '1', limit = '20' } = req.query;
         const query: UserQuery = {};
 
-        if (role && role !== 'all' && typeof role === 'string') query.role = role;
-        if (status && status !== 'all' && typeof status === 'string') query.status = status;
+        if (id && typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id)) {
+            query._id = id;
+        } else if (id) {
+            // If ID is provided but invalid, return empty or error?
+            // Let's return empty to avoid crash but indicate something was wrong if needed.
+            // Actually, if we are specifically looking for an ID and it's invalid, it won't find anything.
+            // But if we set it as _id: id, Mongoose will throw CastError.
+            // Let's just ignore the invalid ID and let it proceed to other filters if any, 
+            // OR return empty if ID was explicitly intended.
+            res.status(400).json({ success: false, message: 'Invalid User ID format' });
+            return;
+        } else {
+            if (role && role !== 'all' && typeof role === 'string') query.role = role;
+            if (status && status !== 'all' && typeof status === 'string') query.status = status;
+        }
+
         if (search && typeof search === 'string') {
             query.$or = [
                 { name: { $regex: search, $options: 'i' } },
@@ -682,6 +697,45 @@ export const toggleShadowBan = async (req: AuthRequest, res: Response, next: Nex
     }
 };
 
+// @desc    Suspend user temporarily
+// @route   POST /api/admin/users/:id/suspend
+// @access  Private (Admin)
+export const suspendUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { durationDays, reason } = z.object({
+            durationDays: z.number().min(1),
+            reason: z.string().min(5)
+        }).parse(req.body);
+
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+
+        const suspendedUntil = new Date();
+        suspendedUntil.setDate(suspendedUntil.getDate() + durationDays);
+
+        user.status = 'suspended';
+        user.suspendedUntil = suspendedUntil;
+        if (!user.moderatorNotes) user.moderatorNotes = [];
+        user.moderatorNotes.push(`[SUSPENSION] Suspended for ${durationDays} days by ${req.user?.name}. Reason: ${reason}`);
+
+        await user.save();
+        res.status(200).json({
+            success: true,
+            message: `User suspended until ${suspendedUntil.toLocaleDateString()}`,
+            data: user
+        });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            res.status(400).json({ success: false, message: 'Validation error', errors: error.errors });
+            return;
+        }
+        next(error);
+    }
+};
+
 // @desc    Add moderator note to user
 // @route   POST /api/admin/users/:id/notes
 // @access  Private (Admin)
@@ -714,12 +768,20 @@ export const getSystemSettings = async (req: AuthRequest, res: Response, next: N
         // Convert array to object for easier frontend consumption
         const settingsMap: Record<string, any> = {};
         settings.forEach(setting => {
-            if (setting.group === 'security' && (setting.key === 'passwordResetExpiry' || setting.key.includes('Expiry'))) {
-                // Ensure numeric values are numbers
-                settingsMap[setting.key] = Number(setting.value);
-            } else {
-                settingsMap[setting.key] = setting.value;
+            let value = setting.value;
+
+            // Type casting logic
+            if (value === 'true') {
+                value = true;
+            } else if (value === 'false') {
+                value = false;
+            } else if (typeof value === 'string' && value.trim() !== '' && !isNaN(Number(value)) &&
+                (setting.group !== 'general' || setting.key.includes('Count') || setting.key.includes('Limit') || setting.key.includes('Day') || setting.key.includes('Size') || setting.key.includes('Attempts') || setting.key.includes('Expiry') || setting.key.includes('Timeout') || setting.key.includes('Port'))) {
+                // Only cast to number if it's explicitly a numeric field to avoid casting site names etc.
+                value = Number(value);
             }
+
+            settingsMap[setting.key] = value;
         });
 
         res.status(200).json({

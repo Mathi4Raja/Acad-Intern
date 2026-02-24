@@ -235,18 +235,18 @@ async function seedAdminData() {
         const defaultSettings = [
             { key: 'siteName', value: 'AcadIntern', group: 'general' },
             { key: 'siteDescription', value: 'Student internship platform', group: 'general' },
-            { key: 'maintenanceMode', value: 'false', group: 'general' },
-            { key: 'requireEmailVerification', value: 'true', group: 'security' },
-            { key: 'allowResumeUpload', value: 'true', group: 'students' },
-            { key: 'maxApplicationsPerDay', value: '30', group: 'students' },
+            { key: 'maintenanceMode', value: false, group: 'general' },
+            { key: 'requireEmailVerification', value: true, group: 'security' },
+            { key: 'allowResumeUpload', value: true, group: 'students' },
+            { key: 'maxApplicationsPerDay', value: 30, group: 'students' },
             { key: 'timezone', value: 'Asia/Kolkata', group: 'security' },
-            { key: 'maxResumeSize', value: '5', group: 'files' },
-            { key: 'autoBackup', value: 'true', group: 'database' },
+            { key: 'maxResumeSize', value: 5, group: 'files' },
+            { key: 'autoBackup', value: true, group: 'database' },
             { key: 'backupFrequency', value: 'daily', group: 'database' },
-            { key: 'autoApproveCompanies', value: 'true', group: 'enterprise' },
-            { key: 'requireCompanyVerification', value: 'true', group: 'enterprise' },
-            { key: 'maxActiveInternshipListings', value: '20', group: 'enterprise' },
-            { key: 'maxInternshipPostsPerDay', value: '5', group: 'enterprise' }
+            { key: 'autoApproveCompanies', value: true, group: 'enterprise' },
+            { key: 'requireCompanyVerification', value: true, group: 'enterprise' },
+            { key: 'maxActiveInternshipListings', value: 20, group: 'enterprise' },
+            { key: 'maxInternshipPostsPerDay', value: 5, group: 'enterprise' }
         ];
 
         for (const setting of defaultSettings) {

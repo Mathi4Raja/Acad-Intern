@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Search, Filter, AlertCircle, CheckCircle, XCircle, Eye, Clock, User, Briefcase, MessageSquare, Loader2, X, Flag, Shield, Activity, Calendar } from 'lucide-react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import api from '@/lib/api'
 import { useAdminStats } from '@/lib/AdminStatsContext'
@@ -473,34 +474,54 @@ export default function ManageReports() {
                 <div className="p-6 sm:p-8 space-y-8 bg-gray-50/30">
                   {/* Reporting Parties */}
                   <section className="space-y-4">
-                    <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Investigation Targets</h4>
+                    <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] px-1">Case Participants</h4>
                     <div className="grid gap-3">
                       {/* Reporter */}
-                      <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                          <User size={20} />
+                      {selectedReport.reporterId && (
+                        <Link
+                          href={`/admin/users?id=${selectedReport.reporterId}`}
+                          className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 hover:border-primary/30 hover:shadow-lg transition-all group/target"
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover/target:scale-110 transition-transform">
+                            <User size={20} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5">Reporter</p>
+                            <p className="text-[13px] font-bold text-gray-900 truncate group-hover/target:text-primary transition-colors">{selectedReport.reportedBy}</p>
+                            <p className="text-[10px] font-bold text-gray-400 truncate">{selectedReport.reporterEmail}</p>
+                          </div>
+                        </Link>
+                      )}
+                      {!selectedReport.reporterId && (
+                        <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 opacity-50 grayscale">
+                          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                            <User size={20} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5">Reporter</p>
+                            <p className="text-[13px] font-bold text-gray-900 truncate">{selectedReport.reportedBy}</p>
+                            <p className="text-[10px] font-bold text-gray-400 truncate">{selectedReport.reporterEmail}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5">Reporter</p>
-                          <p className="text-[13px] font-bold text-gray-900 truncate">{selectedReport.reportedBy}</p>
-                          <p className="text-[10px] font-bold text-gray-400 truncate">{selectedReport.reporterEmail}</p>
-                        </div>
-                      </div>
+                      )}
 
                       {/* Reported User */}
                       {selectedReport.reportedUserId && (
-                        <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 ring-1 ring-red-50">
-                          <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
+                        <Link
+                          href={`/admin/users?id=${selectedReport.reportedUserId}`}
+                          className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-4 ring-1 ring-red-50 hover:border-primary/30 hover:shadow-lg transition-all group/target"
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0 group-hover/target:scale-110 transition-transform">
                             <Shield size={20} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-[8px] font-black text-red-400 uppercase tracking-[0.2em] mb-0.5">Reported User</p>
-                            <p className="text-[13px] font-bold text-gray-900 truncate">{selectedReport.reportedUserName || 'System ID: ' + selectedReport.reportedUserId.slice(-6)}</p>
+                            <p className="text-[8px] font-black text-red-400 uppercase tracking-[0.2em] mb-0.5">User Being Reported</p>
+                            <p className="text-[13px] font-bold text-gray-900 truncate group-hover/target:text-primary transition-colors">{selectedReport.reportedUserName || 'System ID: ' + selectedReport.reportedUserId.slice(-6)}</p>
                             <p className="text-[10px] font-bold text-gray-400 truncate uppercase mt-0.5 tracking-tighter">
                               Role: {selectedReport.reportedUserRole || 'Unknown'}
                             </p>
                           </div>
-                        </div>
+                        </Link>
                       )}
                     </div>
                   </section>
@@ -835,7 +856,7 @@ export default function ManageReports() {
                   </div>
                   <div>
                     <h2 className="text-[15px] font-black text-gray-900 leading-none tracking-tight uppercase">Chat History Context</h2>
-                    <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Case Investigation Mode • {activeChatName}</p>
+                    <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Case Investigation Mode • Neutral Evidence Analysis</p>
                   </div>
                 </div>
                 <button
