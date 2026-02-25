@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Filter, AlertCircle, CheckCircle, XCircle, Eye, Clock, User, Briefcase, MessageSquare, Loader2, X, Flag, Shield, Activity, Calendar } from 'lucide-react'
+import { Search, Filter, AlertCircle, CheckCircle, XCircle, Eye, Clock, User, Briefcase, MessageSquare, Loader2, X, Flag, Shield, Activity, Calendar, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import api from '@/lib/api'
@@ -52,6 +52,9 @@ export default function ManageReports() {
   const [filterPriority, setFilterPriority] = useState('all')
   const [activeChatId, setActiveChatId] = useState<string | null>(null)
   const [activeChatName, setActiveChatName] = useState<string>('')
+  const [contextModalType, setContextModalType] = useState<'chat' | 'profile' | 'internship' | null>(null)
+  const [contextData, setContextData] = useState<any>(null)
+  const [isContextLoading, setIsContextLoading] = useState(false)
 
   const [selectedReports, setSelectedReports] = useState<string[]>([])
   const [stats, setStats] = useState({
@@ -195,6 +198,52 @@ export default function ManageReports() {
         }
       }
     })
+  }
+
+  const handleViewContext = async (report: Report) => {
+    // Determine context type based on origin or report type
+    const origin = report.origin?.toLowerCase() || ''
+
+    if (origin.includes('chat') || report.applicationId) {
+      setContextModalType('chat')
+      setActiveChatId(report.applicationId || null)
+      setActiveChatName(report.reportedBy || 'Reported Chat')
+    } else if (origin.includes('profile') || report.reportedUserId) {
+      setContextModalType('profile')
+      setIsContextLoading(true)
+      try {
+        const res = await api.get(`/admin/users`, { params: { id: report.reportedUserId } })
+        if (res.data.success && res.data.data.length > 0) {
+          setContextData(res.data.data[0])
+        } else {
+          setContextData({ id: report.reportedUserId, name: report.reportedUserName, role: report.reportedUserRole })
+        }
+      } catch (error) {
+        console.error('Error fetching context profile:', error)
+        setContextData({ id: report.reportedUserId, name: report.reportedUserName, role: report.reportedUserRole })
+      } finally {
+        setIsContextLoading(false)
+      }
+    } else if (origin.includes('internship') || report.internshipId) {
+      setContextModalType('internship')
+      setIsContextLoading(true)
+      try {
+        const res = await api.get(`/admin/internships`, { params: { id: report.internshipId } })
+        if (res.data.success && res.data.data.length > 0) {
+          setContextData(res.data.data[0])
+        } else {
+          setContextData({ title: report.internshipTitle, id: report.internshipId })
+        }
+      } catch (error) {
+        console.error('Error fetching context internship:', error)
+        setContextData({ title: report.internshipTitle, id: report.internshipId })
+      } finally {
+        setIsContextLoading(false)
+      }
+    } else {
+      // Default fallback: show detailed report modal (Audit Log) if no specific context
+      handleSelectDetailedReport(report)
+    }
   }
 
   const handleSelectDetailedReport = async (report: Report) => {
@@ -753,13 +802,18 @@ export default function ManageReports() {
               {/* Body: Full Width Metrics */}
               <div className="space-y-4 flex-1">
                 {/* Subject Entity Area */}
-                <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors">
+                <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors relative overflow-hidden group/context">
                   <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Subject Entity</p>
                   <div className="flex items-center justify-between">
                     <p className="text-[11px] font-black text-gray-700 truncate">
                       {report.internshipTitle || report.companyName || 'Platform General'}
                     </p>
-                    <p className="text-[10px] font-black text-primary shrink-0 ml-2 uppercase tracking-tighter">View Context</p>
+                    <button
+                      onClick={() => handleViewContext(report)}
+                      className="text-[10px] font-black text-primary shrink-0 ml-2 uppercase tracking-tighter hover:underline decoration-2 underline-offset-2"
+                    >
+                      View Context
+                    </button>
                   </div>
                 </div>
 
@@ -780,25 +834,12 @@ export default function ManageReports() {
 
               {/* Actions Footer Area */}
               <div className="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => handleSelectDetailedReport(report)}
-                    className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest flex items-center gap-1"
-                  >
-                    <Eye size={12} /> Audit Log
-                  </button>
-                  {report.applicationId && (
-                    <button
-                      onClick={() => {
-                        setActiveChatId(report.applicationId || null)
-                        setActiveChatName(report.reportedBy || 'Reported Chat')
-                      }}
-                      className="text-[10px] font-black text-gray-400 hover:text-primary uppercase tracking-widest flex items-center gap-1.5"
-                    >
-                      <MessageSquare size={12} /> Context
-                    </button>
-                  )}
-                </div>
+                <button
+                  onClick={() => handleSelectDetailedReport(report)}
+                  className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest flex items-center gap-1"
+                >
+                  <Eye size={12} /> Audit Log
+                </button>
 
                 <div className="flex items-center gap-1">
                   {report.status !== 'resolved' && (
@@ -842,47 +883,170 @@ export default function ManageReports() {
           </div>
         )}
       </div>
-      {/* Chat History Modal */}
-      {
-        activeChatId && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100 transition-all">
-              {/* Premium Header Pattern */}
-              <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 p-4 sm:px-6 sm:py-4 flex items-center justify-between overflow-hidden relative group/modal-header shrink-0">
-                <div className="absolute -right-16 -top-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover/modal-header:bg-primary/10 transition-colors duration-700" />
-                <div className="relative flex items-center gap-4">
-                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center transform group-hover/modal-header:scale-110 group-hover/modal-header:rotate-6 transition-all duration-500 shadow-lg shadow-gray-200">
-                    <MessageSquare size={20} className="text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-[15px] font-black text-gray-900 leading-none tracking-tight uppercase">Chat History Context</h2>
-                    <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Case Investigation Mode • Neutral Evidence Analysis</p>
-                  </div>
+      {/* Dynamic Context Modal */}
+      {contextModalType && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100 transition-all">
+            {/* Modal Header */}
+            <div className="bg-white/80 backdrop-blur-md border-b border-gray-100 p-4 sm:px-6 sm:py-4 flex items-center justify-between overflow-hidden relative group/modal-header shrink-0">
+              <div className="absolute -right-16 -top-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover/modal-header:bg-primary/10 transition-colors duration-700" />
+              <div className="relative flex items-center gap-4">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center transform group-hover/modal-header:scale-110 group-hover/modal-header:rotate-6 transition-all duration-500 shadow-lg shadow-gray-200">
+                  {contextModalType === 'chat' && <MessageSquare size={20} className="text-white" />}
+                  {contextModalType === 'profile' && <User size={20} className="text-white" />}
+                  {contextModalType === 'internship' && <Briefcase size={20} className="text-white" />}
                 </div>
-                <button
-                  onClick={() => setActiveChatId(null)}
-                  className="relative z-10 p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all active:scale-90"
-                >
-                  <X size={20} />
-                </button>
+                <div>
+                  <h2 className="text-[15px] font-black text-gray-900 leading-none tracking-tight uppercase">
+                    {contextModalType === 'chat' ? 'Chat History Context' :
+                      contextModalType === 'profile' ? 'User Profile Context' :
+                        'Internship Listing Context'}
+                  </h2>
+                  <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest">
+                    Investigation Preview • Evidence ID: {activeChatId || contextData?._id?.slice(-6) || 'N/A'}
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => {
+                  setContextModalType(null)
+                  setActiveChatId(null)
+                  setContextData(null)
+                }}
+                className="relative z-10 p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-all active:scale-90"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-              <div className="flex-1 min-h-0 bg-white">
+            <div className="flex-1 min-h-0 bg-white overflow-hidden flex flex-col">
+              {isContextLoading ? (
+                <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                  <Loader2 className="animate-spin text-primary" size={32} />
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Retrieving Evidence...</p>
+                </div>
+              ) : contextModalType === 'chat' && activeChatId ? (
                 <ChatInterface
                   applicationId={activeChatId}
-                  currentUserId="admin" // Passed to satisfy prop, but readOnly mode avoids owner checks for sending
+                  currentUserId="admin"
                   otherPartyName={activeChatName}
                   readOnly={true}
                 />
-              </div>
+              ) : contextModalType === 'profile' && contextData ? (
+                <div className="p-8 space-y-8 overflow-y-auto">
+                  <div className="flex items-center gap-6">
+                    <div className="w-20 h-20 rounded-3xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-300">
+                      <User size={40} />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{contextData.name}</h3>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-blue-100">
+                          {contextData.role}
+                        </span>
+                        <span className={cn(
+                          "px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border",
+                          contextData.status === 'active' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
+                        )}>
+                          {contextData.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="p-3 bg-gray-50 border-t border-gray-100 text-center shrink-0">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Read-Only Review Mode • Audit recorded</p>
-              </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-5 bg-gray-50/50 rounded-3xl border border-gray-100">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Identification</p>
+                      <p className="text-sm font-bold text-gray-700">Email: {contextData.email}</p>
+                      <p className="text-sm font-bold text-gray-700 mt-1">ID: {contextData._id}</p>
+                    </div>
+                    <div className="p-5 bg-gray-50/50 rounded-3xl border border-gray-100">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Account Activity</p>
+                      <p className="text-sm font-bold text-gray-700">Joined: {formatDate(contextData.createdAt)}</p>
+                      <p className="text-sm font-bold text-gray-700 mt-1">Verified: {contextData.isEmailVerified ? 'YES' : 'NO'}</p>
+                    </div>
+                  </div>
+
+                  {contextData.bio && (
+                    <div className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Professional Bio</p>
+                      <p className="text-sm font-medium text-gray-600 leading-relaxed">{contextData.bio}</p>
+                    </div>
+                  )}
+
+                  <div className="flex justify-center pt-4">
+                    <Link
+                      href={`/admin/users?id=${contextData._id}`}
+                      className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 active:scale-95"
+                    >
+                      Open in User Registry <ChevronRight size={14} />
+                    </Link>
+                  </div>
+                </div>
+              ) : contextModalType === 'internship' && contextData ? (
+                <div className="p-8 space-y-8 overflow-y-auto">
+                  <div className="flex items-center gap-6">
+                    <div className="w-20 h-20 rounded-3xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-300">
+                      <Briefcase size={40} />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{contextData.title}</h3>
+                      <p className="text-lg font-bold text-primary mt-1">{contextData.companyId?.companyName}</p>
+                      <div className="flex items-center gap-2 mt-3">
+                        <span className={cn(
+                          "px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border",
+                          contextData.status === 'active' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-orange-50 text-orange-600 border-orange-100'
+                        )}>
+                          {contextData.status}
+                        </span>
+                        <span className="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-gray-200">
+                          {contextData.location}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-gray-50/50 rounded-3xl border border-gray-100">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Job Description</p>
+                    <p className="text-sm font-medium text-gray-600 leading-relaxed line-clamp-6">{contextData.description}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-5 bg-gray-50/50 rounded-3xl border border-gray-100">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Metadata</p>
+                      <p className="text-sm font-bold text-gray-700">Applications: {contextData.applicationCount || 0}</p>
+                      <p className="text-sm font-bold text-gray-700 mt-1">Salary Range: {contextData.stipend?.amount || 'Unspecified'}</p>
+                    </div>
+                    <div className="p-5 bg-gray-50/50 rounded-3xl border border-gray-100">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Duration</p>
+                      <p className="text-sm font-bold text-gray-700">Span: {contextData.duration || 'N/A'}</p>
+                      <p className="text-sm font-bold text-gray-700 mt-1">Start: {contextData.startDate || 'Immediate'}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center pt-4">
+                    <Link
+                      href={`/admin/companies?search=${contextData.companyId?.companyName}`}
+                      className="flex items-center gap-2 px-6 py-3 bg-gray-900 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-800 transition-all shadow-xl shadow-gray-200 active:scale-95"
+                    >
+                      View Company Profile <ChevronRight size={14} />
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                  <AlertCircle className="text-gray-300" size={48} />
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">No detailed context available</p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-3 bg-gray-50 border-t border-gray-100 text-center shrink-0">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Context Review Mode • Investigative Record Attached</p>
             </div>
           </div>
-        )
-      }
+        </div>
+      )}
     </div >
   )
 }

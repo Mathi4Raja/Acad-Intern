@@ -31,6 +31,7 @@ const internshipSchema = z.object({
 });
 
 interface InternshipQuery {
+    _id?: any;
     status?: string;
     $or?: any[];
     mode?: string;

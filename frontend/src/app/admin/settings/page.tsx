@@ -28,30 +28,30 @@ interface SettingsData {
   messageAlertEmail: boolean;
   reminderEmail: boolean;
   reportStatusEmail: boolean;
-  passwordResetExpiry: number;
-  passwordMinLength: number;
-  sessionTimeout: number;
-  maxLoginAttempts: number;
+  passwordResetExpiry: number | string;
+  passwordMinLength: number | string;
+  sessionTimeout: number | string;
+  maxLoginAttempts: number | string;
   timezone: string;
   autoApproveCompanies: boolean;
   requireCompanyVerification: boolean;
-  maxInternshipPostsPerDay: number;
-  maxApplicationsPerDay: number;
+  maxInternshipPostsPerDay: number | string;
+  maxApplicationsPerDay: number | string;
   allowResumeUpload: boolean;
-  maxResumeSize: number;
-  maxFileSize: number;
-  maxMessageSize: number;
+  maxResumeSize: number | string;
+  maxFileSize: number | string;
+  maxMessageSize: number | string;
   // Notification Thresholds
-  staleApplicationReminderDays: number;
-  internshipClosingSoonDays: number;
-  unreadMessageAlertCount: number;
+  staleApplicationReminderDays: number | string;
+  internshipClosingSoonDays: number | string;
+  unreadMessageAlertCount: number | string;
   // Student Policies
-  assessmentExpiryDays: number;
+  assessmentExpiryDays: number | string;
   // Data Retention
-  expiredApplicationCleanupDays: number;
+  expiredApplicationCleanupDays: number | string;
   autoBackup: boolean;
   backupFrequency: string;
-  retentionDays: number;
+  retentionDays: number | string;
   [key: string]: any;
 }
 
@@ -182,7 +182,7 @@ function AdminSettingsContent() {
     { id: 'companies', label: 'Companies', icon: Building2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
     { id: 'students', label: 'Students', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { id: 'files', label: 'Files', icon: FileText, color: 'text-cyan-600', bg: 'bg-cyan-50' },
-    { id: 'database', label: 'Database', icon: Database, color: 'text-orange-600', bg: 'bg-orange-50' }
+    { id: 'database', label: 'Storage & Backups', icon: Database, color: 'text-orange-600', bg: 'bg-orange-50' }
   ]
 
   if (loading) {
@@ -316,8 +316,8 @@ function AdminSettingsContent() {
               {activeTab === 'general' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
-                    <h2 className="text-[17px] font-black text-gray-900 leading-tight">Global Identity</h2>
-                    <p className="text-[12px] text-gray-500 font-bold">Define how the platform presents itself</p>
+                    <h2 className="text-[17px] font-black text-gray-900 leading-tight">Platform Branding</h2>
+                    <p className="text-[12px] text-gray-500 font-bold">Define how the platform presents itself to the world</p>
                   </header>
 
                   <div className="grid gap-4">
@@ -425,12 +425,12 @@ function AdminSettingsContent() {
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
                     <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight tracking-tight uppercase group flex items-center gap-2">
-                      Mailing Infrastructure
+                      Email System Configuration
                       <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                     </h2>
                     <p className="text-[12px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2">
                       <Activity size={12} className="text-primary" />
-                      Production Routing & Automated Fallbacks
+                      Mailing Infrastructure & Automated Outbound Routing
                     </p>
                   </header>
 
@@ -674,8 +674,8 @@ function AdminSettingsContent() {
                           <div className="relative">
                             <input
                               type="number"
-                              value={settings[f.key as keyof typeof settings] as number}
-                              onChange={(e) => setSettings({ ...settings, [f.key]: parseInt(e.target.value) })}
+                              value={(settings[f.key as keyof typeof settings] as number | string) || ''}
+                              onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value === '' ? '' : parseInt(e.target.value) })}
                               className="w-full pr-12 pl-1 py-1 bg-transparent border-none focus:ring-0 font-black text-gray-900 text-[18px]"
                             />
                             <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400">{f.unit}</span>
@@ -691,8 +691,8 @@ function AdminSettingsContent() {
               {activeTab === 'security' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
-                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Infrastructure Guard</h2>
-                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Access & Hardening</p>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Access & Security</h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Infrastructure Guard & Access Policies</p>
                   </header>
 
                   <div className="bg-primary/5 border border-primary/10 rounded-2xl p-3.5 flex items-center justify-between group">
@@ -757,8 +757,8 @@ function AdminSettingsContent() {
                         <div className="relative">
                           <input
                             type="number"
-                            value={settings[f.key as keyof typeof settings] as number}
-                            onChange={(e) => setSettings({ ...settings, [f.key]: parseInt(e.target.value) })}
+                            value={(settings[f.key as keyof typeof settings] as number | string) || ''}
+                            onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value === '' ? '' : parseInt(e.target.value) })}
                             className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                           />
                           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400">{f.unit}</span>
@@ -773,8 +773,8 @@ function AdminSettingsContent() {
               {['companies', 'students'].includes(activeTab) && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
-                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">{activeTab === 'companies' ? 'Enterprise Operations' : 'Talent Ecosystem'}</h2>
-                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Interaction Policies</p>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">{activeTab === 'companies' ? 'Company Policies' : 'Student Policies'}</h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">{activeTab === 'companies' ? 'Enterprise Operations' : 'Talent Ecosystem Interaction'}</p>
                   </header>
 
                   <div className="grid gap-4">
@@ -824,8 +824,8 @@ function AdminSettingsContent() {
                           <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Max Internship Posts (Per Day)</label>
                           <input
                             type="number"
-                            value={settings.maxInternshipPostsPerDay}
-                            onChange={(e) => setSettings({ ...settings, maxInternshipPostsPerDay: parseInt(e.target.value) })}
+                            value={settings.maxInternshipPostsPerDay || ''}
+                            onChange={(e) => setSettings({ ...settings, maxInternshipPostsPerDay: e.target.value === '' ? '' : parseInt(e.target.value) })}
                             className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                           />
                         </div>
@@ -856,8 +856,8 @@ function AdminSettingsContent() {
                           <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Max Application Limit (Per Day)</label>
                           <input
                             type="number"
-                            value={settings.maxApplicationsPerDay}
-                            onChange={(e) => setSettings({ ...settings, maxApplicationsPerDay: parseInt(e.target.value) })}
+                            value={settings.maxApplicationsPerDay || ''}
+                            onChange={(e) => setSettings({ ...settings, maxApplicationsPerDay: e.target.value === '' ? '' : parseInt(e.target.value) })}
                             className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                           />
                         </div>
@@ -873,8 +873,8 @@ function AdminSettingsContent() {
                             <div className="flex items-center gap-2">
                               <input
                                 type="number"
-                                value={settings.assessmentExpiryDays}
-                                onChange={(e) => setSettings({ ...settings, assessmentExpiryDays: parseInt(e.target.value) })}
+                                value={settings.assessmentExpiryDays || ''}
+                                onChange={(e) => setSettings({ ...settings, assessmentExpiryDays: e.target.value === '' ? '' : parseInt(e.target.value) })}
                                 className="w-32 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                               />
                               <span className="text-[11px] font-black text-gray-400">DAYS</span>
@@ -892,8 +892,8 @@ function AdminSettingsContent() {
               {activeTab === 'files' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
-                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Asset Policy</h2>
-                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Quotas & Limitations</p>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">File Upload Settings</h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Asset Quotas & System Limits</p>
                   </header>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -907,8 +907,8 @@ function AdminSettingsContent() {
                         <div className="flex items-end gap-1.5">
                           <input
                             type="number"
-                            value={settings[f.key as keyof typeof settings] as number}
-                            onChange={(e) => setSettings({ ...settings, [f.key]: parseInt(e.target.value) })}
+                            value={(settings[f.key as keyof typeof settings] as number | string) || ''}
+                            onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value === '' ? '' : parseInt(e.target.value) })}
                             className="bg-white border border-gray-200 rounded-lg px-2 py-1.5 w-full text-lg font-black text-gray-900 focus:ring-2 focus:ring-primary/20 outline-none"
                           />
                           <span className="text-[12px] font-black text-gray-400 mb-2">MB</span>
@@ -926,18 +926,17 @@ function AdminSettingsContent() {
               {activeTab === 'database' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <header>
-                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">Infrastructure Persistence</h2>
-                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Snapshots & Recovery</p>
+                    <h2 className="text-[17px] font-black text-gray-900 mb-1 leading-tight">System Backups</h2>
+                    <p className="text-[12px] text-gray-500 font-bold uppercase tracking-wide">Data Recovery Policies</p>
                   </header>
-
                   <div className="bg-orange-50/50 border border-orange-100 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-5">
                     <div className="flex items-center gap-3.5">
                       <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-600 border border-orange-200 shadow-sm transition-transform group-hover:scale-105">
                         <Database size={20} />
                       </div>
                       <div>
-                        <p className="text-[14px] font-black text-orange-900">Automated Recovery Cycle</p>
-                        <p className="text-[11px] text-orange-700 font-bold opacity-70 tracking-tight">High-frequency snapshots</p>
+                        <p className="text-[14px] font-black text-orange-900">Enable Automated Backups</p>
+                        <p className="text-[11px] text-orange-700 font-bold opacity-70 tracking-tight">Create periodic snapshots to prevent data loss</p>
                       </div>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer scale-100">
@@ -953,7 +952,7 @@ function AdminSettingsContent() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Cycle Frequency</label>
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Backup Schedule</label>
                       <select
                         value={settings.backupFrequency}
                         onChange={(e) => setSettings({ ...settings, backupFrequency: e.target.value })}
@@ -965,12 +964,12 @@ function AdminSettingsContent() {
                       </select>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Snapshot Retention</label>
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Retention Period</label>
                       <div className="relative">
                         <input
                           type="number"
-                          value={settings.retentionDays}
-                          onChange={(e) => setSettings({ ...settings, retentionDays: parseInt(e.target.value) })}
+                          value={settings.retentionDays || ''}
+                          onChange={(e) => setSettings({ ...settings, retentionDays: e.target.value === '' ? '' : parseInt(e.target.value) })}
                           className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-gray-400">DAYS</span>
@@ -987,14 +986,14 @@ function AdminSettingsContent() {
                     <div className="p-4 bg-gray-50/50 border border-gray-100 rounded-2xl">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-1">
-                          <p className="text-[13px] font-black text-gray-900 leading-tight">Expired Application Cleanup</p>
-                          <p className="text-[11px] text-gray-500 font-bold">Delete applications older than threshold</p>
+                          <p className="text-[13px] font-black text-gray-900 leading-tight">Automatic Application Cleanup</p>
+                          <p className="text-[11px] text-gray-500 font-bold">Automatically remove application records after a set duration</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
-                            value={settings.expiredApplicationCleanupDays}
-                            onChange={(e) => setSettings({ ...settings, expiredApplicationCleanupDays: parseInt(e.target.value) })}
+                            value={settings.expiredApplicationCleanupDays || ''}
+                            onChange={(e) => setSettings({ ...settings, expiredApplicationCleanupDays: e.target.value === '' ? '' : parseInt(e.target.value) })}
                             className="w-24 px-3 py-2 bg-white border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
                           />
                           <span className="text-[11px] font-black text-gray-400">DAYS</span>

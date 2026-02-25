@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, _Object } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import path from 'path';
 
@@ -67,7 +67,7 @@ export const uploadToR2 = async (
     mimetype: string,
     username?: string,
     existingUrl?: string,
-    fileType: 'resume' | 'profilePicture' | 'bannerImage' | 'message' | 'companyLogo' | 'companyBanner' | 'report' = 'resume'
+    fileType: 'resume' | 'profilePicture' | 'bannerImage' | 'message' | 'companyLogo' | 'companyBanner' | 'report' | 'system_backup' = 'resume'
 ): Promise<UploadResult> => {
     // Generate filename based on username for consistency
     const ext = path.extname(originalFilename).toLowerCase();
@@ -97,6 +97,9 @@ export const uploadToR2 = async (
     } else if (fileType === 'report') {
         folder = 'reports/screenshots';
         suffix = 'report_evidence';
+    } else if (fileType === 'system_backup') {
+        folder = 'backups';
+        suffix = 'snapshot';
     }
 
     // Sanitize username or use timestamp
@@ -190,6 +193,19 @@ export const getFileStream = async (key: string) => {
     });
     const response = await r2Client.send(command);
     return response.Body;
+};
+
+/**
+ * List objects in the R2 bucket with an optional prefix
+ */
+export const listObjects = async (prefix?: string): Promise<_Object[]> => {
+    const command = new ListObjectsV2Command({
+        Bucket: R2_BUCKET_NAME,
+        Prefix: prefix,
+    });
+
+    const response = await r2Client.send(command);
+    return response.Contents || [];
 };
 
 export { r2Client };

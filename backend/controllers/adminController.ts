@@ -39,12 +39,14 @@ interface UserQuery {
 }
 
 interface CompanyQuery {
+    _id?: any;
     status?: string;
     verified?: boolean;
     $or?: Array<{ [key: string]: { $regex: string; $options: string } }>;
 }
 
 interface InternshipQuery {
+    _id?: any;
     status?: string;
     $or?: Array<{ [key: string]: { $regex: string; $options: string } }>;
 }
@@ -423,8 +425,12 @@ export const deleteCompany = async (req: AuthRequest, res: Response, next: NextF
 // @access  Private (Admin)
 export const getAllInternships = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { status, search } = req.query;
+        const { status, search, id } = req.query;
         const query: InternshipQuery = {};
+
+        if (id && typeof id === 'string' && id.match(/^[0-9a-fA-F]{24}$/)) {
+            query._id = id;
+        }
 
         if (status && status !== 'all' && typeof status === 'string') query.status = status;
 

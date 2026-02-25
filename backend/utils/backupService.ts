@@ -1,5 +1,5 @@
 import SystemSetting from '../models/SystemSetting';
-import { uploadToR2 } from './r2Storage';
+import { uploadToR2, listObjects, deleteFromR2 } from './r2Storage';
 
 /**
  * Foundational Backup Service
@@ -61,6 +61,45 @@ export const performDatabaseBackup = async (): Promise<void> => {
  * Cleans up old backups based on retention policy
  */
 export const cleanupOldBackups = async (): Promise<void> => {
-    // Placeholder for future R2 deletion logic based on retentionDays
-    console.log('[BACKUP] Running retention cleanup... (Placeholder)');
+    try {
+        const setting = await SystemSetting.findOne({ key: 'retentionDays' });
+        const retentionDays = Number(setting?.value || 7);
+
+        console.log(`[BACKUP] Starting retention cleanup... (Threshold: ${retentionDays} days)`);
+
+        // List all objects in the backups folder
+        const objects = await listObjects('backups/');
+
+        if (objects.length === 0) {
+            console.log('[BACKUP] No snapshots found for cleanup.');
+            return;
+        }
+
+        const now = new Date();
+        const cutoffDate = new Date();
+        cutoffDate.setDate(now.getDate() - retentionDays);
+
+        let deletedCount = 0;
+
+        for (const obj of objects) {
+            if (!obj.Key || !obj.LastModified) continue;
+
+            const lastModified = new Date(obj.LastModified);
+
+            if (lastModified < cutoffDate) {
+                console.log(`[BACKUP] Deleting expired snapshot: ${obj.Key} (Modified: ${lastModified.toISOString()})`);
+                await deleteFromR2(obj.Key);
+                deletedCount++;
+            }
+        }
+
+        if (deletedCount > 0) {
+            console.log(`[BACKUP] Successfully purged ${deletedCount} old snapshots.`);
+        } else {
+            console.log('[BACKUP] All snapshots are within retention period.');
+        }
+
+    } catch (error) {
+        console.error('[BACKUP] Error during retention cleanup:', error);
+    }
 };

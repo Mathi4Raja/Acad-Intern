@@ -370,29 +370,7 @@ function ManageUsersContent() {
         />
       </div>
 
-      {/* Filter Chips */}
-      {(filterRole !== 'all' || filterStatus !== 'all') && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {filterRole !== 'all' && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-              Role: {filterRole}
-              <button onClick={() => clearFilter('role')} className="hover:text-blue-900"><X size={14} /></button>
-            </span>
-          )}
-          {filterStatus !== 'all' && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
-              Status: {filterStatus}
-              <button onClick={() => clearFilter('status')} className="hover:text-green-900"><X size={14} /></button>
-            </span>
-          )}
-          <button
-            onClick={() => { setFilterRole('all'); setFilterStatus('all'); }}
-            className="text-xs text-gray-500 hover:text-gray-900 underline ml-1"
-          >
-            Clear all
-          </button>
-        </div>
-      )}
+      {/* Selection Summary removed for consistency with other pages */}
 
       {/* Select All UI */}
       {users.length > 0 && (
