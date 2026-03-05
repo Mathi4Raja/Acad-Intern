@@ -112,6 +112,10 @@ export const adminApi = {
     updateSettings: (settings: any) => api.put('/admin/settings', settings),
 };
 
+export const internshipsApi = {
+    getPopular: (limit: number = 6) => api.get(`/internships/popular?limit=${limit}`),
+};
+
 export default api;
 
 

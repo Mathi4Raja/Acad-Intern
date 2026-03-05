@@ -471,6 +471,101 @@ export const deleteInternship = async (req: AuthRequest, res: Response, next: Ne
     }
 };
 
+// @desc    Get highest applied internships
+// @route   GET /api/internships/popular
+// @access  Public
+export const getPopularInternships = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { limit = '6' } = req.query;
+
+        // Find companies that are NOT shadow-banned
+        const shadowBannedCompanies = await User.find({ role: 'company', isShadowBanned: true }).distinct('_id');
+        const shadowBannedProfileIds = await Company.find({ userId: { $in: shadowBannedCompanies } }).distinct('_id');
+
+        // Aggregate to find most applied internships
+        const popularInternshipsAgg = await Application.aggregate([
+            {
+                $group: {
+                    _id: '$internshipId',
+                    applicationCount: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { applicationCount: -1 }
+            },
+            {
+                $limit: parseInt(limit as string)
+            }
+        ]);
+
+        let internshipsWithStatus: any[] = [];
+
+        if (popularInternshipsAgg.length > 0) {
+            const internshipIds = popularInternshipsAgg.map(agg => agg._id);
+
+            const internships = await Internship.find({
+                _id: { $in: internshipIds },
+                status: 'active',
+                companyId: { $nin: shadowBannedProfileIds }
+            })
+                .populate('companyId', 'companyName website verified logo')
+                .lean();
+
+            // Sort them back to the original popular order
+            internships.sort((a, b) => {
+                const indexA = internshipIds.findIndex(id => id.toString() === a._id.toString());
+                const indexB = internshipIds.findIndex(id => id.toString() === b._id.toString());
+                return indexA - indexB;
+            });
+
+            internshipsWithStatus = internships.map((internship: any) => ({
+                ...internship,
+                applicationCount: popularInternshipsAgg.find(p => p._id.toString() === internship._id.toString())?.applicationCount || 0
+            }));
+        }
+
+        // If we don't have enough popular internships, fetch some recent ones
+        if (internshipsWithStatus.length < parseInt(limit as string)) {
+            const existingIds = internshipsWithStatus.map((i: any) => i._id);
+            const recentInternships = await Internship.find({
+                _id: { $nin: existingIds },
+                status: 'active',
+                companyId: { $nin: shadowBannedProfileIds }
+            })
+                .sort({ createdAt: -1 })
+                .limit(parseInt(limit as string) - internshipsWithStatus.length)
+                .populate('companyId', 'companyName website verified logo')
+                .lean();
+
+            const recentWithStatus = recentInternships.map((internship: any) => ({
+                ...internship,
+                applicationCount: 0
+            }));
+
+            internshipsWithStatus = [...internshipsWithStatus, ...recentWithStatus];
+        }
+
+        // Check for applications if user is logged in
+        if (req.user) {
+            const applications = await Application.find({ studentId: req.user._id }).select('internshipId');
+            const appliedInternshipIds = new Set(applications.map(app => app.internshipId.toString()));
+
+            internshipsWithStatus = internshipsWithStatus.map((internship: any) => ({
+                ...internship,
+                hasApplied: appliedInternshipIds.has(internship._id.toString())
+            }));
+        }
+
+        res.status(200).json({
+            success: true,
+            count: internshipsWithStatus.length,
+            data: internshipsWithStatus
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // @desc    Get company's internships
 // @route   GET /api/internships/company/my
 // @access  Private (Company)
