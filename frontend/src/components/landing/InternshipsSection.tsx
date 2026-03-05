@@ -13,8 +13,11 @@ export function InternshipsSection() {
     const [loading, setLoading] = useState(true);
 
     const DefaultCompanyLogo = () => (
-        <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0.5" className="w-5 h-5 md:w-6 md:h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 md:w-7 md:h-7">
+            <path d="M3 21h18" />
+            <path d="M9 8h1" /><path d="M9 12h1" /><path d="M9 16h1" />
+            <path d="M14 8h1" /><path d="M14 12h1" /><path d="M14 16h1" />
+            <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
         </svg>
     );
 
