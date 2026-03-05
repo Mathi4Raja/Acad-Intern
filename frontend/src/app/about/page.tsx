@@ -82,25 +82,25 @@ export default function AboutPage() {
 
       <Navbar />
 
-      <main className="pt-24 sm:pt-32 lg:pt-40 pb-16">
+      <main className="pt-20 sm:pt-28 lg:pt-36 pb-12">
         {/* Hero Section */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-20 md:mb-32">
+        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-10 md:mb-24">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm font-medium mb-6 animate-fade-in">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm font-medium mb-4 animate-fade-in">
               <Sparkles className="w-4 h-4" />
               <span>Redefining Talent Discovery</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-4 sm:mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
               Connecting ambition with <br className="hidden sm:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">real opportunities.</span>
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed animate-fade-in max-w-2xl mx-auto" style={{ animationDelay: '200ms' }}>
+            <p className="text-base md:text-xl text-muted-foreground leading-relaxed animate-fade-in max-w-2xl mx-auto" style={{ animationDelay: '200ms' }}>
               {publicSettings?.siteDescription || `${publicSettings?.siteName || 'AcadIntern'} is engineered to bridge the gap between academic environment and the modern workforce through transparent, high-quality internships.`}
             </p>
           </div>
 
           {/* Hero Image Collage */}
-          <div className="mt-16 md:mt-20 grid grid-cols-12 grid-rows-2 gap-4 md:gap-6 h-[400px] md:h-[500px] animate-fade-in relative" style={{ animationDelay: '300ms' }}>
+          <div className="mt-8 md:mt-16 grid grid-cols-12 grid-rows-2 gap-3 md:gap-6 h-[260px] sm:h-[340px] md:h-[500px] animate-fade-in relative" style={{ animationDelay: '300ms' }}>
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-accent/10 rounded-[2.5rem] -z-10 blur-3xl opacity-50" />
 
             <div className="col-span-12 md:col-span-4 row-span-1 md:row-span-2 rounded-[2rem] overflow-hidden relative shadow-lg group">
@@ -126,8 +126,8 @@ export default function AboutPage() {
         </section>
 
         {/* Mission Split Section */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-20 md:mb-32">
-          <div className="bg-gray-50/50 border border-gray-100 rounded-3xl p-8 md:p-12 lg:p-16 overflow-hidden relative">
+        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-10 md:mb-24">
+          <div className="bg-gray-50/50 border border-gray-100 rounded-3xl p-6 md:p-12 lg:p-16 overflow-hidden relative">
             <div className="absolute top-0 right-0 p-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
               <div className="relative z-10">
@@ -161,8 +161,8 @@ export default function AboutPage() {
         </section>
 
         {/* Features Bento Grid */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-20 md:mb-32">
-          <div className="mb-12">
+        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-10 md:mb-24">
+          <div className="mb-6 md:mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Why {publicSettings?.siteName || 'AcadIntern'}?</h2>
             <p className="text-lg text-gray-600 mt-2">The architecture of your career foundation.</p>
           </div>
@@ -186,15 +186,15 @@ export default function AboutPage() {
         </section>
 
         {/* Team / Values Section */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-20 md:mb-32">
-          <div className="grid lg:grid-cols-12 gap-12">
+        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-10 md:mb-24">
+          <div className="grid lg:grid-cols-12 gap-8 md:gap-12">
             <div className="lg:col-span-5">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Our DNA</h2>
-              <p className="text-lg text-gray-600 mb-10 leading-relaxed">
+              <p className="text-base md:text-lg text-gray-600 mb-6 md:mb-10 leading-relaxed">
                 A set of non-negotiable principles that dictate how we operate, build product, and interact with our community.
               </p>
 
-              <div className="space-y-8">
+              <div className="space-y-5 md:space-y-8">
                 {values.map((v, i) => (
                   <div key={i} className="flex gap-4">
                     <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0 border border-primary/20">
@@ -231,11 +231,11 @@ export default function AboutPage() {
 
         {/* CTA Section */}
         <section className="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
-          <div className="bg-gradient-to-r from-primary to-accent rounded-[2.5rem] p-10 md:p-16 text-center text-white relative overflow-hidden shadow-xl shadow-primary/20">
+          <div className="bg-gradient-to-r from-primary to-accent rounded-3xl p-8 md:p-16 text-center text-white relative overflow-hidden shadow-xl shadow-primary/20">
             <div className="absolute inset-0 mix-blend-overlay opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-            <Rocket className="w-16 h-16 mx-auto mb-6 opacity-80 mix-blend-overlay" />
-            <h2 className="text-3xl md:text-5xl font-bold mb-4 relative z-10">Ready to accelerate?</h2>
-            <p className="text-lg text-white/80 max-w-xl mx-auto mb-10 relative z-10 font-medium">
+            <Rocket className="w-10 h-10 md:w-16 md:h-16 mx-auto mb-4 md:mb-6 opacity-80 mix-blend-overlay" />
+            <h2 className="text-2xl md:text-5xl font-bold mb-3 md:mb-4 relative z-10">Ready to accelerate?</h2>
+            <p className="text-sm md:text-lg text-white/80 max-w-xl mx-auto mb-6 md:mb-10 relative z-10 font-medium">
               Join thousands of ambitious students securing exactly the right opportunities to start their careers.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
