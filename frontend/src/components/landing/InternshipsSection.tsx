@@ -12,6 +12,12 @@ export function InternshipsSection() {
     const [internships, setInternships] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const DefaultCompanyLogo = () => (
+        <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0.5" className="w-5 h-5 md:w-6 md:h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+    );
+
     const gradients = [
         "from-blue-500 to-cyan-500",
         "from-purple-500 to-pink-500",
@@ -89,7 +95,7 @@ export function InternshipsSection() {
                             const gradient = gradients[i % gradients.length];
                             // Consider it new if created within the last 7 days
                             const isNew = new Date(job.createdAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000;
-                            const logoInitial = job.companyId?.companyName ? job.companyId.companyName.charAt(0).toUpperCase() : "I";
+
 
                             return (
                                 <div
@@ -103,7 +109,7 @@ export function InternshipsSection() {
                                             {job.companyId?.logo ? (
                                                 <img src={job.companyId.logo} alt={job.companyId.companyName} className="w-full h-full object-cover bg-white" />
                                             ) : (
-                                                <span className="text-xl font-bold">{logoInitial}</span>
+                                                <DefaultCompanyLogo />
                                             )}
                                         </div>
                                         {isNew && (
