@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, AlertCircle, ArrowLeft, CheckCircle } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 import api from '@/lib/api'
 
 import { useAuth } from '@/lib/AuthContext'
@@ -25,6 +26,8 @@ declare global {
 export default function LoginPage() {
   const { login, googleLogin } = useAuth()
   const { settings } = useSettings()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect')
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
@@ -317,21 +320,26 @@ export default function LoginPage() {
           </div>
 
           {/* Google Sign-In Button */}
-          <div className="mt-3">
-            {isGoogleLoading ? (
+          <div className="mt-3 overflow-hidden">
+            {isGoogleLoading && (
               <div className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-gray-300 rounded-lg bg-gray-50 text-sm">
                 <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-gray-600">Signing in...</span>
               </div>
-            ) : (
-              <div ref={googleButtonContainerRef} className="w-full flex justify-center"></div>
             )}
+            <div
+              ref={googleButtonContainerRef}
+              className={`w-full flex justify-center overflow-hidden${isGoogleLoading ? ' hidden' : ''}`}
+            ></div>
           </div>
 
           {/* Sign Up Link */}
           <div className="mt-4 pt-3 border-t border-gray-100 text-center">
             <span className="text-xs text-gray-500">Don't have an account? </span>
-            <Link href="/signup" className="text-xs font-medium text-primary hover:text-primary/90">
+            <Link
+              href={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
+              className="text-xs font-medium text-primary hover:text-primary/90"
+            >
               Create one
             </Link>
           </div>

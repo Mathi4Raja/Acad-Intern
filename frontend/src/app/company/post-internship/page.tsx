@@ -6,6 +6,7 @@ import { IndianRupee, Calendar, MapPin, Clock, Users, Briefcase, FileText, Plus,
 import api from '@/lib/api'
 import { useAlert } from '@/components/ui/AlertProvider'
 import { INTERNSHIP_MODES } from '@/lib/constants'
+import { Select } from '@/components/ui/Select'
 
 export default function PostInternship() {
   const router = useRouter()
@@ -229,17 +230,13 @@ export default function PostInternship() {
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                     Work Mode *
                   </label>
-                  <select
-                    name="mode"
+                  <Select
                     value={formData.mode}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    required
-                  >
-                    {INTERNSHIP_MODES.map(mode => (
-                      <option key={mode.value} value={mode.value}>{mode.label}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => setFormData({ ...formData, mode: val })}
+                    options={INTERNSHIP_MODES.map(mode => ({ value: mode.value, label: mode.label }))}
+                    className="w-full"
+                    isFullWidth
+                  />
                 </div>
               </div>
 

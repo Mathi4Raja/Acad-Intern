@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
+import { Select } from '../ui/Select';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
@@ -153,18 +154,19 @@ export function ReportModal({
                         <div className="space-y-4">
                             <div className="space-y-1.5">
                                 <Label htmlFor="category" className="text-[10px] font-black uppercase tracking-widest text-gray-400">Category</Label>
-                                <select
-                                    id="category"
+                                <Select
                                     value={category}
-                                    onChange={(e) => setCategory(e.target.value)}
-                                    className="w-full h-10 px-4 bg-gray-50 border border-gray-100 rounded-xl text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer"
-                                >
-                                    <option value="spam">Spam / Prohibited Content</option>
-                                    <option value="harassment">Harassment / Abuse</option>
-                                    <option value="scam">Scam / Fraud</option>
-                                    <option value="inaccurate">Inaccurate Details</option>
-                                    <option value="other">Other</option>
-                                </select>
+                                    onChange={setCategory}
+                                    options={[
+                                        { value: "spam", label: "Spam / Prohibited Content" },
+                                        { value: "harassment", label: "Harassment / Abuse" },
+                                        { value: "scam", label: "Scam / Fraud" },
+                                        { value: "inaccurate", label: "Inaccurate Details" },
+                                        { value: "other", label: "Other" }
+                                    ]}
+                                    className="!bg-gray-50 border-gray-100 h-10"
+                                    isFullWidth
+                                />
                             </div>
 
                             <div className="space-y-1.5">

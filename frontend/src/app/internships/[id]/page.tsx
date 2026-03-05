@@ -121,15 +121,17 @@ export default function PublicInternshipDetailPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-24 pb-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-24 pb-12">
             {/* Back Button */}
-            <Link
-                href="/internships"
-                className="inline-flex items-center gap-2 text-gray-600 hover:text-primary mb-4 transition-colors text-sm"
-            >
-                <ArrowLeft size={18} />
-                Back to Internships
-            </Link>
+            <div className="mb-6">
+                <Link
+                    href="/internships"
+                    className="inline-flex items-center gap-2.5 px-4 py-2 bg-white border border-gray-100 text-gray-600 rounded-xl text-sm font-bold shadow-sm hover:border-primary/20 hover:text-primary hover:shadow-md transition-all group"
+                >
+                    <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
+                    Back to Internships
+                </Link>
+            </div>
 
             <div className="grid lg:grid-cols-3 gap-4">
                 {/* Main Content */}

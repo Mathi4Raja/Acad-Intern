@@ -7,6 +7,7 @@ import { StatCard } from '@/components/analytics/StatCard'
 import api from '@/lib/api'
 import { useAuth } from '@/lib/AuthContext'
 import { useAlert } from '@/components/ui/AlertProvider'
+import { Select } from '@/components/ui/Select'
 import { useRouter } from 'next/navigation'
 
 export default function ManageInternships() {
@@ -271,17 +272,19 @@ export default function ManageInternships() {
             />
           </div>
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <select
+            <Select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full sm:w-auto pl-10 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none appearance-none bg-white cursor-pointer"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="expired">Expired</option>
-            </select>
+              onChange={setFilterStatus}
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+                { value: 'expired', label: 'Expired' }
+              ]}
+              className="w-full sm:w-40 !pl-10"
+              isFullWidth
+            />
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10 pointer-events-none" size={18} />
           </div>
         </div>
       </div>

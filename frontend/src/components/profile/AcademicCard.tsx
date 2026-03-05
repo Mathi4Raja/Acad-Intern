@@ -1,6 +1,8 @@
 import React, { memo } from 'react'
+import { cn } from '@/lib/utils'
 import { GraduationCap } from 'lucide-react'
 import { StudentProfile } from '@/types'
+import { Select } from '@/components/ui/Select'
 import { ProfileSection } from './ProfileSection'
 
 interface AcademicCardProps {
@@ -26,32 +28,30 @@ export const AcademicCard = memo(({ profile, isEditing, onChange }: AcademicCard
             <div className="grid grid-cols-1 min-[450px]:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1.5">Department</label>
-                    <select
+                    <Select
                         value={profile.department || ''}
-                        onChange={(e) => onChange({ department: e.target.value })}
-                        disabled={!isEditing}
-                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 transition-all"
-                    >
-                        <option value="">Select Department</option>
-                        {DEPARTMENTS.map((dept) => (
-                            <option key={dept} value={dept}>{dept}</option>
-                        ))}
-                    </select>
+                        onChange={(val) => onChange({ department: val })}
+                        options={[
+                            { value: '', label: 'Select Department' },
+                            ...DEPARTMENTS.map(dept => ({ value: dept, label: dept }))
+                        ]}
+                        className={cn(!isEditing && "opacity-50 pointer-events-none bg-gray-50")}
+                        isFullWidth
+                    />
                 </div>
 
                 <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1.5">Semester</label>
-                    <select
-                        value={profile.semester || ''}
-                        onChange={(e) => onChange({ semester: parseInt(e.target.value) || undefined })}
-                        disabled={!isEditing}
-                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 transition-all"
-                    >
-                        <option value="">Select Semester</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                            <option key={sem} value={sem}>Semester {sem}</option>
-                        ))}
-                    </select>
+                    <Select
+                        value={profile.semester?.toString() || ''}
+                        onChange={(val) => onChange({ semester: parseInt(val) || undefined })}
+                        options={[
+                            { value: '', label: 'Select Semester' },
+                            ...[1, 2, 3, 4, 5, 6, 7, 8].map(sem => ({ value: sem.toString(), label: `Semester ${sem}` }))
+                        ]}
+                        className={cn(!isEditing && "opacity-50 pointer-events-none bg-gray-50")}
+                        isFullWidth
+                    />
                 </div>
 
                 <div>

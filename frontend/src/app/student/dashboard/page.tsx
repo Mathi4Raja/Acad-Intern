@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, Briefcase, FileText, CheckCircle, Clock, LayoutDashboard } from 'lucide-react'
+import { Lightbulb, Briefcase, FileText, CheckCircle, Clock, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
@@ -70,15 +70,16 @@ export default function StudentDashboard() {
 
         // Stats Calculation
         let completeness = 0;
-        const total = 8;
+        const total = 9;
         if (user?.name) completeness++;
         if (user?.email) completeness++;
         if (studentProfile?.department) completeness++;
-        if (studentProfile?.semester) completeness++;
-        if (studentProfile?.cgpa) completeness++;
+        if (studentProfile?.semester !== undefined && studentProfile?.semester !== null) completeness++;
+        if (studentProfile?.cgpa !== undefined && studentProfile?.cgpa !== null) completeness++;
         if (studentProfile?.bio) completeness++;
         if (studentProfile?.skills?.length > 0) completeness++;
         if (studentProfile?.resumeUrl) completeness++;
+        if (studentProfile?.phone) completeness++;
 
         setStats({
           profileCompletion: Math.round((completeness / total) * 100),
@@ -208,7 +209,7 @@ export default function StudentDashboard() {
           {/* Quick Actions / Tips can go here */}
           <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
             <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <TrendingUp size={18} className="text-green-500" />
+              <Lightbulb size={18} className="text-amber-500" />
               Quick Tips
             </h3>
             <ul className="space-y-3 text-sm text-gray-600">

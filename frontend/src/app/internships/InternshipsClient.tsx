@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Search, MapPin, Clock, Building2, Filter, X, Menu } from 'lucide-react'
+import { Select } from '@/components/ui/Select'
 import { INTERNSHIP_MODES, getLabel } from '@/lib/constants'
 
 // Helper to format "x days ago"
@@ -203,18 +204,20 @@ export default function InternshipsClient({ initialInternships }: InternshipsCli
 
                     {/* Search Bar */}
                     <div className="max-w-2xl mx-auto">
-                        <div className="bg-white rounded-lg shadow-lg flex items-center gap-2 px-3 py-2">
-                            <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                            <input
-                                type="text"
-                                placeholder="Search by title, company, or skills..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 py-1 focus:outline-none text-sm bg-transparent"
-                            />
+                        <div className="bg-white rounded-lg shadow-lg flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2 sm:px-3 sm:py-2">
+                            <div className="flex items-center gap-2 px-2 flex-1">
+                                <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by title, company, or skills..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="flex-1 py-2 sm:py-1 focus:outline-none text-sm bg-transparent"
+                                />
+                            </div>
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${showFilters ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
+                                className={`flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-1.5 rounded-md transition-colors text-sm font-medium ${showFilters ? 'bg-primary text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
                             >
                                 <Filter className="w-4 h-4" />
                                 Filters
@@ -241,44 +244,48 @@ export default function InternshipsClient({ initialInternships }: InternshipsCli
                         <div className="grid md:grid-cols-4 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Work Mode</label>
-                                <select
+                                <Select
                                     value={filters.mode}
-                                    onChange={(e) => setFilters({ ...filters, mode: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                                >
-                                    <option value="all">All Modes</option>
-                                    {INTERNSHIP_MODES.map(mode => (
-                                        <option key={mode.value} value={mode.value}>{mode.label}</option>
-                                    ))}
-                                </select>
+                                    onChange={(val) => setFilters({ ...filters, mode: val })}
+                                    options={[
+                                        { value: 'all', label: 'All Modes' },
+                                        ...INTERNSHIP_MODES.map(mode => ({ value: mode.value, label: mode.label }))
+                                    ]}
+                                    className="w-full"
+                                    isFullWidth
+                                />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
-                                <select
+                                <Select
                                     value={filters.duration}
-                                    onChange={(e) => setFilters({ ...filters, duration: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                                >
-                                    <option value="all">All Durations</option>
-                                    <option value="short">Less than 8 weeks</option>
-                                    <option value="medium">8-12 weeks</option>
-                                    <option value="long">More than 12 weeks</option>
-                                </select>
+                                    onChange={(val) => setFilters({ ...filters, duration: val })}
+                                    options={[
+                                        { value: 'all', label: 'All Durations' },
+                                        { value: 'short', label: 'Less than 8 weeks' },
+                                        { value: 'medium', label: '8-12 weeks' },
+                                        { value: 'long', label: 'More than 12 weeks' }
+                                    ]}
+                                    className="w-full"
+                                    isFullWidth
+                                />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Stipend</label>
-                                <select
+                                <Select
                                     value={filters.stipend}
-                                    onChange={(e) => setFilters({ ...filters, stipend: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                                >
-                                    <option value="all">All Ranges</option>
-                                    <option value="0-10000">₹0 - ₹10,000</option>
-                                    <option value="10000-15000">₹10,000 - ₹15,000</option>
-                                    <option value="15000+">₹15,000+</option>
-                                </select>
+                                    onChange={(val) => setFilters({ ...filters, stipend: val })}
+                                    options={[
+                                        { value: 'all', label: 'All Ranges' },
+                                        { value: '0-10000', label: '₹0 - ₹10,000' },
+                                        { value: '10000-15000', label: '₹10,000 - ₹15,000' },
+                                        { value: '15000+', label: '₹15,000+' }
+                                    ]}
+                                    className="w-full"
+                                    isFullWidth
+                                />
                             </div>
 
                             <div className="flex items-end">
@@ -297,21 +304,25 @@ export default function InternshipsClient({ initialInternships }: InternshipsCli
             {/* Results */}
             <section className="py-10 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
-                    <div className="flex items-center justify-between mb-6">
-                        <p className="text-gray-600">
-                            <span className="font-bold text-gray-900">{filteredInternships.length}</span> internships found
-                        </p>
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <span>Sort by:</span>
-                            <select
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-gray-100 shadow-sm">
+                        <div className="flex items-center gap-2 order-2 sm:order-1">
+                            <span className="flex items-center justify-center bg-primary/10 text-primary font-bold px-3 py-1 rounded-full text-sm">
+                                {filteredInternships.length}
+                            </span>
+                            <span className="text-gray-600 font-medium text-sm">internships found</span>
+                        </div>
+                        <div className="flex items-center gap-3 w-full sm:w-auto order-1 sm:order-2">
+                            <Select
                                 value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="border-0 bg-transparent font-medium text-gray-700 focus:ring-0 cursor-pointer pr-6"
-                            >
-                                <option value="recent">Most Recent</option>
-                                <option value="stipend">Highest Stipend</option>
-                                <option value="duration">Shortest Duration</option>
-                            </select>
+                                onChange={setSortBy}
+                                options={[
+                                    { value: 'recent', label: 'Most Recent' },
+                                    { value: 'stipend', label: 'Highest Stipend' },
+                                    { value: 'duration', label: 'Shortest Duration' }
+                                ]}
+                                label="Sort by:"
+                                isFullWidth
+                            />
                         </div>
                     </div>
 
@@ -330,19 +341,19 @@ export default function InternshipsClient({ initialInternships }: InternshipsCli
                                             <Building2 className="w-5 h-5 text-gray-400" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="text-base font-bold text-gray-900 group-hover:text-primary transition-colors truncate mb-1">
+                                            <h3 className="text-base font-bold text-gray-900 group-hover:text-primary transition-colors truncate mb-0.5">
                                                 {internship.title}
                                             </h3>
-                                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                                                <span className="truncate font-medium">{internship.company}</span>
+                                            <div className="text-sm text-gray-500 truncate font-medium">
+                                                {internship.company}
                                             </div>
                                         </div>
                                     </div>
                                     <div className="text-right flex-shrink-0">
-                                        <div className="text-base font-bold text-primary">
+                                        <div className="text-base sm:text-lg font-bold text-primary">
                                             ₹{internship.stipend.toLocaleString()}
                                         </div>
-                                        <div className="text-xs text-gray-400">/month</div>
+                                        <div className="text-[10px] text-gray-400 leading-none">/month</div>
                                     </div>
                                 </div>
 
@@ -380,18 +391,18 @@ export default function InternshipsClient({ initialInternships }: InternshipsCli
                                 </div>
 
                                 {/* Footer */}
-                                <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
-                                    <span className="text-xs text-gray-400">{internship.postedAt}</span>
-                                    <div className="flex gap-2">
+                                <div className="flex flex-row items-center justify-between pt-4 border-t border-gray-100 mt-auto gap-3">
+                                    <span className="text-xs text-gray-400 whitespace-nowrap">{internship.postedAt}</span>
+                                    <div className="flex gap-2 min-w-0">
                                         <Link
                                             href={`/internships/${internship.id}`}
-                                            className="px-4 py-2 text-sm border border-gray-200 text-gray-600 rounded-lg hover:border-primary hover:text-primary transition-colors font-medium"
+                                            className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-200 text-gray-600 rounded-lg hover:border-primary hover:text-primary transition-colors font-medium whitespace-nowrap"
                                         >
                                             Details
                                         </Link>
                                         <Link
-                                            href={`/login?redirect=/internships/${internship.id}`}
-                                            className="px-4 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                                            href={`/login?redirect=/student/internships/${internship.id}`}
+                                            className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors font-medium whitespace-nowrap"
                                         >
                                             Apply
                                         </Link>
@@ -422,11 +433,11 @@ export default function InternshipsClient({ initialInternships }: InternshipsCli
                             </div>
                         )
                     }
-                </div >
-            </section >
+                </div>
+            </section>
 
             {/* Footer */}
-            < footer className="bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8" >
+            <footer className="bg-gray-900 text-white py-8 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto text-center">
                     <Link href="/" className="text-xl font-bold text-white hover:text-primary/80 transition-colors">
                         AcadIntern
@@ -446,7 +457,7 @@ export default function InternshipsClient({ initialInternships }: InternshipsCli
                         </Link>
                     </div>
                 </div>
-            </footer >
-        </div >
+            </footer>
+        </div>
     )
 }

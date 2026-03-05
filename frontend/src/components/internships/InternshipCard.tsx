@@ -1,5 +1,5 @@
 import React, { memo } from 'react'
-import { MapPin, Clock, IndianRupee, TrendingUp, ExternalLink, ArrowRight } from 'lucide-react'
+import { MapPin, Clock, IndianRupee, Target, ExternalLink, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { Internship } from '@/types'
 import { useState } from 'react'
@@ -88,7 +88,7 @@ const InternshipCard = memo(({
                                 {/* Match Badge */}
                                 {(internship.matchScore || 0) >= 70 && (
                                     <div className="inline-flex items-center gap-0.5 bg-green-50 text-green-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-green-100 w-fit">
-                                        <TrendingUp size={10} />
+                                        <Target size={10} />
                                         {internship.matchScore}%
                                     </div>
                                 )}

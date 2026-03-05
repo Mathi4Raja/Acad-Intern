@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Search, Filter, SlidersHorizontal, X } from 'lucide-react'
+import { Select } from '@/components/ui/Select'
 import { cn } from '@/lib/utils'
 
 interface FilterBarProps {
@@ -121,15 +122,13 @@ export function FilterBar({ onSearch, onFilterChange, className }: FilterBarProp
                         {/* Status */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
-                            <select
+                            <Select
                                 value={filters.status}
-                                onChange={(e) => handleFilterUpdate('status', e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20"
-                            >
-                                {statusOptions.map(opt => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
+                                onChange={(val) => handleFilterUpdate('status', val)}
+                                options={statusOptions}
+                                className="!bg-gray-50 border-gray-200"
+                                isFullWidth
+                            />
                         </div>
 
                         {/* Match Score */}
@@ -151,15 +150,13 @@ export function FilterBar({ onSearch, onFilterChange, className }: FilterBarProp
                         {/* Date Range */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1.5">Applied Date</label>
-                            <select
+                            <Select
                                 value={filters.dateRange}
-                                onChange={(e) => handleFilterUpdate('dateRange', e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20"
-                            >
-                                {dateRangeOptions.map(opt => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
+                                onChange={(val) => handleFilterUpdate('dateRange', val)}
+                                options={dateRangeOptions}
+                                className="!bg-gray-50 border-gray-200"
+                                isFullWidth
+                            />
                         </div>
                     </div>
                 </div>

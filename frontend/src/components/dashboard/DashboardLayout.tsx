@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { TopNavbar, NavbarVariant } from "./TopNavbar";
 import { Sidebar, NavigationItem, SidebarVariant } from "./Sidebar";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, LogOut } from "lucide-react";
 import type { Notification } from "@/components/notifications/NotificationItem";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -51,8 +52,22 @@ export function DashboardLayout({
     disableContentPadding = false,
 }: DashboardLayoutProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     const closeSidebar = () => setSidebarOpen(false);
+
+    const handleLogoutClick = () => {
+        if (onLogout) {
+            setShowLogoutConfirm(true);
+        }
+    };
+
+    const handleConfirmLogout = () => {
+        setShowLogoutConfirm(false);
+        if (onLogout) {
+            onLogout();
+        }
+    };
 
     return (
         <div className={disableContentPadding ? "fixed inset-0 overflow-hidden bg-gray-50 flex flex-col" : "min-h-screen bg-gray-50"}>
@@ -72,7 +87,7 @@ export function DashboardLayout({
                 notifications={notifications}
                 onMarkNotificationAsRead={onMarkNotificationAsRead}
                 onMarkAllNotificationsAsRead={onMarkAllNotificationsAsRead}
-                onLogout={onLogout}
+                onLogout={handleLogoutClick}
             />
 
             {variant === "admin" ? (
@@ -84,19 +99,19 @@ export function DashboardLayout({
                         isOpen={sidebarOpen}
                         onClose={closeSidebar}
                         quickStats={quickStats}
-                        onLogout={onLogout}
+                        onLogout={handleLogoutClick}
                     />
 
                     {/* Overlay for mobile */}
                     {sidebarOpen && (
                         <div
-                            className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden top-11 sm:top-12"
+                            className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden top-14 sm:top-16"
                             onClick={closeSidebar}
                         />
                     )}
 
                     {/* Main Content */}
-                    <main className={`lg:ml-56 pt-11 sm:pt-12 min-h-screen ${disableContentPadding ? '' : ''}`}>
+                    <main className={`lg:ml-56 pt-16 sm:pt-20 min-h-screen ${disableContentPadding ? '' : ''}`}>
                         {children}
                     </main>
                 </>
@@ -109,26 +124,37 @@ export function DashboardLayout({
                         isOpen={sidebarOpen}
                         onClose={closeSidebar}
                         quickStats={quickStats}
-                        onLogout={onLogout}
+                        onLogout={handleLogoutClick}
                     />
 
                     {/* Overlay for mobile */}
                     {sidebarOpen && (
                         <div
-                            className="fixed inset-0 bg-black bg-opacity-50 z-[45] lg:hidden mt-11 sm:mt-12"
+                            className="fixed inset-0 bg-black bg-opacity-50 z-[45] lg:hidden mt-14 sm:mt-16"
                             onClick={closeSidebar}
                         />
                     )}
 
                     {/* Main Content */}
                     <main className={disableContentPadding
-                        ? "absolute inset-0 top-11 sm:top-12 lg:left-64 overflow-hidden flex flex-col bg-white"
-                        : "pt-11 sm:pt-12 lg:ml-64 min-h-screen"
+                        ? "absolute inset-0 top-14 sm:top-16 lg:left-64 overflow-hidden flex flex-col bg-white"
+                        : "pt-16 sm:pt-20 lg:ml-64 min-h-screen"
                     }>
                         {children}
                     </main>
                 </>
             )}
+
+            <ConfirmDialog
+                isOpen={showLogoutConfirm}
+                onClose={() => setShowLogoutConfirm(false)}
+                onConfirm={handleConfirmLogout}
+                title="Confirm Logout"
+                message="Are you sure you want to log out of your account? Any unsaved changes may be lost."
+                confirmLabel="Log Out"
+                cancelLabel="Stay Logged In"
+                type="danger"
+            />
         </div>
     );
 }

@@ -84,6 +84,7 @@ export const messageApi = {
 
 export const companyApi = {
     getProfile: (id: string) => api.get(`/companies/${id}`),
+    getCompanies: (params?: any) => api.get('/companies', { params }),
 };
 
 export const studentApi = {

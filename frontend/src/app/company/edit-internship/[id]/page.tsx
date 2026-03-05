@@ -5,6 +5,8 @@ import { useRouter, useParams } from 'next/navigation'
 import { IndianRupee, Calendar, MapPin, Clock, Users, Briefcase, FileText, Plus, X, Loader2, Edit, ArrowLeft } from 'lucide-react'
 import api from '@/lib/api'
 import { useAlert } from '@/components/ui/AlertProvider'
+import { INTERNSHIP_MODES } from '@/lib/constants'
+import { Select } from '@/components/ui/Select'
 import Link from 'next/link'
 
 export default function EditInternship() {
@@ -279,17 +281,13 @@ export default function EditInternship() {
                                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                                     Work Mode *
                                 </label>
-                                <select
-                                    name="mode"
+                                <Select
                                     value={formData.mode}
-                                    onChange={handleInputChange}
-                                    className="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                                    required
-                                >
-                                    <option value="remote">Remote</option>
-                                    <option value="hybrid">Hybrid</option>
-                                    <option value="onsite">On-site</option>
-                                </select>
+                                    onChange={(val) => setFormData({ ...formData, mode: val })}
+                                    options={INTERNSHIP_MODES.map(mode => ({ value: mode.value, label: mode.label }))}
+                                    className="w-full"
+                                    isFullWidth
+                                />
                             </div>
                         </div>
 

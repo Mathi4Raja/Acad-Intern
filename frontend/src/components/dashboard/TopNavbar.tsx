@@ -73,16 +73,16 @@ export function TopNavbar({
 
     return (
         <nav className={cn("bg-white/80 backdrop-blur-md border-b border-gray-100 fixed w-full top-0 z-[60] shadow-sm shadow-gray-200/20", className)}>
-            <div className="px-3 sm:px-5">
-                <div className="flex items-center justify-between h-11 sm:h-12">
+            <div className="px-3 sm:px-6">
+                <div className="flex items-center justify-between h-14 sm:h-16">
                     {/* Left Side: Menu + Logo */}
                     <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                         <button
                             onClick={onToggleSidebar}
-                            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+                            className="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors flex-shrink-0"
                             aria-label="Toggle menu"
                         >
-                            {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
+                            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
                         </button>
 
                         <Link
@@ -92,11 +92,11 @@ export function TopNavbar({
                             {LogoIcon && (
                                 <LogoIcon
                                     className={cn("flex-shrink-0 transition-transform group-hover/logo:scale-110", logoIconColor ?? config.labelColor)}
-                                    size={18}
+                                    size={20}
                                 />
                             )}
                             <div className="flex items-baseline gap-1 min-w-0">
-                                <span className="text-sm sm:text-base font-black text-gray-900 truncate tracking-tight">
+                                <span className="text-base sm:text-lg font-black text-gray-900 truncate tracking-tight">
                                     {settings?.siteName || "AcadIntern"}
                                 </span>
                                 {variant === "admin" ? (
@@ -125,19 +125,19 @@ export function TopNavbar({
                         ) : notificationHref ? (
                             <Link
                                 href={notificationHref}
-                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors relative"
+                                className="p-2 rounded-xl hover:bg-gray-100 transition-colors relative"
                             >
-                                <Bell size={16} className="text-gray-500" />
+                                <Bell size={20} className="text-gray-500" />
                                 {unreadCount > 0 && (
-                                    <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
+                                    <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full" />
                                 )}
                             </Link>
                         ) : (
                             <button
-                                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors relative"
+                                className="p-2 rounded-xl hover:bg-gray-100 transition-colors relative"
                                 aria-label="Notifications"
                             >
-                                <Bell size={16} className="text-gray-500" />
+                                <Bell size={20} className="text-gray-500" />
                             </button>
                         )}
 
@@ -179,10 +179,10 @@ export function TopNavbar({
                         {(variant === "admin" || onLogout) && (
                             <button
                                 onClick={onLogout}
-                                className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+                                className="p-2 rounded-xl hover:bg-red-50 text-red-500 transition-colors"
                                 aria-label="Logout"
                             >
-                                <LogOut size={16} />
+                                <LogOut size={20} />
                             </button>
                         )}
                     </div>

@@ -9,6 +9,7 @@ import { ScheduleInterviewModal } from '@/components/company/ScheduleInterviewMo
 import { StatCard } from '@/components/analytics/StatCard'
 import { useAlert } from '@/components/ui/AlertProvider'
 import StudentAvatar from '@/components/common/StudentAvatar'
+import { Select } from '@/components/ui/Select'
 
 interface Application {
   id: string
@@ -372,19 +373,17 @@ export default function Applications() {
             />
           </div>
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <select
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" size={20} />
+            <Select
               value={filterInternship}
-              onChange={(e) => setFilterInternship(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none appearance-none bg-white cursor-pointer pr-10"
-            >
-              <option value="all">All Internships</option>
-              {internships.map(internship => (
-                <option key={internship.id} value={internship.id}>
-                  {internship.title}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setFilterInternship(val)}
+              options={[
+                { value: 'all', label: 'All Internships' },
+                ...internships.map(internship => ({ value: internship.id, label: internship.title }))
+              ]}
+              className="w-full !pl-10"
+              isFullWidth
+            />
           </div>
         </div>
 

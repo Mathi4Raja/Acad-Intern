@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal, Loader2, Briefcase, Sparkles } from 'lucide-
 import { cn } from '@/lib/utils'
 import api from '@/lib/api'
 import InternshipCard from '@/components/internships/InternshipCard'
+import { Select } from '@/components/ui/Select'
 import { Internship } from '@/types'
 
 export default function InternshipsPage() {
@@ -140,7 +141,7 @@ export default function InternshipsPage() {
           <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-purple-100/50 rounded-full blur-2xl group-hover:bg-purple-100/80 transition-colors" />
         </div>
 
-        <div className="relative w-full md:w-96 group">
+        <div className="relative w-full md:w-96 group z-40">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={16} />
           <input
             type="text"
@@ -153,91 +154,91 @@ export default function InternshipsPage() {
       </div>
 
       {/* Results Header: Count | Filters | Sort */}
-      <div className="flex items-center justify-between gap-4 mb-6 bg-white/70 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-gray-100/50 shadow-sm overflow-x-auto custom-scrollbar no-scrollbar">
-        <div className="flex items-center gap-4 flex-shrink-0">
-          <p className="text-xs font-black text-gray-400 uppercase tracking-widest hidden sm:block">Results</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 bg-white/70 backdrop-blur-md px-4 py-4 sm:py-2.5 rounded-2xl border border-gray-100/50 shadow-sm relative z-20">
+        {/* Descriptive Count Summary */}
+        <div className="flex items-center gap-3">
           {loading ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
           ) : (
-            <span className="font-black text-gray-900 text-sm">{internships.length}</span>
+            <div className="flex items-center gap-2">
+              <span className="font-black text-gray-900 text-lg sm:text-sm">{internships.length}</span>
+              <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest">Internships found</span>
+            </div>
           )}
+        </div>
 
-          <div className="h-4 w-[1px] bg-gray-200" />
+        {/* Action Controls & Filters Area */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          {/* Main Controls row - stacks on mobile */}
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-100/50 relative z-30">
+            <div className="flex items-center gap-1.5 flex-1 sm:flex-none">
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 hidden lg:block">Sort By</span>
+              <Select
+                value={sortBy}
+                onChange={(val) => setSortBy(val as 'match' | 'recent' | 'stipend')}
+                options={[
+                  { value: 'match', label: 'Match' },
+                  { value: 'recent', label: 'Recent' },
+                  { value: 'stipend', label: 'Stipend' }
+                ]}
+                className="h-9 sm:h-8 !px-3 w-full sm:w-32 bg-gray-50 uppercase tracking-tight"
+              />
+            </div>
 
-          {/* Inline Filters */}
-          {showFilters ? (
-            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
-              <select
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                "flex items-center justify-center gap-2 h-9 sm:h-8 px-4 sm:px-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
+                showFilters
+                  ? 'bg-primary text-white shadow-lg shadow-primary/20 border-primary'
+                  : 'bg-white border border-gray-100 text-gray-400 hover:text-gray-900 hover:border-gray-200'
+              )}
+            >
+              <SlidersHorizontal size={14} />
+              <span className="font-black">Filters</span>
+            </button>
+          </div>
+
+          {/* Active Filter Grid - only shown when filters are active */}
+          {showFilters && (
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto animate-in fade-in slide-in-from-top-2 duration-300 border-t sm:border-t-0 pt-3 sm:pt-0 border-gray-100/50 relative z-20">
+              <Select
                 value={filters.mode}
-                onChange={(e) => setFilters({ ...filters, mode: e.target.value })}
-                className="h-8 px-3 bg-gray-50 border border-gray-100 rounded-lg text-[10px] font-black uppercase tracking-tight text-gray-700 outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer hover:bg-gray-100"
-              >
-                <option value="">All Modes</option>
-                <option value="remote">Remote</option>
-                <option value="hybrid">Hybrid</option>
-                <option value="onsite">On-site</option>
-              </select>
+                onChange={(val) => setFilters({ ...filters, mode: val })}
+                options={modeOptions}
+                className="h-8 !px-3 flex-1 min-w-[110px] sm:w-32 bg-gray-50 uppercase tracking-tight"
+                placeholder="All Modes"
+              />
 
-              <select
+              <Select
                 value={filters.maxDuration}
-                onChange={(e) => setFilters({ ...filters, maxDuration: e.target.value })}
-                className="h-8 px-3 bg-gray-50 border border-gray-100 rounded-lg text-[10px] font-black uppercase tracking-tight text-gray-700 outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer hover:bg-gray-100"
-              >
-                <option value="">Duration</option>
-                <option value="8">≤ 8w</option>
-                <option value="12">≤ 12w</option>
-                <option value="16">≤ 16w</option>
-              </select>
+                onChange={(val) => setFilters({ ...filters, maxDuration: val })}
+                options={[
+                  { value: '', label: 'Duration' },
+                  { value: '8', label: '≤ 8w' },
+                  { value: '12', label: '≤ 12w' },
+                  { value: '16', label: '≤ 16w' }
+                ]}
+                className="h-8 !px-3 flex-1 min-w-[110px] sm:w-32 bg-gray-50 uppercase tracking-tight"
+                placeholder="Duration"
+              />
 
-              <div className="relative">
+              <div className="relative flex-1 min-w-[110px]">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-gray-400">₹</span>
                 <input
                   type="number"
                   value={filters.minStipend}
                   onChange={(e) => setFilters({ ...filters, minStipend: e.target.value })}
                   placeholder="Min stipend"
-                  className="h-8 w-24 pl-5 pr-2 bg-gray-50 border border-gray-100 rounded-lg text-[10px] font-black uppercase tracking-tight text-gray-700 outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-gray-400"
+                  className="h-8 w-full pl-5 pr-2 bg-gray-50 border border-gray-100 rounded-lg text-[10px] font-black uppercase tracking-tight text-gray-700 outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-gray-400"
                 />
               </div>
             </div>
-          ) : (
-            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest italic">Filters inactive</p>
           )}
-        </div>
 
-        <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-          <div className="flex items-center gap-1.5 mr-1">
-            <span className="text-[9px] font-black uppercase tracking-widest text-gray-400 hidden lg:block">Sort By</span>
-            <div className="relative">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'match' | 'recent' | 'stipend')}
-                className="appearance-none pl-3 pr-8 h-8 bg-gray-50 border border-gray-100 rounded-lg text-[10px] font-black uppercase tracking-tight text-gray-700 outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer hover:bg-gray-100"
-              >
-                <option value="match">Match</option>
-                <option value="recent">Recent</option>
-                <option value="stipend">Stipend</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="h-4 w-[1px] bg-gray-200 mr-1" />
-
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={cn(
-              "flex items-center justify-center gap-2 h-8 px-3 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
-              showFilters
-                ? 'bg-primary text-white shadow-lg shadow-primary/20 border-primary'
-                : 'bg-white border border-gray-100 text-gray-400 hover:text-gray-900 hover:border-gray-200'
-            )}
-          >
-            <SlidersHorizontal size={12} />
-            <span>Filters</span>
-          </button>
+          {!showFilters && (
+            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest italic hidden sm:block">Filters inactive</p>
+          )}
         </div>
       </div>
 

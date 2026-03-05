@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { LucideIcon, TrendingUp, TrendingDown, Minus, ChevronRight } from 'lucide-react'
+import { LucideIcon, ArrowUp, ArrowDown, Minus, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
 interface StatCardProps {
@@ -38,9 +38,9 @@ export function StatCard({
         if (!change) return null
         switch (change.type) {
             case 'increase':
-                return <TrendingUp className="w-4 h-4 text-green-500" />
+                return <ArrowUp className="w-4 h-4 text-green-500" />
             case 'decrease':
-                return <TrendingDown className="w-4 h-4 text-red-500" />
+                return <ArrowDown className="w-4 h-4 text-red-500" />
             default:
                 return <Minus className="w-4 h-4 text-gray-400" />
         }

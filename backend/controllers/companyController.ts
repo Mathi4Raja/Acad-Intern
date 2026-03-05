@@ -213,6 +213,47 @@ export const verifyCin = async (req: AuthRequest, res: Response, next: NextFunct
     }
 };
 
+// @desc    Get all company profiles (with search and filters)
+// @route   GET /api/companies
+// @access  Private (Authenticated)
+export const getCompanies = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { search, industry, location, verified } = req.query;
+        let query: any = {};
+
+        // Search by company name
+        if (search) {
+            query.companyName = { $regex: search, $options: 'i' };
+        }
+
+        // Filter by industry
+        if (industry) {
+            query.industry = { $regex: industry, $options: 'i' };
+        }
+
+        // Filter by location
+        if (location) {
+            query.location = { $regex: location, $options: 'i' };
+        }
+
+        // Filter by verified status
+        if (verified === 'true') {
+            query.verified = true;
+        }
+
+        // Find companies with pagination (limit 100 for now)
+        const companies = await Company.find(query).limit(100).sort({ verified: -1, companyName: 1 });
+
+        res.status(200).json({
+            success: true,
+            count: companies.length,
+            data: companies
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // @desc    Get company profile by ID
 // @route   GET /api/companies/:id
 // @access  Private (Authenticated)

@@ -25,6 +25,7 @@ const flexibleUrl = z.string().trim().transform((val) => {
 
 // Schema
 const profileSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters").optional(),
     department: z.string().optional(),
     semester: z.number().min(1).max(8).optional(),
     skills: z.array(z.string()).optional(),
@@ -82,6 +83,12 @@ export const getMe = async (req: AuthRequest, res: Response, next: NextFunction)
 export const updateProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         const validatedData = profileSchema.parse(req.body);
+
+        // Update the user's name if provided
+        if (validatedData.name) {
+            const User = require('../models/User').default;
+            await User.findByIdAndUpdate(req.user?._id, { name: validatedData.name });
+        }
 
         let profile = await StudentProfile.findOne({ userId: req.user?._id });
 

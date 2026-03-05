@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useAlert } from '@/components/ui/AlertProvider'
 import { cn } from '@/lib/utils'
 import { INDUSTRIES, COMPANY_SIZES } from '@/lib/constants'
+import { Select } from '@/components/ui/Select'
 import { ensureHttps } from '@/lib/formatters'
 
 interface CompanyProfile {
@@ -702,17 +703,16 @@ export default function CompanyProfilePage() {
           <div className="space-y-1 ml-1 cursor-default">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Industry</label>
             {isEditing ? (
-              <select
-                name="industry"
+              <Select
                 value={formData.industry}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-              >
-                <option value="">Select Industry</option>
-                {INDUSTRIES.map(ind => (
-                  <option key={ind} value={ind}>{ind}</option>
-                ))}
-              </select>
+                onChange={(val) => setFormData({ ...formData, industry: val })}
+                options={[
+                  { value: '', label: 'Select Industry' },
+                  ...INDUSTRIES.map(ind => ({ value: ind, label: ind }))
+                ]}
+                className="w-full"
+                isFullWidth
+              />
             ) : (
               <div className="flex items-center gap-3 py-1">
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
@@ -796,17 +796,16 @@ export default function CompanyProfilePage() {
           <div className="space-y-1 ml-1 cursor-default">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Company Size</label>
             {isEditing ? (
-              <select
-                name="companySize"
+              <Select
                 value={formData.companySize}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-              >
-                <option value="">Select Size</option>
-                {COMPANY_SIZES.map(size => (
-                  <option key={size} value={size}>{size}</option>
-                ))}
-              </select>
+                onChange={(val) => setFormData({ ...formData, companySize: val })}
+                options={[
+                  { value: '', label: 'Select Size' },
+                  ...COMPANY_SIZES.map(size => ({ value: size, label: size }))
+                ]}
+                className="w-full"
+                isFullWidth
+              />
             ) : (
               <div className="flex items-center gap-3 py-1">
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Search, Filter, AlertCircle, CheckCircle, XCircle, Eye, Clock, User, Briefcase, MessageSquare, Loader2, X, Flag, Shield, Activity, Calendar, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { Select } from '@/components/ui/Select'
 import api from '@/lib/api'
 import { useAdminStats } from '@/lib/AdminStatsContext'
 import ChatInterface from '@/components/messages/ChatInterface'
@@ -592,16 +593,18 @@ export default function ManageReports() {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-2">
                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Suspend Period</label>
-                          <select
-                            value={suspensionDuration}
-                            onChange={(e) => setSuspensionDuration(Number(e.target.value))}
-                            className="w-full h-11 px-4 bg-white border border-gray-100 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-primary/10 outline-none transition-all appearance-none"
-                          >
-                            <option value={7}>7 Days</option>
-                            <option value={15}>15 Days</option>
-                            <option value={30}>30 Days</option>
-                            <option value={90}>90 Days</option>
-                          </select>
+                          <Select
+                            value={suspensionDuration.toString()}
+                            onChange={(val: string) => setSuspensionDuration(Number(val))}
+                            options={[
+                              { value: '7', label: '7 Days' },
+                              { value: '15', label: '15 Days' },
+                              { value: '30', label: '30 Days' },
+                              { value: '90', label: '90 Days' }
+                            ]}
+                            className="w-full h-11 !bg-white"
+                            isFullWidth
+                          />
                         </div>
 
                         <div className="flex items-end">

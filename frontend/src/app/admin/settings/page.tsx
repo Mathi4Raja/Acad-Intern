@@ -9,6 +9,8 @@ import { toast } from 'react-hot-toast'
 import { Loader2 } from 'lucide-react'
 import { useSettings } from '@/lib/SettingsContext'
 
+import { Select } from '@/components/ui/Select'
+
 // Define types for settings
 interface SettingsData {
   siteName: string;
@@ -726,20 +728,22 @@ function AdminSettingsContent() {
                         <p className="text-[11px] text-gray-500 font-bold">Global scheduling reference</p>
                       </div>
                     </div>
-                    <select
+                    <Select
                       value={settings.timezone || 'Asia/Kolkata'}
-                      onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-                      className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-[11px] font-bold text-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none cursor-pointer"
-                    >
-                      <option value="UTC">UTC (Universal)</option>
-                      <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
-                      <option value="America/New_York">America/New_York (EST)</option>
-                      <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
-                      <option value="Europe/London">Europe/London (GMT)</option>
-                      <option value="Europe/Paris">Europe/Paris (CET)</option>
-                      <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
-                      <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
-                    </select>
+                      onChange={(val: string) => setSettings({ ...settings, timezone: val })}
+                      options={[
+                        { value: 'UTC', label: 'UTC (Universal)' },
+                        { value: 'Asia/Kolkata', label: 'Asia/Kolkata (IST)' },
+                        { value: 'America/New_York', label: 'America/New_York (EST)' },
+                        { value: 'America/Los_Angeles', label: 'America/Los_Angeles (PST)' },
+                        { value: 'Europe/London', label: 'Europe/London (GMT)' },
+                        { value: 'Europe/Paris', label: 'Europe/Paris (CET)' },
+                        { value: 'Asia/Tokyo', label: 'Asia/Tokyo (JST)' },
+                        { value: 'Australia/Sydney', label: 'Australia/Sydney (AEST)' }
+                      ]}
+                      className="min-w-[180px] !bg-gray-50 text-[11px]"
+                      isFullWidth
+                    />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -953,15 +957,17 @@ function AdminSettingsContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Backup Schedule</label>
-                      <select
+                      <Select
                         value={settings.backupFrequency}
-                        onChange={(e) => setSettings({ ...settings, backupFrequency: e.target.value })}
-                        className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-bold text-gray-900 text-[13px]"
-                      >
-                        <option value="hourly">Every Hour</option>
-                        <option value="daily">Daily Snapshot</option>
-                        <option value="weekly">Weekly Routine</option>
-                      </select>
+                        onChange={(val: string) => setSettings({ ...settings, backupFrequency: val })}
+                        options={[
+                          { value: 'hourly', label: 'Every Hour' },
+                          { value: 'daily', label: 'Daily Snapshot' },
+                          { value: 'weekly', label: 'Weekly Routine' }
+                        ]}
+                        className="w-full !bg-gray-50"
+                        isFullWidth
+                      />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Retention Period</label>

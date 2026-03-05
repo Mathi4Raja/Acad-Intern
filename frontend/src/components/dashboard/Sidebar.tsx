@@ -63,7 +63,7 @@ export function Sidebar({
                 "fixed inset-y-0 left-0 z-50 w-56 bg-white border-r border-gray-100 transform transition-all duration-300 ease-in-out shadow-[1px_0_10px_rgba(0,0,0,0.02)]",
                 // All variants stay fixed
                 isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-                variant === "admin" ? "top-11 sm:top-12 bottom-0 w-56" : "mt-11 sm:mt-12",
+                variant === "admin" ? "top-14 sm:top-16 bottom-0 w-60" : "mt-14 sm:mt-16 w-60",
                 className
             )}
         >
@@ -94,7 +94,7 @@ export function Sidebar({
                                 href={item.href}
                                 onClick={onClose}
                                 className={cn(
-                                    "group flex items-center gap-3 px-3 py-1.5 rounded-xl transition-all duration-300 text-[13px] font-bold tracking-tight",
+                                    "group flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-300 text-[14px] font-bold tracking-tight",
                                     isActive ? styles.active : styles.hover
                                 )}
                             >
@@ -103,7 +103,7 @@ export function Sidebar({
                                     isActive && variant === "admin" ? "bg-white shadow-sm" : "bg-transparent",
                                     isActive ? styles.icon : ""
                                 )}>
-                                    <Icon size={16} strokeWidth={isActive ? 2.5 : 2} className="flex-shrink-0" />
+                                    <Icon size={20} strokeWidth={isActive ? 2.5 : 2} className="flex-shrink-0" />
                                 </div>
                                 <span className={cn(isActive ? "translate-x-0.5" : "")}>{item.name}</span>
                             </Link>
@@ -141,20 +141,17 @@ export function Sidebar({
                     </div>
                 )}
 
-                {/* Logout Button */}
-                {onLogout && (
-                    <div className="p-2 bg-white">
-                        <button
-                            onClick={onLogout}
-                            className="flex items-center gap-3 px-4 py-2 w-full text-[11px] font-black uppercase tracking-widest text-gray-400 hover:bg-red-50 hover:text-red-600 hover:shadow-sm rounded-xl transition-all duration-300 group/logout"
-                        >
-                            <div className="p-1 rounded-lg group-hover/logout:bg-white group-hover/logout:shadow-sm transition-all">
-                                <LogOut size={16} />
-                            </div>
-                            Logout
-                        </button>
-                    </div>
-                )}
+                <div className="p-2 bg-white mt-auto">
+                    <button
+                        onClick={onLogout}
+                        className="flex items-center gap-3 px-3.5 py-2.5 w-full text-[11px] font-black uppercase tracking-widest text-gray-500 hover:bg-red-50 hover:text-red-600 hover:shadow-sm rounded-2xl transition-all duration-300 group/logout"
+                    >
+                        <div className="p-1 rounded-lg group-hover/logout:bg-white group-hover/logout:shadow-sm transition-all">
+                            <LogOut size={18} />
+                        </div>
+                        Logout
+                    </button>
+                </div>
             </div>
         </aside>
     );

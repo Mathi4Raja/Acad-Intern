@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { Eye, EyeOff, Mail, Lock, User, Building2, GraduationCap, ArrowRight, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
 import { LegalModals } from '@/components/signup/LegalModals'
 
 type UserRole = 'student' | 'company' | null
@@ -10,6 +11,7 @@ type UserRole = 'student' | 'company' | null
 import { useAuth } from '@/lib/AuthContext'
 import { useSettings } from '@/lib/SettingsContext'
 import { DEPARTMENTS } from '@/lib/constants'
+import { Select } from '@/components/ui/Select'
 import { ensureHttps } from '@/lib/formatters'
 
 declare global {
@@ -29,6 +31,8 @@ declare global {
 export default function SignupPage() {
   const { signup, googleLogin } = useAuth()
   const { settings } = useSettings()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect')
   const [selectedRole, setSelectedRole] = useState<UserRole>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -202,7 +206,7 @@ export default function SignupPage() {
             </div>
             <div className="pt-4 flex flex-col gap-3">
               <Link
-                href="/login"
+                href={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-sm text-white bg-primary hover:bg-primary/90 transition-all shadow-md hover:shadow-lg"
               >
                 Sign in to Existing Account
@@ -308,7 +312,10 @@ export default function SignupPage() {
               {/* Login link */}
               <div className="text-center pt-3">
                 <span className="text-sm text-gray-500">Already have an account? </span>
-                <Link href="/login" className="text-sm font-semibold text-primary hover:text-primary/80 underline-offset-2 hover:underline">
+                <Link
+                  href={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
+                  className="text-sm font-semibold text-primary hover:text-primary/80 underline-offset-2 hover:underline"
+                >
                   Login
                 </Link>
               </div>
@@ -405,32 +412,30 @@ export default function SignupPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Department</label>
-                      <select
-                        required
+                      <Select
                         value={formData.department}
-                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                        className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-sm bg-gray-50/50 focus:bg-white"
-                      >
-                        <option value="">Select Department</option>
-                        {DEPARTMENTS.map(dept => (
-                          <option key={dept} value={dept}>{dept}</option>
-                        ))}
-                      </select>
+                        onChange={(val) => setFormData({ ...formData, department: val })}
+                        options={[
+                          { value: '', label: 'Select Department' },
+                          ...DEPARTMENTS.map(dept => ({ value: dept, label: dept }))
+                        ]}
+                        className="w-full !bg-gray-50/50"
+                        isFullWidth
+                      />
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Current Semester</label>
-                      <select
-                        required
+                      <Select
                         value={formData.semester}
-                        onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                        className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all text-sm bg-gray-50/50 focus:bg-white"
-                      >
-                        <option value="">Select Semester</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                          <option key={sem} value={sem}>Semester {sem}</option>
-                        ))}
-                      </select>
+                        onChange={(val) => setFormData({ ...formData, semester: val })}
+                        options={[
+                          { value: '', label: 'Select Semester' },
+                          ...[1, 2, 3, 4, 5, 6, 7, 8].map(sem => ({ value: sem.toString(), label: `Semester ${sem}` }))
+                        ]}
+                        className="w-full !bg-gray-50/50"
+                        isFullWidth
+                      />
                     </div>
                   </div>
                 )}
@@ -606,7 +611,10 @@ export default function SignupPage() {
                 {/* Login Link */}
                 <div className="text-center pt-3 border-t border-gray-100">
                   <span className="text-sm text-gray-500">Already have an account? </span>
-                  <Link href="/login" className="text-sm font-semibold hover:underline underline-offset-2 text-blue-600">
+                  <Link
+                    href={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''}`}
+                    className="text-sm font-semibold hover:underline underline-offset-2 text-blue-600"
+                  >
                     Login
                   </Link>
                 </div>

@@ -7,11 +7,13 @@ import { StudentAvatar } from '@/components/common'
 import { useAuth } from '@/lib/AuthContext'
 import toast from 'react-hot-toast'
 import { DEPARTMENTS } from '@/lib/constants'
+import { Select } from '@/components/ui/Select'
 import { ensureHttps } from '@/lib/formatters'
 
 interface StudentProfile {
   _id?: string
   userId: string
+  name?: string
   department?: string
   semester?: number | null
   phone?: string
@@ -27,7 +29,7 @@ interface StudentProfile {
 }
 
 export default function StudentProfile() {
-  const { user, deleteAccount } = useAuth()
+  const { user, deleteAccount, refreshUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false) // Renamed from 'saving'
@@ -56,6 +58,7 @@ export default function StudentProfile() {
 
   const [profile, setProfile] = useState<StudentProfile>({
     userId: '',
+    name: '',
     department: '',
     semester: null,
     phone: '',
@@ -129,6 +132,13 @@ export default function StudentProfile() {
     }
   }, [bannerFile])
 
+  // Sync profile.name when user object is loaded or changed
+  useEffect(() => {
+    if (user?.name && !profile.name && !isEditing) {
+      setProfile(prev => ({ ...prev, name: user.name }));
+    }
+  }, [user, profile.name, isEditing]);
+
   const fetchProfile = async () => {
     try {
       setLoading(true)
@@ -155,6 +165,7 @@ export default function StudentProfile() {
         setProfile({
           _id: data._id,
           userId: data.userId,
+          name: user?.name || '', // Initialize with current user name
           department: mappedDept,
           semester: data.semester || null,
           phone: data.phone || '',
@@ -315,6 +326,10 @@ export default function StudentProfile() {
           linkedIn: data.linkedIn || '',
           github: data.github || ''
         }) // Update local profile state with all values from backend
+
+        // Refresh global auth user state to reflect name change immediately
+        await refreshUser()
+
         setResumeVersion(Date.now()) // Update version to bust cache
         setSuccessMessage('Profile saved successfully!')
         setTimeout(() => setSuccessMessage(null), 3000)
@@ -373,8 +388,8 @@ export default function StudentProfile() {
     if (user?.name) completed++
     if (user?.email) completed++
     if (profile.department) completed++
-    if (profile.semester) completed++
-    if (profile.cgpa) completed++
+    if (profile.semester !== null && profile.semester !== undefined) completed++
+    if (profile.cgpa !== null && profile.cgpa !== undefined) completed++
     if (profile.bio) completed++
     if (skills.length > 0) completed++
     if (profile.resumeUrl) completed++
@@ -497,9 +512,9 @@ export default function StudentProfile() {
             <div className="w-full h-full bg-gradient-to-r from-blue-500 to-indigo-600 opacity-20" />
           )}
 
-          {/* Banner Upload Button */}
+          {/* Banner Upload Actions */}
           {isEditing && (
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 flex items-center gap-2">
               <input
                 type="file"
                 id="banner-upload"
@@ -512,11 +527,26 @@ export default function StudentProfile() {
               />
               <label
                 htmlFor="banner-upload"
-                className="flex items-center justify-center p-2.5 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white cursor-pointer transition-all shadow-sm"
+                className="flex items-center justify-center p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white cursor-pointer transition-all shadow-sm"
+                title="Change Banner"
               >
-                {/* Camera icon always visible, no loading spinner needed here since it's instant preview */}
-                <Camera size={18} />
+                <Edit2 size={16} />
               </label>
+
+              {(profile.bannerImage || bannerPreview) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBannerFile(null);
+                    setBannerPreview(null);
+                    setProfile(prev => ({ ...prev, bannerImage: null }));
+                  }}
+                  className="flex items-center justify-center p-2.5 bg-rose-500/80 hover:bg-rose-600/90 backdrop-blur-md rounded-full text-white transition-all shadow-sm"
+                  title="Remove Banner"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -538,10 +568,10 @@ export default function StudentProfile() {
               {isEditing && (
                 <label
                   htmlFor="pfp-upload"
-                  className="absolute inset-0 bg-black/30 hover:bg-black/50 flex items-center justify-center cursor-pointer opacity-0 group-hover/pfp:opacity-100 transition-opacity"
+                  className="absolute bottom-0 right-0 p-1.5 bg-gray-900 border-2 border-white hover:bg-black rounded-full cursor-pointer shadow-sm transition-all z-20 group-hover/pfp:scale-105"
+                  title="Change Profile Picture"
                 >
-                  {/* Camera icon always visible, no loading spinner needed here since it's instant preview */}
-                  <Camera size={24} className="text-white" />
+                  <Edit2 size={14} className="text-white" />
                 </label>
               )}
               <input
@@ -558,7 +588,7 @@ export default function StudentProfile() {
 
             {/* Name and Info */}
             <div className="flex-1 pt-2 sm:pt-0">
-              <h1 className="text-xl sm:text-2xl font-black text-gray-900">{user?.name}</h1>
+              <h1 className="text-xl sm:text-2xl font-black text-gray-900">{profile.name || user?.name}</h1>
               <div className="flex flex-wrap gap-2 text-sm text-gray-500 mt-1">
                 {profile.department && <span className="flex items-center gap-1"><FileText size={14} /> {profile.department}</span>}
                 {/* {profile.location && <span className="flex items-center gap-1"><MapPin size={14}/> {profile.location}</span>} */}
@@ -632,16 +662,17 @@ export default function StudentProfile() {
             {isEditing ? (
               <input
                 type="text"
-                value={user?.name || ''}
-                disabled
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                value={profile.name || ''}
+                onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                placeholder="Enter your full name"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               />
             ) : (
               <div className="flex items-center gap-3 py-1">
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
                   <User size={14} />
                 </div>
-                <span className="text-sm font-semibold text-gray-800">{user?.name || 'Not provided'}</span>
+                <span className="text-sm font-semibold text-gray-800">{profile.name || user?.name || 'Not provided'}</span>
               </div>
             )}
           </div>
@@ -697,16 +728,35 @@ export default function StudentProfile() {
           <div className="space-y-1 ml-1 cursor-default">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Department</label>
             {isEditing ? (
-              <select
-                value={profile.department}
-                onChange={(e) => setProfile({ ...profile, department: e.target.value })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              >
-                <option value="">Select</option>
-                {DEPARTMENTS.map((dept) => (
-                  <option key={dept} value={dept}>{dept}</option>
-                ))}
-              </select>
+              <div className="space-y-2">
+                <Select
+                  value={(profile.department === 'Other' || (!DEPARTMENTS.includes(profile.department || '') && profile.department !== '' && profile.department !== undefined)) ? 'Custom_Other' : profile.department || ''}
+                  onChange={(val) => {
+                    if (val === 'Custom_Other') {
+                      // Set to 'Other' as a flag to show the text input, but keep the actual custom value if it exists
+                      setProfile({ ...profile, department: DEPARTMENTS.includes(profile.department || '') ? 'Other' : profile.department });
+                    } else {
+                      setProfile({ ...profile, department: val });
+                    }
+                  }}
+                  options={[
+                    { value: '', label: 'Select' },
+                    ...DEPARTMENTS.filter(d => d !== 'Other').map(dept => ({ value: dept, label: dept })),
+                    { value: 'Custom_Other', label: 'Other' }
+                  ]}
+                  className="w-full"
+                  isFullWidth
+                />
+                {(!DEPARTMENTS.includes(profile.department || '') && profile.department !== '' && profile.department !== undefined) || (profile.department === 'Other') ? (
+                  <input
+                    type="text"
+                    value={profile.department === 'Other' ? '' : profile.department || ''}
+                    onChange={(e) => setProfile({ ...profile, department: e.target.value })}
+                    placeholder="Enter your department"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent mt-2"
+                  />
+                ) : null}
+              </div>
             ) : (
               <div className="flex items-center gap-3 py-1">
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
@@ -719,16 +769,16 @@ export default function StudentProfile() {
           <div className="space-y-1 ml-1 cursor-default">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Semester</label>
             {isEditing ? (
-              <select
-                value={profile.semester || ''}
-                onChange={(e) => setProfile({ ...profile, semester: parseInt(e.target.value) || null })}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              >
-                <option value="">Select</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
-                  <option key={sem} value={sem}>Sem {sem}</option>
-                ))}
-              </select>
+              <Select
+                value={profile.semester?.toString() || ''}
+                onChange={(val) => setProfile({ ...profile, semester: parseInt(val) || null })}
+                options={[
+                  { value: '', label: 'Select' },
+                  ...[1, 2, 3, 4, 5, 6, 7, 8].map(sem => ({ value: sem.toString(), label: `Sem ${sem}` }))
+                ]}
+                className="w-full"
+                isFullWidth
+              />
             ) : (
               <div className="flex items-center gap-3 py-1">
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
@@ -761,13 +811,13 @@ export default function StudentProfile() {
             )}
           </div>
           <div className="space-y-1 ml-1 cursor-default">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Hours Required</label>
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Months Required</label>
             {isEditing ? (
               <input
                 type="number"
                 value={profile.hoursRequired || ''}
                 onChange={(e) => setProfile({ ...profile, hoursRequired: parseInt(e.target.value) || undefined })}
-                placeholder="120"
+                placeholder="6"
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             ) : (
@@ -775,7 +825,7 @@ export default function StudentProfile() {
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
                   <Target size={14} />
                 </div>
-                <span className="text-sm font-semibold text-gray-800">{profile.hoursRequired ? `${profile.hoursRequired} Hours` : 'Not provided'}</span>
+                <span className="text-sm font-semibold text-gray-800">{profile.hoursRequired ? `${profile.hoursRequired} Months` : 'Not provided'}</span>
               </div>
             )}
           </div>
@@ -817,23 +867,23 @@ export default function StudentProfile() {
           {skills.map((skill) => (
             <span
               key={skill}
-              className="group flex items-center gap-1.5 bg-indigo-50 text-indigo-600 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full sm:rounded-xl text-xs sm:text-xs font-bold border border-indigo-100/50 shadow-sm transition-all hover:bg-indigo-100 hover:shadow-md"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200 shadow-sm transition-all hover:bg-blue-100/50 leading-none min-h-[32px]"
             >
-              {skill}
+              <span className="translate-y-[1px]">{skill}</span>
               {isEditing && (
                 <button
                   onClick={() => handleRemoveSkill(skill)}
-                  className="text-indigo-400 hover:text-rose-500 transition-colors"
+                  className="text-blue-400 hover:text-white hover:bg-rose-500 p-0.5 rounded-sm transition-colors flex items-center justify-center"
                   aria-label={`Remove ${skill}`}
                 >
-                  <X size={14} className="sm:w-3 sm:h-3" strokeWidth={3} />
+                  <X size={14} strokeWidth={2.5} />
                 </button>
               )}
             </span>
           ))}
           {skills.length === 0 && (
-            <div className="w-full py-4 text-center border-2 border-dashed border-gray-100 rounded-2xl">
-              <p className="text-gray-400 text-xs font-medium">No skills added yet</p>
+            <div className="w-full py-6 text-center border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50">
+              <p className="text-gray-500 text-sm font-medium">No skills added yet</p>
             </div>
           )}
         </div>
@@ -846,17 +896,17 @@ export default function StudentProfile() {
                 onChange={(e) => setNewSkill(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
                 placeholder="Type a skill (e.g. React)"
-                className="w-full pl-4 pr-10 py-3 text-sm border border-gray-200 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm outline-none"
+                className="w-full pl-4 pr-10 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300">
-                < Award size={16} />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <Award size={16} />
               </div>
             </div>
             <button
               onClick={handleAddSkill}
-              className="bg-primary text-white px-6 py-3 rounded-2xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 text-sm font-black shadow-lg shadow-primary/10 active:scale-95"
+              className="bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-black transition-all flex items-center justify-center gap-2 text-sm font-semibold shadow-sm sm:w-auto w-full"
             >
-              <Plus size={18} strokeWidth={3} />
+              <Plus size={16} strokeWidth={2.5} />
               Add Skill
             </button>
           </div>
