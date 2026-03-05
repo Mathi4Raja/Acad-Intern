@@ -90,11 +90,11 @@ export default function AboutPage() {
               <Sparkles className="w-4 h-4" />
               <span>Redefining Talent Discovery</span>
             </div>
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-4 sm:mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
+            <h1 className="text-2xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-3 sm:mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
               Connecting ambition with <br className="hidden sm:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">real opportunities.</span>
             </h1>
-            <p className="text-base md:text-xl text-muted-foreground leading-relaxed animate-fade-in max-w-2xl mx-auto" style={{ animationDelay: '200ms' }}>
+            <p className="text-sm md:text-xl text-muted-foreground leading-relaxed animate-fade-in max-w-2xl mx-auto" style={{ animationDelay: '200ms' }}>
               {publicSettings?.siteDescription || `${publicSettings?.siteName || 'AcadIntern'} is engineered to bridge the gap between academic environment and the modern workforce through transparent, high-quality internships.`}
             </p>
           </div>
@@ -131,8 +131,8 @@ export default function AboutPage() {
             <div className="absolute top-0 right-0 p-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
             <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
               <div className="relative z-10">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-6">Built for the next generation of builders.</h2>
-                <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                <h2 className="text-xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 md:mb-6">Built for the next generation of builders.</h2>
+                <p className="text-sm md:text-lg text-gray-600 mb-4 md:mb-6 leading-relaxed">
                   We believe that every driven student deserves access to quality work environments that accelerate their trajectory. The traditional hiring process is fragmented, opaque, and slow. We fix that.
                 </p>
                 <div className="space-y-4 pt-4 border-t border-gray-200/60">
@@ -145,7 +145,7 @@ export default function AboutPage() {
                       <div className="mt-1 bg-green-500/10 p-1 rounded-full">
                         <CheckCircle className="w-4 h-4 text-green-600" />
                       </div>
-                      <span className="text-gray-700 font-medium">{item}</span>
+                      <span className="text-sm md:text-base text-gray-700 font-medium">{item}</span>
                     </div>
                   ))}
                 </div>
@@ -163,8 +163,8 @@ export default function AboutPage() {
         {/* Features Bento Grid */}
         <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-10 md:mb-24">
           <div className="mb-6 md:mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">Why {publicSettings?.siteName || 'AcadIntern'}?</h2>
-            <p className="text-lg text-gray-600 mt-2">The architecture of your career foundation.</p>
+            <h2 className="text-2xl md:text-4xl font-bold text-gray-900">Why {publicSettings?.siteName || 'AcadIntern'}?</h2>
+            <p className="text-sm md:text-lg text-gray-600 mt-2">The architecture of your career foundation.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6 lg:grid-rows-2">
@@ -175,8 +175,8 @@ export default function AboutPage() {
                   <div className="w-12 h-12 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center mb-6 group-hover:bg-primary group-hover:text-white transition-colors duration-300 text-gray-700">
                     <feature.icon className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600 leading-relaxed font-medium">
+                  <h3 className="text-base md:text-xl font-bold text-gray-900 mb-2 md:mb-3">{feature.title}</h3>
+                  <p className="text-sm md:text-base text-gray-600 leading-relaxed font-medium">
                     {feature.description}
                   </p>
                 </div>
@@ -189,8 +189,8 @@ export default function AboutPage() {
         <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-10 md:mb-24">
           <div className="grid lg:grid-cols-12 gap-8 md:gap-12">
             <div className="lg:col-span-5">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Our DNA</h2>
-              <p className="text-base md:text-lg text-gray-600 mb-6 md:mb-10 leading-relaxed">
+              <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4 md:mb-6">Our DNA</h2>
+              <p className="text-xs md:text-lg text-gray-600 mb-5 md:mb-10 leading-relaxed">
                 A set of non-negotiable principles that dictate how we operate, build product, and interact with our community.
               </p>
 
@@ -201,8 +201,8 @@ export default function AboutPage() {
                       0{i + 1}
                     </div>
                     <div>
-                      <h4 className="text-lg font-bold text-gray-900 mb-1">{v.title}</h4>
-                      <p className="text-gray-600">{v.description}</p>
+                      <h4 className="text-sm md:text-lg font-bold text-gray-900 mb-1">{v.title}</h4>
+                      <p className="text-xs md:text-base text-gray-600">{v.description}</p>
                     </div>
                   </div>
                 ))}
@@ -211,7 +211,7 @@ export default function AboutPage() {
 
             <div className="lg:col-span-7 bg-gray-900 rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-              <h2 className="text-2xl md:text-3xl font-bold mb-10 relative z-10">The Architect</h2>
+              <h2 className="text-lg md:text-3xl font-bold mb-6 md:mb-10 relative z-10">The Architect</h2>
 
               <div className="grid sm:grid-cols-2 gap-6 relative z-10">
                 {team.map((member, i) => (
@@ -219,9 +219,9 @@ export default function AboutPage() {
                     <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center text-2xl font-black mb-5 shadow-lg">
                       {member.initials}
                     </div>
-                    <h3 className="text-xl font-bold mb-1">{member.name}</h3>
-                    <p className="text-primary-foreground/70 text-sm font-medium mb-3 tracking-wide uppercase">{member.role}</p>
-                    <p className="text-gray-400 text-sm leading-relaxed">{member.description}</p>
+                    <h3 className="text-base md:text-xl font-bold mb-1">{member.name}</h3>
+                    <p className="text-primary-foreground/70 text-xs font-medium mb-2 tracking-wide uppercase">{member.role}</p>
+                    <p className="text-gray-400 text-xs md:text-sm leading-relaxed">{member.description}</p>
                   </div>
                 ))}
               </div>
@@ -234,8 +234,8 @@ export default function AboutPage() {
           <div className="bg-gradient-to-r from-primary to-accent rounded-3xl p-8 md:p-16 text-center text-white relative overflow-hidden shadow-xl shadow-primary/20">
             <div className="absolute inset-0 mix-blend-overlay opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
             <Rocket className="w-10 h-10 md:w-16 md:h-16 mx-auto mb-4 md:mb-6 opacity-80 mix-blend-overlay" />
-            <h2 className="text-2xl md:text-5xl font-bold mb-3 md:mb-4 relative z-10">Ready to accelerate?</h2>
-            <p className="text-sm md:text-lg text-white/80 max-w-xl mx-auto mb-6 md:mb-10 relative z-10 font-medium">
+            <h2 className="text-xl md:text-5xl font-bold mb-2 md:mb-4 relative z-10">Ready to accelerate?</h2>
+            <p className="text-xs md:text-lg text-white/80 max-w-xl mx-auto mb-5 md:mb-10 relative z-10 font-medium">
               Join thousands of ambitious students securing exactly the right opportunities to start their careers.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
