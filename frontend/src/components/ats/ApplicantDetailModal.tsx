@@ -130,13 +130,13 @@ export function ApplicantDetailModal({ applicant, isOpen, onClose, onStatusChang
                             <Clock size={14} className="inline mr-1" />
                             Applied {applicant.appliedDate}
                         </p>
-                        <div className="flex flex-wrap items-center justify-center gap-2 order-1 sm:order-2">
+                        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center gap-2 order-1 sm:order-2">
                             {statusActions.filter(a => a.status !== applicant.status).slice(0, 3).map(action => (
                                 <button
                                     key={action.status}
                                     onClick={() => onStatusChange?.(action.status)}
                                     className={cn(
-                                        'flex items-center gap-1.5 px-3 py-2 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap',
+                                        'flex items-center justify-center gap-1.5 px-3 py-2 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap',
                                         action.color
                                     )}
                                 >

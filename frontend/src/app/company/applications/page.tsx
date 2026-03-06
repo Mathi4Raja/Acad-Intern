@@ -528,13 +528,13 @@ export default function Applications() {
                       </div>
                     )}
 
-                    <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-50">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 pt-2 border-t border-gray-50">
                       {/* Primary Actions Based on Status */}
                       {app.status === 'pending' && (
                         <button
                           onClick={() => handleUpdateStatus(app.id, 'shortlisted')}
                           disabled={actionLoading === app.id}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
                         >
                           {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
                           Shortlist
@@ -545,7 +545,7 @@ export default function Applications() {
                         <button
                           onClick={() => openInterviewModal(app.id)}
                           disabled={actionLoading === app.id}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
                         >
                           <Calendar size={14} />
                           Schedule Interview
@@ -556,7 +556,7 @@ export default function Applications() {
                         <button
                           onClick={() => handleUpdateStatus(app.id, 'assessment_completed')}
                           disabled={actionLoading === app.id}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
                         >
                           {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
                           Mark Assessment Done
@@ -567,7 +567,7 @@ export default function Applications() {
                         <button
                           onClick={() => handleUpdateStatus(app.id, 'accepted')}
                           disabled={actionLoading === app.id}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm"
                         >
                           {actionLoading === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
                           Accept
@@ -578,7 +578,7 @@ export default function Applications() {
                         <button
                           onClick={() => handleUpdateStatus(app.id, 'rejected')}
                           disabled={actionLoading === app.id}
-                          className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm rounded-lg"
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 transition-colors text-xs font-semibold disabled:opacity-50 shadow-sm rounded-lg"
                         >
                           <XCircle size={14} />
                           Reject
@@ -587,7 +587,7 @@ export default function Applications() {
 
                       <button
                         onClick={() => router.push(`/company/messages?applicationId=${app.id}`)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 border border-indigo-200 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors text-xs font-bold rounded-lg ml-auto"
+                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-indigo-200 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors text-xs font-bold rounded-lg"
                       >
                         <MessageCircle size={14} />
                         Message
@@ -595,7 +595,7 @@ export default function Applications() {
 
                       <button
                         onClick={() => handleViewProfile(app.studentId)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 border border-blue-200 text-blue-700 bg-blue-50/50 rounded-lg hover:bg-blue-100 transition-colors text-xs font-medium"
+                        className="flex items-center justify-center gap-1.5 px-3 py-1.5 border border-blue-200 text-blue-700 bg-blue-50/50 rounded-lg hover:bg-blue-100 transition-colors text-xs font-medium"
                       >
                         <User size={14} />
                         View Profile

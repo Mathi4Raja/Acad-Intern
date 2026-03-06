@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { LucideIcon, ArrowUp, ArrowDown, Minus, ChevronRight } from 'lucide-react'
+import { LucideIcon, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 
 interface StatCardProps {
@@ -34,18 +34,6 @@ export function StatCard({
     onClick,
     active
 }: StatCardProps) {
-    const getTrendIcon = () => {
-        if (!change) return null
-        switch (change.type) {
-            case 'increase':
-                return <ArrowUp className="w-4 h-4 text-green-500" />
-            case 'decrease':
-                return <ArrowDown className="w-4 h-4 text-red-500" />
-            default:
-                return <Minus className="w-4 h-4 text-gray-400" />
-        }
-    }
-
     const getTrendColor = () => {
         if (!change) return ''
         switch (change.type) {
@@ -79,8 +67,8 @@ export function StatCard({
                 </div>
                 {change ? (
                     <div className={cn('flex items-center gap-0.5 text-[9px] font-medium', getTrendColor())}>
-                        {getTrendIcon()}
                         <span>
+                            {change.type === 'increase' ? '+' : change.type === 'decrease' ? '-' : ''}
                             {change.value > 100
                                 ? '100%+'
                                 : `${change.value}%`}

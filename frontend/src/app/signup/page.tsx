@@ -573,13 +573,13 @@ export default function SignupPage() {
                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 transition-transform active:scale-95 shrink-0"
                   />
                   <span className="text-[13px] leading-[1.4] text-gray-600 font-bold flex-1">
-                    I agree to the{' '}
+                    I Agree to the{' '}
                     <button
                       type="button"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegalModal({ isOpen: true, type: 'terms' }); }}
                       className="text-blue-600 hover:underline transition-colors font-black"
                     >
-                      Terms of Service
+                      Terms
                     </button>
                     {' '}and{' '}
                     <button
@@ -587,7 +587,7 @@ export default function SignupPage() {
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); setLegalModal({ isOpen: true, type: 'privacy' }); }}
                       className="text-blue-600 hover:underline transition-colors font-black"
                     >
-                      Privacy Policy
+                      Policies
                     </button>
                   </span>
                 </label>

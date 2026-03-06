@@ -100,7 +100,7 @@ export function TestimonialsSection() {
                                 <button
                                     key={i}
                                     onClick={() => setCurrent(i)}
-                                    className={`h-1.5 rounded-full transition-all duration-300 ${i === current ? "w-6 bg-primary" : "w-1.5 bg-border"
+                                    className={`!p-0 !m-0 !min-w-0 !min-h-0 !border-none appearance-none !rounded-full transition-all duration-300 ${i === current ? "!w-4 !h-2 bg-primary" : "!w-2 !h-2 bg-gray-300"
                                         }`}
                                     aria-label={`Go to testimonial ${i + 1}`}
                                 />
