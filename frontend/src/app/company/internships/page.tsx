@@ -216,13 +216,7 @@ export default function ManageInternships() {
           <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-amber-100/50 rounded-full blur-2xl group-hover:bg-amber-100/80 transition-colors" />
         </div>
 
-        <Link
-          href="/company/post-internship"
-          className="inline-flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
-        >
-          <PlusCircle size={18} />
-          Post New Internship
-        </Link>
+
       </div>
 
       {/* Stats Summary */}
@@ -399,13 +393,7 @@ export default function ManageInternships() {
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-1">No internships found</h3>
             <p className="text-gray-500 text-sm mb-6">Get started by creating your first internship posting.</p>
-            <Link
-              href="/company/post-internship"
-              className="inline-flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-xl hover:bg-primary/90 transition-colors font-medium shadow-sm hover:shadow-md"
-            >
-              <PlusCircle size={20} />
-              Post New Internship
-            </Link>
+
           </div>
         )}
       </div>

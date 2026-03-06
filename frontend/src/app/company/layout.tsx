@@ -1,7 +1,7 @@
 'use client'
 
 import { DashboardLayout } from '@/components/dashboard'
-import { Home, Briefcase, FileText, Building, BarChart3, MessageCircle } from 'lucide-react'
+import { Home, Briefcase, FileText, Building, BarChart3, MessageCircle, PlusCircle } from 'lucide-react'
 import { useAuth } from '@/lib/AuthContext'
 import { useNotifications } from '@/lib/useNotifications'
 import { usePathname, useRouter } from 'next/navigation'
@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Dashboard', href: '/company/dashboard', icon: Home },
 
   { name: 'My Internships', href: '/company/internships', icon: Briefcase },
+  { name: 'Post Internship', href: '/company/post-internship', icon: PlusCircle },
   { name: 'Applications', href: '/company/applications', icon: FileText },
   { name: 'Messages', href: '/company/messages', icon: MessageCircle },
   { name: 'Analytics', href: '/company/analytics', icon: BarChart3 },

@@ -376,15 +376,16 @@ export default function PostInternship() {
                   {formData.skills.map((skill) => (
                     <span
                       key={skill}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/20 text-primary rounded-full text-xs sm:text-sm font-medium"
+                      className="inline-flex items-center gap-1 pl-3 pr-1.5 py-1 rounded-full text-xs sm:text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200 shadow-sm transition-all hover:bg-blue-100/50"
                     >
-                      {skill}
+                      <span>{skill}</span>
                       <button
                         type="button"
                         onClick={() => removeSkill(skill)}
-                        className="hover:text-primary-900"
+                        className="text-blue-400 hover:text-white hover:bg-rose-500 p-0.5 rounded-full transition-colors flex items-center justify-center"
+                        aria-label={`Remove ${skill}`}
                       >
-                        <X size={14} />
+                        <X size={14} strokeWidth={2.5} />
                       </button>
                     </span>
                   ))}
@@ -475,8 +476,11 @@ export default function PostInternship() {
                 <h4 className="font-semibold text-gray-900 mb-1 text-sm">Required Skills</h4>
                 <div className="flex flex-wrap gap-2">
                   {formData.skills.map((skill) => (
-                    <span key={skill} className="px-3 py-1.5 bg-primary/20 text-primary rounded-full text-xs sm:text-sm font-medium">
-                      {skill}
+                    <span
+                      key={skill}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-blue-50 text-blue-700 border border-blue-200 shadow-sm transition-all hover:bg-blue-100/50"
+                    >
+                      <span>{skill}</span>
                     </span>
                   ))}
                 </div>
