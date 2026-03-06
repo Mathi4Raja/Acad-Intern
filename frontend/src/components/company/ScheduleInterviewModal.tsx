@@ -169,18 +169,18 @@ export function ScheduleInterviewModal({ isOpen, onClose, onSchedule, studentNam
                             </div>
                         </div>
 
-                        <div className="pt-2 flex items-center justify-end gap-3">
+                        <div className="pt-2 flex flex-col-reverse sm:flex-row items-center sm:justify-end gap-3">
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all"
+                                className="w-full sm:w-auto rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={loading || !date || !time || !meetingLink}
-                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-indigo-200 hover:-translate-y-0.5 transform"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-indigo-200 hover:-translate-y-0.5 transform"
                             >
                                 {loading ? (
                                     <>

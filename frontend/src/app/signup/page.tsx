@@ -213,9 +213,10 @@ export default function SignupPage() {
               </Link>
               <Link
                 href="/"
-                className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group mt-2"
               >
-                Back to Home
+                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                <span className="font-semibold text-sm">Back to Home</span>
               </Link>
             </div>
           </div>
@@ -252,15 +253,17 @@ export default function SignupPage() {
                     </span>
                   </div>
 
-                  <div className="space-y-2.5">
-                    {isGoogleLoading ? (
+                  <div className="space-y-2.5 overflow-hidden">
+                    {isGoogleLoading && (
                       <div className="w-full flex items-center justify-center gap-2 py-2.5 px-3 border border-gray-200 rounded-xl bg-gray-50 text-sm">
                         <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                         <span className="text-gray-600">Signing up...</span>
                       </div>
-                    ) : (
-                      <div ref={googleButtonContainerRef} className="w-full flex justify-center"></div>
                     )}
+                    <div
+                      ref={googleButtonContainerRef}
+                      className={`w-full flex justify-center overflow-hidden animate-in fade-in duration-500 ${isGoogleLoading ? 'hidden' : ''}`}
+                    ></div>
                     <button
                       onClick={() => setSelectedRole('student')}
                       className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-sm hover:shadow-md"

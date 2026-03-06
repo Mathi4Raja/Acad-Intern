@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import {
   Building2, Mail, Phone, MapPin, Globe, Linkedin, Twitter, Instagram,
   Edit3, Camera, Save, X, Plus, Trash2, CheckCircle2, Loader2, Verified,
-  ExternalLink, Activity, FileText, Briefcase, CheckCircle, Edit,
+  ExternalLink, Activity, FileText, Briefcase, CheckCircle, Edit, Edit2,
   AlertCircle, Shield, Info, Rocket, Gift, AlertTriangle, Building, Users, Calendar
 } from 'lucide-react'
 import api from '@/lib/api'
@@ -71,10 +71,11 @@ export default function CompanyProfilePage() {
 
   // File state for deferred upload with local preview
   const [logoFile, setLogoFile] = useState<File | null>(null)
-  const [bannerFile, setBannerFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const [logoError, setLogoError] = useState(false)
+
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const [bannerError, setBannerError] = useState(false)
 
   const [profile, setProfile] = useState<CompanyProfile | null>(null)
@@ -364,6 +365,10 @@ export default function CompanyProfilePage() {
         }
       })
     }
+    setLogoFile(null)
+    setBannerFile(null)
+    setLogoPreview(null)
+    setBannerPreview(null)
   }
 
   const handleDeleteAccount = async () => {
@@ -390,24 +395,24 @@ export default function CompanyProfilePage() {
 
   return (
     <div className="max-w-5xl mx-auto p-2 sm:p-3">
-      {/* Header with Banner & Logo */}
+      {/* Profile Header */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4 relative group">
         {/* Banner Area */}
         <div className="h-32 sm:h-48 bg-gray-100 relative">
           {(bannerPreview || profile?.banner) && !bannerError ? (
             <img
               src={bannerPreview || profile?.banner || ''}
-              alt="Banner"
+              alt="Company Banner"
               className="w-full h-full object-cover"
               onError={() => setBannerError(true)}
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-primary/10 to-secondary/10" />
+            <div className="w-full h-full bg-gradient-to-r from-primary/10 to-primary/20" />
           )}
 
-          {/* Banner Upload Button */}
+          {/* Banner Upload Actions */}
           {isEditing && (
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 flex items-center gap-2">
               <input
                 type="file"
                 id="banner-upload"
@@ -417,15 +422,30 @@ export default function CompanyProfilePage() {
               />
               <label
                 htmlFor="banner-upload"
-                className="flex items-center justify-center p-2.5 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white cursor-pointer transition-all shadow-sm"
+                className="flex items-center justify-center p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white cursor-pointer transition-all shadow-sm"
+                title="Change Banner"
               >
-                <Camera size={18} />
+                <Edit2 size={16} />
               </label>
+
+              {(bannerPreview || profile?.banner) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBannerFile(null)
+                    setBannerPreview(null)
+                    setProfile(prev => prev ? { ...prev, banner: undefined } : null)
+                  }}
+                  className="flex items-center justify-center p-2.5 bg-rose-500/80 hover:bg-rose-600/90 backdrop-blur-md rounded-full text-white transition-all shadow-sm"
+                  title="Remove Banner"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </div>
           )}
         </div>
 
-        {/* Profile Info Row */}
         <div className="px-4 sm:px-6 pb-6 relative">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end -mt-12 sm:-mt-16">
 
@@ -444,24 +464,25 @@ export default function CompanyProfilePage() {
                     {formData.companyName?.charAt(0) || 'C'}
                   </div>
                 )}
-
-                {/* Logo Upload Overlay */}
-                {isEditing && (
-                  <label
-                    htmlFor="logo-upload"
-                    className="absolute inset-0 bg-black/30 hover:bg-black/50 flex items-center justify-center cursor-pointer opacity-0 group-hover/logo:opacity-100 transition-opacity"
-                  >
-                    <Camera size={24} className="text-white" />
-                  </label>
-                )}
-                <input
-                  type="file"
-                  id="logo-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleLogoSelect}
-                />
               </div>
+
+              {/* Logo Upload Button */}
+              {isEditing && (
+                <label
+                  htmlFor="logo-upload"
+                  className="absolute bottom-0 right-0 p-1.5 bg-gray-900 border-2 border-white hover:bg-black rounded-full cursor-pointer shadow-sm transition-all z-20 group-hover/logo:scale-105"
+                  title="Change Logo"
+                >
+                  <Edit2 size={14} className="text-white" />
+                </label>
+              )}
+              <input
+                type="file"
+                id="logo-upload"
+                className="hidden"
+                accept="image/*"
+                onChange={handleLogoSelect}
+              />
             </div>
 
             {/* Company Name and Info */}
@@ -550,7 +571,7 @@ export default function CompanyProfilePage() {
               <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                 Corporate Identification Number (CIN)
               </label>
-              <div className="relative max-w-2xl">
+              <div className="flex flex-col sm:flex-row gap-3 max-w-2xl">
                 <input
                   type="text"
                   name="cin"
@@ -558,17 +579,17 @@ export default function CompanyProfilePage() {
                   onChange={handleInputChange}
                   placeholder="e.g., L74899DL1995PLC069802"
                   maxLength={21}
-                  className="w-full pl-4 pr-36 py-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono uppercase outline-none bg-gray-50/30"
+                  className="flex-1 pl-4 pr-4 py-3 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-mono uppercase outline-none bg-gray-50/30"
                 />
                 <button
                   onClick={handleVerifyCin}
                   disabled={isVerifying || !formData.cin || formData.cin.length !== 21}
-                  className="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+                  className="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm whitespace-nowrap"
                 >
                   {isVerifying ? (
                     <>
                       <Loader2 size={14} className="animate-spin" />
-                      <span>Verifying...</span>
+                      <span>Verifying CIN...</span>
                     </>
                   ) : (
                     <>
@@ -703,16 +724,36 @@ export default function CompanyProfilePage() {
           <div className="space-y-1 ml-1 cursor-default">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Industry</label>
             {isEditing ? (
-              <Select
-                value={formData.industry}
-                onChange={(val) => setFormData({ ...formData, industry: val })}
-                options={[
-                  { value: '', label: 'Select Industry' },
-                  ...INDUSTRIES.map(ind => ({ value: ind, label: ind }))
-                ]}
-                className="w-full"
-                isFullWidth
-              />
+              <div className="space-y-2">
+                <Select
+                  value={INDUSTRIES.includes(formData.industry) ? formData.industry : 'Other'}
+                  onChange={(val) => {
+                    if (val === 'Other') {
+                      setFormData({ ...formData, industry: '' })
+                    } else {
+                      setFormData({ ...formData, industry: val })
+                    }
+                  }}
+                  options={[
+                    { value: '', label: 'Select Industry' },
+                    ...INDUSTRIES.map(ind => ({ value: ind, label: ind }))
+                  ]}
+                  className="w-full"
+                  isFullWidth
+                />
+                {(!INDUSTRIES.includes(formData.industry) || formData.industry === 'Other') && (
+                  <div className="animate-in slide-in-from-top-1 duration-200">
+                    <input
+                      type="text"
+                      name="industry"
+                      value={formData.industry === 'Other' ? '' : formData.industry}
+                      onChange={handleInputChange}
+                      placeholder="Specify your industry"
+                      className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none bg-white"
+                    />
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex items-center gap-3 py-1">
                 <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">

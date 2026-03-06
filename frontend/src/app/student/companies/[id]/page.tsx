@@ -107,9 +107,10 @@ export default function CompanyProfilePage() {
                 <br />
                 <button
                     onClick={() => router.back()}
-                    className="px-8 py-3 bg-primary text-white rounded-2xl hover:bg-primary/90 transition-all font-bold shadow-xl shadow-primary/20 active:scale-95"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group mb-6"
                 >
-                    Go Back
+                    <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                    <span className="font-semibold text-sm">Go Back</span>
                 </button>
             </div>
         )
@@ -118,13 +119,12 @@ export default function CompanyProfilePage() {
     return (
         <div className="min-h-screen bg-[#fafafa]">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 pb-24">
-                {/* Ultra-Compact Breadcrumb */}
                 <button
                     onClick={() => router.back()}
-                    className="inline-flex items-center gap-1.5 text-gray-400 hover:text-primary mb-4 transition-all text-xs font-bold group"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group mb-4"
                 >
-                    <ArrowLeft size={12} className="group-hover:-translate-x-0.5 transition-transform" />
-                    Back
+                    <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                    <span className="font-semibold text-sm">Go Back</span>
                 </button>
 
                 <div className="grid lg:grid-cols-4 gap-4">
@@ -147,6 +147,14 @@ export default function CompanyProfilePage() {
 
                             {/* Info Area */}
                             <div className="px-5 sm:px-6 pb-6 relative z-30">
+                                {/* Mobile-only top-right report button */}
+                                <button
+                                    onClick={() => setIsReportModalOpen(true)}
+                                    className="absolute top-4 right-4 flex sm:hidden items-center justify-center p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95 border border-gray-100 bg-white shadow-sm z-40"
+                                    title="Report Company"
+                                >
+                                    <Flag size={12} />
+                                </button>
                                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 -mt-8 sm:-mt-10 mb-4">
                                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] bg-white p-2 shadow-lg border border-gray-50 shrink-0">
                                         <div className="w-full h-full rounded-[16px] relative overflow-hidden">
@@ -179,7 +187,7 @@ export default function CompanyProfilePage() {
                                                         {company?.verified && (
                                                             <div className="flex items-center gap-1 px-1.5 py-0.5 bg-blue-600 text-white rounded-full text-[8px] font-black tracking-widest uppercase shadow-sm">
                                                                 <CheckCircle size={7} fill="currentColor" />
-                                                                Vetted
+                                                                Verified
                                                             </div>
                                                         )}
                                                     </div>
@@ -213,10 +221,10 @@ export default function CompanyProfilePage() {
                                                     )}
                                                     <button
                                                         onClick={() => setIsReportModalOpen(true)}
-                                                        className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95 border border-gray-100 bg-white shadow-sm"
+                                                        className="hidden sm:flex items-center justify-center p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all active:scale-95 border border-gray-100 bg-white shadow-sm"
                                                         title="Report Company"
                                                     >
-                                                        <Flag size={14} />
+                                                        <Flag size={12} />
                                                     </button>
                                                 </div>
                                             </div>
@@ -389,16 +397,18 @@ export default function CompanyProfilePage() {
                             )}
 
                             {/* Trust Badge Ultra Compact */}
-                            <div className="bg-gradient-to-br from-primary/90 to-blue-700 rounded-xl p-3 text-white relative overflow-hidden shadow-md shadow-primary/10">
-                                <Building size={30} className="absolute -right-2 -bottom-2 opacity-5" />
-                                <div className="relative z-10 flex items-center gap-2.5">
-                                    <Award size={16} className="text-primary-foreground/90 shrink-0" />
-                                    <div>
-                                        <h4 className="font-black text-[11px] uppercase tracking-widest leading-none mb-1">Verified Safe</h4>
-                                        <p className="text-[10px] text-white/80 font-bold leading-tight">By Acad-Intern</p>
+                            {company?.verified && (
+                                <div className="bg-gradient-to-br from-primary/90 to-blue-700 rounded-xl p-3 text-white relative overflow-hidden shadow-md shadow-primary/10">
+                                    <Building size={30} className="absolute -right-2 -bottom-2 opacity-5" />
+                                    <div className="relative z-10 flex items-center gap-2.5">
+                                        <Award size={16} className="text-primary-foreground/90 shrink-0" />
+                                        <div>
+                                            <h4 className="font-black text-[11px] uppercase tracking-widest leading-none mb-1">Verified Safe</h4>
+                                            <p className="text-[10px] text-white/80 font-bold leading-tight">By Acad-Intern</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>

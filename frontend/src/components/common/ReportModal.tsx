@@ -233,19 +233,19 @@ export function ReportModal({
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-3 pt-1">
+                        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-1">
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={onClose}
-                                className="bg-gray-50 border-gray-200 rounded-xl h-10 px-6 text-[11px] font-black uppercase tracking-widest text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors shadow-sm"
+                                className="bg-gray-50 border-gray-200 rounded-xl h-11 sm:h-10 px-4 sm:px-6 text-[10px] sm:text-[11px] font-black uppercase tracking-wide sm:tracking-widest text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors shadow-sm"
                             >
                                 Cancel
                             </Button>
                             <Button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="bg-red-500 hover:bg-red-600 shadow-lg shadow-red-100 rounded-xl h-10 px-6 text-[11px] font-black uppercase tracking-widest text-white active:scale-95"
+                                className="bg-red-500 hover:bg-red-600 shadow-lg shadow-red-100 rounded-xl h-11 sm:h-10 px-4 sm:px-6 text-[10px] sm:text-[11px] font-black uppercase tracking-wide sm:tracking-widest text-white active:scale-95"
                             >
                                 {isSubmitting ? 'Submitting...' : 'Submit Report'}
                             </Button>

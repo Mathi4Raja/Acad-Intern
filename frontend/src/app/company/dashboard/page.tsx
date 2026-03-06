@@ -1,5 +1,5 @@
 'use client'
-import { Building2, Users, Briefcase, TrendingUp, Plus, Search, Calendar, ChevronRight, CheckCircle, LayoutDashboard } from 'lucide-react'
+import { Building2, Users, Briefcase, TrendingUp, Search, Calendar, ChevronRight, CheckCircle, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
@@ -177,13 +177,7 @@ export default function CompanyDashboard() {
           <div className="absolute -left-6 -bottom-6 w-16 h-16 bg-purple-100/50 rounded-full blur-2xl group-hover:bg-purple-100/80 transition-colors" />
         </div>
 
-        <Link
-          href="/company/post-internship"
-          className="inline-flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
-        >
-          <Plus size={18} />
-          Post Internship
-        </Link>
+
       </div>
 
       {/* Stats Grid */}
@@ -310,15 +304,7 @@ export default function CompanyDashboard() {
                 No internships posted.
               </div>
             )}
-            <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-              <Link
-                href="/company/post-internship"
-                className="w-full flex items-center justify-center gap-2 text-primary border border-primary/20 bg-white py-2.5 rounded-xl text-sm font-medium hover:bg-primary/5 transition-colors shadow-sm"
-              >
-                <Plus size={16} />
-                Create New Posting
-              </Link>
-            </div>
+
           </div>
         </div>
       </div>

@@ -66,17 +66,17 @@ export function ConfirmDialog({
                     </p>
                 </div>
 
-                <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-50 flex justify-end gap-3">
+                <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
                     <button
                         onClick={onClose}
-                        className="px-5 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 transition-all active:scale-95"
+                        className="w-full sm:w-auto px-5 py-2.5 sm:py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 bg-white border border-gray-100 rounded-xl hover:bg-gray-50 transition-all active:scale-95"
                     >
                         {cancelLabel}
                     </button>
                     <button
                         onClick={() => { onConfirm(); onClose(); }}
                         className={cn(
-                            "px-5 py-2 text-[10px] font-black uppercase tracking-widest text-white rounded-xl transition-all active:scale-95 shadow-lg shadow-gray-200",
+                            "w-full sm:w-auto px-5 py-2.5 sm:py-2 text-[10px] font-black uppercase tracking-widest text-white rounded-xl transition-all active:scale-95 shadow-lg shadow-gray-200",
                             type === 'danger' ? 'bg-red-500 hover:bg-red-600 shadow-red-200' :
                                 type === 'warning' ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-200' :
                                     'bg-primary hover:bg-primary/90 shadow-primary/20'

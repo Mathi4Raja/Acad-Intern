@@ -11,6 +11,15 @@ export default function MaintenancePage() {
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]">
             <div className="max-w-2xl w-full text-center space-y-8 p-12 bg-white/80 backdrop-blur-xl rounded-[40px] shadow-2xl shadow-slate-200/50 border border-white relative overflow-hidden group">
+                <div className="absolute top-6 left-6">
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group"
+                    >
+                        <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
+                        <span className="font-semibold text-[10px] uppercase tracking-wider">Back to Home</span>
+                    </Link>
+                </div>
 
                 {/* Decorative Background Glows */}
                 <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />

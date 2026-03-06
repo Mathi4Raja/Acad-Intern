@@ -155,9 +155,9 @@ export default function EditInternship() {
                     <div className="relative z-10 flex items-center gap-3">
                         <Link
                             href="/company/internships"
-                            className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                            className="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group"
                         >
-                            <ArrowLeft size={18} />
+                            <ArrowLeft className="w-4.5 h-4.5 transition-transform group-hover:-translate-x-1" />
                         </Link>
                         <div className="p-2 bg-amber-500 rounded-lg text-white shadow-lg shadow-amber-500/20 group-hover:scale-105 transition-transform duration-300">
                             <Edit size={20} />

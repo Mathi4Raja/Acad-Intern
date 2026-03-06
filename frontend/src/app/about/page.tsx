@@ -33,7 +33,7 @@ export default function AboutPage() {
     {
       icon: Shield,
       title: 'Verified Companies',
-      description: 'Every organization is vetted. Browse authentic reviews, hiring velocity, and workplace culture metrics safely.',
+      description: 'Every organization is verified. Browse authentic reviews, hiring velocity, and workplace culture metrics safely.',
       colSpan: 'col-span-1 md:col-span-2 lg:col-span-2'
     },
     {

@@ -82,10 +82,10 @@ export default function StudentProfilePage() {
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <button
                     onClick={() => router.back()}
-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group mb-6"
                 >
-                    <ArrowLeft size={20} />
-                    <span>Go Back</span>
+                    <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                    <span className="font-semibold text-sm">Go Back</span>
                 </button>
                 <div className="bg-red-50 text-red-600 p-6 rounded-xl text-center">
                     {error || 'Student profile not found'}
@@ -163,13 +163,6 @@ export default function StudentProfilePage() {
 
                         {/* Quick Links */}
                         <div className="flex flex-wrap gap-2 items-center">
-                            <button
-                                onClick={() => setIsReportModalOpen(true)}
-                                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all active:scale-95 border border-gray-100"
-                                title="Report Student"
-                            >
-                                <Flag size={18} />
-                            </button>
                             {profile.linkedIn && (
                                 <a
                                     href={profile.linkedIn}
@@ -202,6 +195,13 @@ export default function StudentProfilePage() {
                                     <FileText size={16} /> View Resume
                                 </a>
                             )}
+                            <button
+                                onClick={() => setIsReportModalOpen(true)}
+                                className="flex items-center justify-center p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all active:scale-95 border border-gray-100"
+                                title="Report Student"
+                            >
+                                <Flag size={12} />
+                            </button>
                         </div>
                     </div>
 

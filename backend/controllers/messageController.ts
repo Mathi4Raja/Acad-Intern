@@ -143,9 +143,26 @@ export const getConversations = async (req: AuthRequest, res: Response, next: Ne
             return timeB - timeA;
         });
 
+        // Check for reports for admin visibility unmasking
+        const Report = require('../models/Report').default;
+        const processedConversations = await Promise.all(visibleConversations.map(async (conv: any) => {
+            if (conv.lastMessage?.isDeleted) {
+                const hasActiveReport = req.user?.role === 'admin' && await Report.exists({
+                    applicationId: conv.application._id,
+                    status: { $in: ['open', 'under_review'] }
+                });
+
+                if (!(req.user?.role === 'admin' && hasActiveReport)) {
+                    conv.lastMessage.content = 'This message was deleted';
+                    conv.lastMessage.attachments = [];
+                }
+            }
+            return conv;
+        }));
+
         res.status(200).json({
             success: true,
-            data: visibleConversations
+            data: processedConversations
         });
     } catch (error) {
         next(error);
@@ -196,9 +213,32 @@ export const getMessages = async (req: AuthRequest, res: Response, next: NextFun
         }
 
         // Get messages
-        const messages = await Message.find({ applicationId })
+        let messages = await Message.find({ applicationId })
             .populate('senderId', 'name email role')
             .sort({ createdAt: 1 });
+
+        // Admin Visibility Logic: Check for active reports if admin
+        const Report = require('../models/Report').default;
+        const hasActiveReport = req.user?.role === 'admin' && await Report.exists({
+            applicationId,
+            status: { $in: ['open', 'under_review'] }
+        });
+
+        // Mask deleted messages for non-authorized users
+        messages = messages.map(msg => {
+            const msgObj = msg.toObject() as any;
+            if (msgObj.isDeleted) {
+                if (req.user?.role === 'admin' && hasActiveReport) {
+                    // Admin can see it, but mark it clearly
+                    msgObj.wasDeleted = true;
+                } else {
+                    // Standard masking
+                    msgObj.content = 'This message was deleted';
+                    msgObj.attachments = [];
+                }
+            }
+            return msgObj;
+        });
 
         // Mark messages as delivered if user is receiver
         await Message.updateMany(

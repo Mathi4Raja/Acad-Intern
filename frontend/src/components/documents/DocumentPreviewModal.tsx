@@ -26,13 +26,13 @@ export function DocumentPreviewModal({ document, isOpen, onClose, onDownload }: 
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] mx-4 overflow-hidden flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
                             <FileText className="w-5 h-5 text-primary" />
                         </div>
-                        <div>
-                            <h3 className="font-semibold text-gray-900">{document.name}</h3>
-                            <p className="text-xs text-gray-500">{document.size} • {document.uploadedAt}</p>
+                        <div className="min-w-0 flex-1">
+                            <h3 className="font-semibold text-gray-900 truncate">{document.name}</h3>
+                            <p className="text-xs text-gray-500 truncate">{document.size} • {document.uploadedAt}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">

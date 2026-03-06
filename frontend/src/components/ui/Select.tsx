@@ -55,11 +55,11 @@ export function Select({
                     type="button"
                     onClick={() => setIsOpen(!isOpen)}
                     className={cn(
-                        "w-full sm:w-48 bg-white border border-gray-200 text-gray-700 py-2.5 px-4 pr-10 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all flex items-center justify-between shadow-sm hover:border-gray-300 group",
+                        "w-full sm:min-w-[12rem] bg-white border border-gray-200 text-gray-700 py-2.5 px-4 pr-10 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all flex items-center justify-between shadow-sm hover:border-gray-300 group",
                         className
                     )}
                 >
-                    <span className="truncate">
+                    <span className="whitespace-nowrap">
                         {selectedOption ? selectedOption.label : placeholder || 'Select option'}
                     </span>
                     <Menu className={cn("w-4 h-4 text-gray-400 transition-transform duration-200", isOpen ? "rotate-180" : "rotate-90")} />
@@ -67,7 +67,7 @@ export function Select({
 
                 {isOpen && (
                     <>
-                        <div className="absolute right-0 top-full mt-2 w-full sm:w-56 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in duration-200">
+                        <div className="absolute right-0 top-full mt-2 min-w-full w-max max-w-[90vw] bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in duration-200">
                             {options.map((option) => (
                                 <button
                                     key={option.value}
@@ -83,9 +83,9 @@ export function Select({
                                             : "text-gray-600 hover:bg-gray-50 font-medium"
                                     )}
                                 >
-                                    <span className="truncate">{option.label}</span>
+                                    <span className="whitespace-nowrap pr-4">{option.label}</span>
                                     {value === option.value && (
-                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                                     )}
                                 </button>
                             ))}

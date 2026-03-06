@@ -564,7 +564,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
             onClick={() => setActiveMessageId(null)}
         >
             {/* Header */}
-            <div className="px-3 py-2 md:px-4 md:py-3 border-b border-gray-200 flex items-center gap-2 md:gap-3 bg-white shadow-sm flex-shrink-0 z-10">
+            <div className="px-3 py-2 md:px-4 md:py-3 border-b border-gray-200 flex items-center gap-2 md:gap-3 bg-white shadow-sm flex-shrink-0 relative z-[30]">
                 {/* Back Button for Mobile */}
                 {onBack && (
                     <button
@@ -723,7 +723,9 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                                     }}
                                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
                                 >
-                                    <Flag className="w-4 h-4" />
+                                    <div className="w-4 h-4 flex items-center justify-center">
+                                        <Flag size={12} />
+                                    </div>
                                     <span>Report Discussion</span>
                                 </button>
                             </div>
@@ -789,11 +791,11 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                                     style={{ animationDelay: isFirstInGroup ? `${index * 50}ms` : '0ms' }}
                                 >
                                     <div
-                                        className={`flex flex-col message-bubble ${isOwn ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-[75%]`}
+                                        className={`flex flex-col message-bubble ${isOwn ? 'items-end' : 'items-start'} max-w-[85%] md:max-w-[75%] min-w-0`}
                                         onClick={(e) => handleMessageTap(e, message._id, isOwn, (message as any).isDeleted)}
                                     >
                                         <div
-                                            className={`rounded-xl md:rounded-2xl px-3 py-1.5 md:px-4 md:py-2.5 shadow-sm relative group ${isOwn
+                                            className={`rounded-xl md:rounded-2xl px-3 py-1.5 md:px-4 md:py-2.5 shadow-sm relative group overflow-hidden ${isOwn
                                                 ? 'bg-gradient-to-br from-primary to-primary-dark text-white message-bubble-own'
                                                 : 'bg-white text-gray-800 message-bubble-other border border-gray-200'
                                                 } ${isOwn
@@ -828,9 +830,17 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                                                 </div>
                                             )}
                                             {message.content && (
-                                                <p className="text-sm leading-snug md:leading-relaxed whitespace-pre-wrap break-words">
-                                                    {message.content}
-                                                </p>
+                                                <div className="relative">
+                                                    {(message as any).wasDeleted && (
+                                                        <div className="flex items-center gap-1 mb-1 bg-red-500/10 text-red-500 text-[8px] font-black uppercase tracking-wider py-0.5 px-1.5 rounded w-max">
+                                                            <Trash2 size={8} />
+                                                            Deleted Message
+                                                        </div>
+                                                    )}
+                                                    <p className={`text-sm leading-snug md:leading-relaxed whitespace-pre-wrap break-all overflow-wrap-anywhere ${(message as any).wasDeleted ? 'opacity-70' : ''}`}>
+                                                        {message.content}
+                                                    </p>
+                                                </div>
                                             )}
 
                                             {/* Attachments */}

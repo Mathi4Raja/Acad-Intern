@@ -102,10 +102,10 @@ export default function ApplicationDetailPage() {
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <button
                     onClick={() => router.back()}
-                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group mb-6"
                 >
-                    <ArrowLeft size={20} />
-                    <span>Go Back</span>
+                    <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                    <span className="font-semibold text-sm">Go Back</span>
                 </button>
                 <div className="bg-red-50 text-red-600 p-6 rounded-xl text-center">
                     {error || 'Application not found'}
@@ -118,13 +118,12 @@ export default function ApplicationDetailPage() {
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-6">
-            {/* Back Button */}
             <button
                 onClick={() => router.back()}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group mb-6"
             >
-                <ArrowLeft size={20} />
-                <span>Go Back</span>
+                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                <span className="font-semibold text-sm">Go Back</span>
             </button>
 
             {/* Main Card */}

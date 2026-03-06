@@ -176,13 +176,15 @@ export default function InternshipDetailPage() {
     return (
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 pb-10">
             {/* Back Button */}
-            <Link
-                href="/student/internships"
-                className="inline-flex items-center gap-2 text-gray-600 hover:text-primary mb-4 transition-colors text-sm"
-            >
-                <ArrowLeft size={18} />
-                Back to Internships
-            </Link>
+            <div className="mb-6">
+                <Link
+                    href="/student/internships"
+                    className="inline-flex items-center gap-2.5 px-4 py-2 bg-white border border-gray-100 text-gray-600 rounded-xl text-sm font-bold shadow-sm hover:border-primary/20 hover:text-primary hover:shadow-md transition-all group"
+                >
+                    <ArrowLeft size={18} className="transition-transform group-hover:-translate-x-1" />
+                    Back to Internships
+                </Link>
+            </div>
 
             <div className="grid lg:grid-cols-3 gap-4">
                 {/* Main Content */}
@@ -203,13 +205,6 @@ export default function InternshipDetailPage() {
                                 </div>
                             </div>
                             <div className="flex items-start gap-2">
-                                <button
-                                    onClick={() => setIsReportModalOpen(true)}
-                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all active:scale-95 border border-gray-100"
-                                    title="Report Internship"
-                                >
-                                    <Flag size={18} />
-                                </button>
                                 <div className="hidden sm:block">
                                     <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-xl font-bold border border-gray-100 overflow-hidden shadow-sm">
                                         {internship.companyId.logo ? (
@@ -223,6 +218,13 @@ export default function InternshipDetailPage() {
                                         )}
                                     </div>
                                 </div>
+                                <button
+                                    onClick={() => setIsReportModalOpen(true)}
+                                    className="flex items-center justify-center p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all active:scale-95 border border-gray-100"
+                                    title="Report Internship"
+                                >
+                                    <Flag size={12} />
+                                </button>
                             </div>
                         </div>
 

@@ -57,10 +57,10 @@ export default function ForgotPasswordPage() {
                     <CardFooter className="flex flex-col gap-4 pt-2">
                         <Link
                             href="/login"
-                            className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors flex items-center justify-center group"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group mb-2"
                         >
-                            <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                            Back to Login
+                            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                            <span className="font-semibold text-sm">Back to Login</span>
                         </Link>
                     </CardFooter>
                 </Card>
@@ -112,10 +112,10 @@ export default function ForgotPasswordPage() {
                         </Button>
                         <Link
                             href="/login"
-                            className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors flex items-center justify-center group"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group mb-2"
                         >
-                            <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                            Back to Login
+                            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                            <span className="font-semibold text-sm">Back to Login</span>
                         </Link>
                     </CardFooter>
                 </form>

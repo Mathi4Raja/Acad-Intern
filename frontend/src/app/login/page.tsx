@@ -163,10 +163,10 @@ export default function LoginPage() {
       {/* Back Arrow - Top Left */}
       <Link
         href="/internships"
-        className="absolute top-4 left-4 p-2 rounded-full bg-white/80 hover:bg-white shadow-sm hover:shadow-md text-gray-600 hover:text-primary transition-all z-20"
-        aria-label="Back to home"
+        className="absolute top-6 left-6 inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group z-20"
       >
-        <ArrowLeft className="w-5 h-5" />
+        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+        <span className="font-semibold text-sm">Back to Internships</span>
       </Link>
 
       {/* Background decorative elements */}

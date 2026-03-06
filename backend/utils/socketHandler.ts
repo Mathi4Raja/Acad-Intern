@@ -436,10 +436,8 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
                     return;
                 }
 
-                // Soft delete
+                // Soft delete: Preserve content for admin review (only unmasked if reported)
                 message.isDeleted = true;
-                message.content = 'This message was deleted';
-                message.attachments = []; // Remove attachments
                 message.deletedAt = new Date();
                 await message.save();
 

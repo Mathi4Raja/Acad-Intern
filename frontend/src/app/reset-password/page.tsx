@@ -229,15 +229,13 @@ function ResetPasswordContent() {
                         >
                             {isLoading ? 'Resetting Password...' : 'Reset Password'}
                         </Button>
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            className="text-gray-500 hover:text-gray-900 hover:bg-transparent"
-                            onClick={() => router.push('/login')}
-                            disabled={isLoading}
+                        <Link
+                            href="/login"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 shadow-sm hover:shadow-md group mb-2"
                         >
-                            Cancel
-                        </Button>
+                            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                            <span className="font-semibold text-sm">Back to Login</span>
+                        </Link>
                     </CardFooter>
                 </form>
             </Card>
