@@ -180,9 +180,9 @@ export const verifyCin = async (req: AuthRequest, res: Response, next: NextFunct
         const verificationResult = await verifyCompanyCin(cin);
 
         if (!verificationResult.success) {
-            res.status(400).json({
+            res.status(200).json({
                 success: false,
-                message: 'CIN verification failed',
+                message: 'Automated verification unavailable at the moment. Please use the manual appeal option below.',
                 error: verificationResult.error
             });
             return;
@@ -191,6 +191,7 @@ export const verifyCin = async (req: AuthRequest, res: Response, next: NextFunct
         // Update company profile with CIN and set verified
         profile.cin = cin;
         profile.verified = true;
+        profile.verificationStatus = 'verified';
         await profile.save();
 
         res.status(200).json({
@@ -210,6 +211,62 @@ export const verifyCin = async (req: AuthRequest, res: Response, next: NextFunct
             });
             return;
         }
+        next(error);
+    }
+};
+
+const manualVerifySchema = z.object({
+    cin: z.string().min(21).max(21),
+    companyName: z.string().min(2),
+    documentUrls: z.array(z.string().url('Invalid document URL')).optional(),
+    notes: z.string().optional()
+});
+
+// @desc    Submit company verification appeal (manual)
+// @route   POST /api/companies/verify-manual
+// @access  Private (Company)
+export const submitManualVerification = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const validatedData = manualVerifySchema.parse(req.body);
+
+        // Find company profile
+        const profile = await Company.findOne({ userId: req.user?._id });
+
+        if (!profile) {
+            res.status(404).json({
+                success: false,
+                message: 'Company profile not found'
+            });
+            return;
+        }
+
+        // Update company profile to pending manual verification
+        profile.verificationStatus = 'pending';
+        profile.verificationData = {
+            cin: validatedData.cin.toUpperCase().trim(),
+            companyName: validatedData.companyName.trim(),
+            documentUrls: validatedData.documentUrls,
+            notes: validatedData.notes,
+            submittedAt: new Date()
+        };
+
+        await profile.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Manual verification request submitted successfully',
+            data: profile
+        });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            res.status(400).json({
+                success: false,
+                message: 'Validation error',
+                errors: error.errors
+            });
+            return;
+        }
+        next(error);
     }
 };
 

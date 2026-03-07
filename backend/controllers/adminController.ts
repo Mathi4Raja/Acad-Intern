@@ -19,7 +19,8 @@ const updateUserStatusSchema = z.object({
 
 const updateCompanySchema = z.object({
     status: z.enum(['active', 'pending', 'suspended']).optional(),
-    verified: z.boolean().optional()
+    verified: z.boolean().optional(),
+    verificationStatus: z.enum(['unverified', 'pending', 'verified', 'rejected']).optional()
 });
 
 const updateInternshipStatusSchema = z.object({
@@ -73,6 +74,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
             activeCompanies,
             pendingCompanies,
             suspendedCompanies,
+            pendingVerificationCompanies,
             totalInternships,
             activeInternships,
             pendingReports,
@@ -95,6 +97,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
             User.countDocuments({ role: 'company', status: 'active' }),
             User.countDocuments({ role: 'company', status: 'pending' }),
             User.countDocuments({ role: 'company', status: 'suspended' }),
+            Company.countDocuments({ verificationStatus: 'pending' }),
             Internship.countDocuments(),
             Internship.countDocuments({ status: 'active' }),
             Report.countDocuments({ status: 'open' }),
@@ -113,6 +116,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
                 stats: {
                     totalUsers, totalStudents, totalCompanies, activeUsers, pendingUsers, suspendedUsers,
                     verifiedCompanies, unverifiedCompanies, activeCompanies, pendingCompanies, suspendedCompanies,
+                    pendingVerificationCompanies,
                     totalInternships, activeInternships, pendingReports, totalReports, underReviewReports,
                     resolvedReports, highPriorityReports
                 },
@@ -288,7 +292,7 @@ export const deleteUser = async (req: AuthRequest, res: Response, next: NextFunc
 // @access  Private (Admin)
 export const getAllCompanies = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { status, verified, search } = req.query;
+        const { status, verified, verificationStatus, search } = req.query;
 
         const pipeline: any[] = [];
 
@@ -312,6 +316,10 @@ export const getAllCompanies = async (req: AuthRequest, res: Response, next: Nex
 
         if (verified !== undefined && verified !== 'all') {
             match['verified'] = verified === 'true';
+        }
+
+        if (verificationStatus && verificationStatus !== 'all') {
+            match['verificationStatus'] = verificationStatus;
         }
 
         if (search) {
@@ -372,7 +380,43 @@ export const updateCompany = async (req: AuthRequest, res: Response, next: NextF
                 await User.findByIdAndUpdate(company.userId, { status: validatedData.status });
             }
         }
-        if (validatedData.verified !== undefined) company.verified = validatedData.verified;
+        if (validatedData.verified !== undefined) {
+            company.verified = validatedData.verified;
+            if (validatedData.verified) {
+                company.verificationStatus = 'verified';
+            } else if (company.verificationStatus === 'verified') {
+                company.verificationStatus = 'unverified';
+            }
+        }
+
+        if (validatedData.verificationStatus !== undefined) {
+            company.verificationStatus = validatedData.verificationStatus;
+
+            // Sync boolean verified flag for legacy logic depending on it
+            if (validatedData.verificationStatus === 'verified') {
+                company.verified = true;
+
+                // If resolving a manual verification request, clear the documents once verified
+                if (company.verificationData && company.verificationData.documentUrls && company.verificationData.documentUrls.length > 0) {
+                    const { deleteFromR2, getKeyFromUrl } = require('../utils/r2Storage');
+
+                    await Promise.all(company.verificationData.documentUrls.map(async (url) => {
+                        const key = getKeyFromUrl(url);
+                        if (key) {
+                            try {
+                                await deleteFromR2(key);
+                            } catch (err) {
+                                console.error(`Failed to delete company verification document ${key}:`, err);
+                            }
+                        }
+                    }));
+
+                    company.verificationData.documentUrls = [];
+                }
+            } else {
+                company.verified = false;
+            }
+        }
 
         await company.save();
         res.status(200).json({ success: true, message: 'Company updated successfully', data: company });

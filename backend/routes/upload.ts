@@ -69,7 +69,7 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
         const allowResumeSetting = settings.find(s => s.key === 'allowResumeUpload');
 
         // Get metadata
-        const type = req.body.type as 'resume' | 'profilePicture' | 'bannerImage' | 'companyLogo' | 'companyBanner' || 'resume';
+        const type = req.body.type as 'resume' | 'profilePicture' | 'bannerImage' | 'companyLogo' | 'companyBanner' | 'companyRecord' || 'resume';
 
         // 1. Check if Resume Upload is Allowed
         if (type === 'resume') {
@@ -87,11 +87,11 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
         let maxSizeBytes;
         let limitLabel;
 
-        if (type === 'resume') {
-            // Priority: maxResumeSize -> maxFileSize -> Default 10MB
+        if (type === 'resume' || type === 'companyRecord') {
+            // Priority: maxResumeSize -> maxFileSize -> Default 10MB (sharing resume size limit for docs)
             const limit = maxResumeSizeSetting?.value || maxFileSizeSetting?.value || 10;
             maxSizeBytes = Number(limit) * 1024 * 1024;
-            limitLabel = `${limit}MB (Resume Limit)`;
+            limitLabel = `${limit}MB (Document Limit)`;
         } else {
             // Priority: maxFileSize -> Default 10MB
             const limit = maxFileSizeSetting?.value || 10;
@@ -131,11 +131,12 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
                 }
             }
             // Handle company file types
-            else if (type === 'companyLogo' || type === 'companyBanner') {
+            else if (type === 'companyLogo' || type === 'companyBanner' || type === 'companyRecord') {
                 const company = await Company.findOne({ userId: req.user._id });
                 if (company) {
                     if (type === 'companyLogo') existingUrl = company.logo;
                     else if (type === 'companyBanner') existingUrl = company.banner;
+                    else if (type === 'companyRecord') existingUrl = company.verificationData?.documentUrl;
 
                     // Use company name for filename if available
                     if (company.companyName) {

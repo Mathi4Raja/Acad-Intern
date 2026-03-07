@@ -27,6 +27,18 @@ const companySchema = new Schema<ICompany>({
         type: Boolean,
         default: false
     },
+    verificationStatus: {
+        type: String,
+        enum: ['unverified', 'pending', 'verified', 'rejected'],
+        default: 'unverified'
+    },
+    verificationData: {
+        cin: { type: String, trim: true },
+        companyName: { type: String, trim: true },
+        documentUrls: [{ type: String }],
+        notes: { type: String },
+        submittedAt: { type: Date }
+    },
     cin: {
         type: String,
         trim: true,

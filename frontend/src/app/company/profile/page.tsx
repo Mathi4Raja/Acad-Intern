@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import {
   Building2, Mail, Phone, MapPin, Globe, Linkedin, Twitter, Instagram,
-  Edit3, Camera, Save, X, Plus, Trash2, CheckCircle2, Loader2, Verified,
+  Edit3, Camera, Save, Upload, X, Plus, Trash2, CheckCircle2, Loader2, Verified,
   ExternalLink, Activity, FileText, Briefcase, CheckCircle, Edit, Edit2,
   AlertCircle, Shield, Info, Rocket, Gift, AlertTriangle, Building, Users, Calendar
 } from 'lucide-react'
@@ -41,6 +41,14 @@ interface CompanyProfile {
     twitter?: string;
     instagram?: string;
   };
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verificationData?: {
+    cin?: string;
+    companyName?: string;
+    documentUrls?: string[];
+    notes?: string;
+    submittedAt?: string;
+  };
 }
 
 interface McaDetails {
@@ -68,6 +76,13 @@ export default function CompanyProfilePage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Specific inputs for manual verification appeal
+  const [isAppealing, setIsAppealing] = useState(false)
+  const [appealDocuments, setAppealDocuments] = useState<File[]>([])
+  const [appealNotes, setAppealNotes] = useState('')
+  const [isSubmittingAppeal, setIsSubmittingAppeal] = useState(false)
+  const [appealSuccess, setAppealSuccess] = useState(false)
 
   // File state for deferred upload with local preview
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -329,14 +344,82 @@ export default function CompanyProfilePage() {
         setShowMcaDetails(true)
         setFormData(prev => ({ ...prev, cin: response.data.data.profile.cin }))
       } else {
-        setVerificationError(response.data.error || response.data.message || 'Verification failed')
+        // Handle failed verification (e.g. quota limit) gracefully
+        setVerificationError(response.data.message || 'Automated verification unavailable. Please use the manual appeal option below.')
+        setIsAppealing(true)
       }
     } catch (error: any) {
-      console.error('Error verifying CIN:', error)
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Verification failed. Please try again.'
-      setVerificationError(errorMsg)
+      // Suppress logging for handled verification failures (expected user flow)
+      if (error.response?.status !== 400) {
+        console.error('Unexpected error verifying CIN:', error)
+      }
+
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Verification failed due to a system error.'
+      setVerificationError(`${errorMsg} Please submit a manual appeal below.`)
+      setIsAppealing(true)
     } finally {
       setIsVerifying(false)
+    }
+  }
+
+  const handleAppealSubmit = async () => {
+    if (!formData.cin || formData.cin.length !== 21) {
+      setVerificationError('Please enter a valid 21-character CIN first')
+      return
+    }
+
+    if (appealDocuments.length === 0) {
+      setVerificationError('Please upload at least one supporting document (e.g., Certificate of Incorporation)')
+      return
+    }
+
+    const totalSize = appealDocuments.reduce((acc, file) => acc + file.size, 0)
+    if (totalSize > 10 * 1024 * 1024) {
+      setVerificationError('Collective size of documents must be less than 10MB')
+      return
+    }
+
+    try {
+      setIsSubmittingAppeal(true)
+      setVerificationError(null)
+
+      const documentUrls: string[] = []
+      // Upload documents one by one
+      for (const file of appealDocuments) {
+        const formDataUpload = new FormData()
+        formDataUpload.append('file', file)
+        formDataUpload.append('type', 'companyRecord')
+
+        const uploadResponse = await api.post('/upload', formDataUpload, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+
+        if (uploadResponse.data.success) {
+          documentUrls.push(uploadResponse.data.data.url)
+        } else {
+          throw new Error(`Failed to upload ${file.name}`)
+        }
+      }
+
+      const response = await api.post('/companies/verify-manual', {
+        cin: formData.cin,
+        companyName: formData.companyName || profile?.companyName,
+        documentUrls, // Send array of URLs
+        notes: appealNotes || undefined
+      })
+
+      if (response.data.success) {
+        setProfile(response.data.data)
+        setAppealSuccess(true)
+        setIsAppealing(false)
+      } else {
+        setVerificationError(response.data.message || 'Failed to submit appeal')
+      }
+    } catch (error: any) {
+      console.error('Error submitting appeal:', error)
+      setVerificationError(error.response?.data?.message || 'Failed to submit appeal. Please try again.')
+    } finally {
+      setIsSubmittingAppeal(false)
     }
   }
 
@@ -535,31 +618,46 @@ export default function CompanyProfilePage() {
       </div>
 
       {/* Verification Status */}
-      {profile?.verified ? (
+      {(profile?.verified || profile?.verificationStatus === 'verified') ? (
         <div className="bg-green-50 border border-green-200 rounded-xl p-2 sm:p-3 mb-3 sm:mb-4 flex items-start gap-2">
           <CheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={18} />
           <div>
             <h3 className="font-semibold text-green-900 text-xs sm:text-sm">Verified Company</h3>
             <p className="text-xs text-green-700">
-              Your company CIN has been verified via MCA.
+              Your company has been verified.
               {profile.cin && <span className="font-mono ml-1">({profile.cin})</span>}
             </p>
           </div>
         </div>
-      ) : (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-2 sm:p-3 mb-3 sm:mb-4 flex items-start gap-2">
-          <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={18} />
+      ) : profile?.verificationStatus === 'pending' ? (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-2 sm:p-3 mb-3 sm:mb-4 flex items-start gap-2">
+          <Loader2 className="text-blue-600 flex-shrink-0 mt-0.5 animate-spin" size={18} />
           <div className="flex-1">
-            <h3 className="font-semibold text-amber-900 text-xs sm:text-sm">Unverified Company</h3>
-            <p className="text-xs text-amber-700 mb-2">
-              Add your Company CIN and verify it to get a verified badge.
+            <h3 className="font-semibold text-blue-900 text-xs sm:text-sm">Verification Pending</h3>
+            <p className="text-xs text-blue-700 mb-2">
+              Your manual verification request is currently under review by our team.
+              {profile.verificationData?.submittedAt && ` Submitted on ${new Date(profile.verificationData.submittedAt).toLocaleDateString()}`}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className={`bg-${profile?.verificationStatus === 'rejected' ? 'red' : 'amber'}-50 border border-${profile?.verificationStatus === 'rejected' ? 'red' : 'amber'}-200 rounded-xl p-2 sm:p-3 mb-3 sm:mb-4 flex items-start gap-2`}>
+          <AlertCircle className={`text-${profile?.verificationStatus === 'rejected' ? 'red' : 'amber'}-600 flex-shrink-0 mt-0.5`} size={18} />
+          <div className="flex-1">
+            <h3 className={`font-semibold text-${profile?.verificationStatus === 'rejected' ? 'red' : 'amber'}-900 text-xs sm:text-sm`}>
+              {profile?.verificationStatus === 'rejected' ? 'Verification Rejected' : 'Unverified Company'}
+            </h3>
+            <p className={`text-xs text-${profile?.verificationStatus === 'rejected' ? 'red' : 'amber'}-700 mb-2`}>
+              {profile?.verificationStatus === 'rejected'
+                ? 'Your previous verification request was rejected. Please review your details and try again.'
+                : 'Add your Company CIN and verify it to get a verified badge.'}
             </p>
           </div>
         </div>
       )}
 
-      {/* CIN Verification Section - Only show for unverified companies */}
-      {!profile?.verified && (
+      {/* CIN Verification Section - Only show for unverified/rejected companies */}
+      {(!profile?.verified && profile?.verificationStatus !== 'pending') && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-3">
           <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
             <Shield size={18} />
@@ -589,29 +687,155 @@ export default function CompanyProfilePage() {
                   {isVerifying ? (
                     <>
                       <Loader2 size={14} className="animate-spin" />
-                      <span>Verifying CIN...</span>
+                      <span>Verifying...</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle size={14} />
-                      <span>Verify CIN</span>
+                      <span>Auto Verify</span>
                     </>
                   )}
                 </button>
               </div>
               <p className="text-[11px] text-gray-400 mt-2 ml-1 flex items-center gap-1.5">
                 <Info size={12} />
-                21 characters, format: L74899DL1995PLC069802
+                21 characters, format: L74899DL1995PLC069802. Auto-verification checks MCA records directly.
               </p>
             </div>
           </div>
 
           {verificationError && (
             <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-xs text-red-700 flex items-center gap-1">
+              <p className="text-xs text-red-700 flex items-center gap-1 mb-2">
                 <AlertCircle size={14} />
                 {verificationError}
               </p>
+
+              {!isAppealing && (
+                <button
+                  onClick={() => setIsAppealing(true)}
+                  className="text-xs font-medium text-red-600 hover:text-red-800 underline underline-offset-2 flex items-center gap-1"
+                >
+                  Submit a manual verification appeal
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Manual Appeal Form */}
+          {isAppealing && (
+            <div className="mt-4 p-4 border border-gray-200 rounded-xl bg-gray-50/50 animate-in fade-in zoom-in duration-300">
+              <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                <FileText size={16} className="text-gray-500" />
+                Manual Verification Appeal
+              </h3>
+
+              {appealSuccess ? (
+                <div className="bg-green-50 p-3 rounded-lg flex items-center gap-2 text-green-700 text-sm">
+                  <CheckCircle size={16} />
+                  Appeal submitted successfully! Our team will review it shortly.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-xs text-gray-500">
+                    If auto-verification failed, you can upload official company documents (like incorporation certificate) for manual review by our team. Make sure your CIN is entered correctly above.
+                  </p>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-xs font-bold text-gray-600">Supporting Documents (Required)</label>
+                      <span className="text-[10px] text-gray-400">Max 2 files, 10MB collective</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <label className={`cursor-pointer ${appealDocuments.length >= 2 ? 'opacity-50 pointer-events-none' : ''}`}>
+                          <span className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors">
+                            <Upload size={14} />
+                            {appealDocuments.length === 0 ? 'Upload Documents' : 'Add More'}
+                          </span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,.png,.jpg,.jpeg"
+                            multiple
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files || [])
+                              if (files.length > 0) {
+                                // Limit to 2 files total
+                                setAppealDocuments(prev => {
+                                  const combined = [...prev, ...files].slice(0, 2)
+                                  return combined
+                                })
+                              }
+                              // Reset input so same file can be re-selected if removed
+                              e.target.value = ''
+                            }}
+                          />
+                        </label>
+                      </div>
+
+                      {appealDocuments.length > 0 && (
+                        <div className="flex flex-col gap-1.5">
+                          {appealDocuments.map((file, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 border border-gray-200 rounded-lg group">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText size={14} className="text-gray-400 flex-shrink-0" />
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-xs font-medium text-gray-700 truncate">{file.name}</span>
+                                  <span className="text-[10px] text-gray-400">{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => setAppealDocuments(prev => prev.filter((_, i) => i !== idx))}
+                                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                title="Remove file"
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                          {appealDocuments.length > 0 && (
+                            <div className="px-1 flex justify-between items-center">
+                              <span className={`text-[10px] font-medium ${appealDocuments.reduce((acc, f) => acc + f.size, 0) > 10 * 1024 * 1024 ? 'text-red-500' : 'text-gray-500'}`}>
+                                Total: {(appealDocuments.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2)} MB / 10 MB
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-600 mb-1">Appeal Notes (Optional)</label>
+                    <textarea
+                      value={appealNotes}
+                      onChange={(e) => setAppealNotes(e.target.value)}
+                      placeholder="Please clarify any discrepancies (e.g. name change, recent incorporation)..."
+                      className="w-full text-sm p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none h-20 resize-none"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 justify-end pt-2">
+                    <button
+                      onClick={() => setIsAppealing(false)}
+                      className="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      disabled={isSubmittingAppeal}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleAppealSubmit}
+                      disabled={isSubmittingAppeal || !formData.cin || formData.cin.length !== 21 || appealDocuments.length === 0 || appealDocuments.reduce((acc, f) => acc + f.size, 0) > 10 * 1024 * 1024}
+                      className="px-4 py-2 text-xs font-bold text-white bg-gray-900 disabled:opacity-50 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2"
+                    >
+                      {isSubmittingAppeal ? (
+                        <><Loader2 size={14} className="animate-spin" /> Submitting...</>
+                      ) : 'Submit Appeal'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

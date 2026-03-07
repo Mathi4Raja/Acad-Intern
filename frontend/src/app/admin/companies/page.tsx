@@ -25,6 +25,14 @@ interface Company {
   cin?: string
   logo?: string
   verified: boolean
+  verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected'
+  verificationData?: {
+    cin?: string
+    companyName?: string
+    documentUrls?: string[]
+    notes?: string
+    submittedAt?: string
+  }
   status: 'active' | 'pending' | 'suspended'
   createdAt: string
   phone?: string
@@ -63,6 +71,7 @@ function ManageCompaniesContent() {
     total: 0,
     verified: 0,
     unverified: 0,
+    pendingVerification: 0,
     active: 0,
     pending: 0,
     suspended: 0
@@ -99,6 +108,7 @@ function ManageCompaniesContent() {
         total: s.totalCompanies,
         verified: s.verifiedCompanies || 0,
         unverified: s.unverifiedCompanies || 0,
+        pendingVerification: s.pendingVerificationCompanies || 0,
         active: s.activeCompanies || 0,
         pending: s.pendingCompanies || 0,
         suspended: s.suspendedCompanies || 0
@@ -108,7 +118,13 @@ function ManageCompaniesContent() {
       const params: any = {}
       if (debouncedSearch) params.search = debouncedSearch
       if (filterStatus !== 'all') params.status = filterStatus
-      if (filterVerified !== 'all') params.verified = filterVerified === 'verified'
+      if (filterVerified !== 'all') {
+        if (filterVerified === 'pending') {
+          params.verificationStatus = 'pending'
+        } else {
+          params.verified = filterVerified === 'verified'
+        }
+      }
 
       const companiesRes = await api.get('/admin/companies', { params })
       setCompanies(companiesRes.data.data)
@@ -126,15 +142,17 @@ function ManageCompaniesContent() {
 
   const { refreshStats } = useAdminStats()
 
-  const handleAction = (id: string, action: 'verify' | 'unverify' | 'activate' | 'suspend' | 'delete') => {
+  const handleAction = (id: string, action: 'verify' | 'unverify' | 'activate' | 'suspend' | 'delete' | 'reject') => {
     const title = action === 'delete' ? 'Delete Company' : `${action.charAt(0).toUpperCase() + action.slice(1)} Company`
-    const message = `Are you sure you want to ${action} this company?`
+    const message = action === 'verify' ? 'Are you sure you want to verify this company?' :
+      action === 'reject' ? 'Are you sure you want to reject this verification request?' :
+        `Are you sure you want to ${action} this company?`
 
     setConfirmDialog({
       isOpen: true,
       title,
       message,
-      type: action === 'delete' ? 'danger' : 'warning',
+      type: action === 'delete' || action === 'reject' ? 'danger' : 'warning',
       onConfirm: async () => {
         try {
           if (action === 'delete') {
@@ -142,8 +160,18 @@ function ManageCompaniesContent() {
             toast.success('Company deleted')
           } else {
             const updates: any = {}
-            if (action === 'verify') updates.verified = true
-            if (action === 'unverify') updates.verified = false
+            if (action === 'verify') {
+              updates.verified = true
+              updates.verificationStatus = 'verified'
+            }
+            if (action === 'reject') {
+              updates.verified = false
+              updates.verificationStatus = 'rejected'
+            }
+            if (action === 'unverify') {
+              updates.verified = false
+              updates.verificationStatus = 'unverified'
+            }
             if (action === 'activate') updates.status = 'active'
             if (action === 'suspend') updates.status = 'suspended'
             await api.put(`/admin/companies/${id}`, updates)
@@ -151,7 +179,15 @@ function ManageCompaniesContent() {
           }
           fetchData()
           refreshStats()
-          setSelectedCompanies(prev => prev.filter(cid => cid !== id))
+          if (action === 'delete') {
+            setSelectedCompanies(prev => prev.filter(cid => cid !== id))
+            setSelectedCompany(null)
+          } else if (selectedCompany && selectedCompany._id === id) {
+            // Update the selected company in the modal if it's open
+            const updatedCompanyRes = await api.get(`/admin/companies`, { params: { search: selectedCompany.companyName } })
+            const updatedCompany = updatedCompanyRes.data.data.find((c: any) => c._id === id)
+            if (updatedCompany) setSelectedCompany(updatedCompany)
+          }
         } catch (error) {
           console.error(`Error performing ${action}:`, error)
           toast.error(`Failed to ${action} company`)
@@ -273,7 +309,7 @@ function ManageCompaniesContent() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2 mb-2">
         <StatCard
           title="Total"
           value={stats.total}
@@ -302,6 +338,15 @@ function ManageCompaniesContent() {
           active={filterVerified === 'unverified'}
         />
         <StatCard
+          title="Pending Approval"
+          value={stats.pendingVerification}
+          icon={FileText}
+          iconColor="text-orange-600"
+          iconBg="bg-orange-50"
+          onClick={() => setFilterVerified('pending')}
+          active={filterVerified === 'pending'}
+        />
+        <StatCard
           title="Active"
           value={stats.active}
           icon={CheckCircle}
@@ -311,7 +356,7 @@ function ManageCompaniesContent() {
           active={filterStatus === 'active'}
         />
         <StatCard
-          title="Pending"
+          title="Login Pending"
           value={stats.pending}
           icon={Loader2}
           iconColor="text-yellow-600"
@@ -406,12 +451,17 @@ function ManageCompaniesContent() {
                     )}>
                       {(company.userId?.status || company.status)}
                     </span>
-                    {company.verified && (
+                    {company.verified ? (
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-100 flex items-center gap-1 shadow-sm">
                         <Shield size={10} fill="currentColor" className="text-white" />
                         Verified
                       </span>
-                    )}
+                    ) : company.verificationStatus === 'pending' ? (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-orange-50 text-orange-600 border border-orange-100 flex items-center gap-1 shadow-sm animate-pulse">
+                        <Loader2 size={10} className="animate-spin" />
+                        Verification Pending
+                      </span>
+                    ) : null}
                   </div>
                 </div>
 
@@ -482,7 +532,7 @@ function ManageCompaniesContent() {
                         onClick={() => handleAction(company._id, 'verify')}
                         className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-100 transition-all shadow-sm"
                       >
-                        Verify Entity
+                        {company.verificationStatus === 'pending' ? 'Review & Verify' : 'Verify Entity'}
                       </button>
                     ) : (
                       <button
@@ -639,7 +689,7 @@ function ManageCompaniesContent() {
 
                       <div>
                         <span className="block text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 md:mb-1.5">Corporate ID</span>
-                        <p className="text-[11px] md:text-[12px] font-black text-gray-900 font-mono tracking-tighttruncate">{selectedCompany?.cin || 'N/A'}</p>
+                        <p className="text-[11px] md:text-[12px] font-black text-gray-900 font-mono tracking-tighttruncate">{selectedCompany?.cin || selectedCompany?.verificationData?.cin || 'N/A'}</p>
                       </div>
                       <div>
                         <span className="block text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 md:mb-1.5">Since</span>
@@ -680,6 +730,64 @@ function ManageCompaniesContent() {
                     </div>
                   </div>
                 </div>
+
+                {/* Pending Verification Request Area */}
+                {selectedCompany?.verificationStatus === 'pending' && selectedCompany?.verificationData && (
+                  <div className="mt-4 bg-orange-50/50 border border-orange-200 rounded-2xl p-4 md:p-5 shadow-sm">
+                    <h4 className="text-[11px] md:text-[12px] font-black text-orange-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <FileText size={14} className="text-orange-600" />
+                      Pending Verification Request
+                    </h4>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <span className="block text-[9px] font-black text-orange-600/70 uppercase tracking-widest mb-1">Provided Corporate ID (CIN)</span>
+                        <p className="text-[12px] font-bold text-orange-900 font-mono">{selectedCompany.verificationData.cin || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="block text-[9px] font-black text-orange-600/70 uppercase tracking-widest mb-1">Company Name on Request</span>
+                        <p className="text-[12px] font-bold text-orange-900">{selectedCompany.verificationData.companyName || 'N/A'}</p>
+                      </div>
+                    </div>
+
+                    {selectedCompany.verificationData.notes && (
+                      <div className="mt-4">
+                        <span className="block text-[9px] font-black text-orange-600/70 uppercase tracking-widest mb-1">Company Notes</span>
+                        <p className="text-[12px] text-orange-800 bg-white/60 p-3 rounded-xl border border-orange-100/50">{selectedCompany.verificationData.notes}</p>
+                      </div>
+                    )}
+
+                    {selectedCompany.verificationData.documentUrls && selectedCompany.verificationData.documentUrls.length > 0 && (
+                      <div className="mt-4">
+                        <span className="block text-[9px] font-black text-orange-600/70 uppercase tracking-widest mb-1">Supporting Documents (Max 2)</span>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedCompany.verificationData.documentUrls.map((url, index) => (
+                            <a key={index} href={url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-orange-200 rounded-xl text-orange-700 text-xs font-bold hover:bg-orange-100 transition-colors shadow-sm">
+                              <FileText size={14} /> View Document {index + 1}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-5 flex items-center gap-2 pt-4 border-t border-orange-200/50">
+                      <button
+                        // @ts-ignore
+                        onClick={() => handleAction(selectedCompany._id, 'verify')}
+                        className="px-5 py-2 bg-orange-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-700 transition-all shadow-sm flex items-center justify-center gap-1.5"
+                      >
+                        <CheckCircle size={14} /> Approve Request
+                      </button>
+                      <button
+                        // @ts-ignore
+                        onClick={() => handleAction(selectedCompany._id, 'reject')}
+                        className="px-5 py-2 bg-white text-red-600 border border-red-200 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-50 hover:border-red-300 transition-all shadow-sm flex items-center justify-center gap-1.5"
+                      >
+                        <XCircle size={14} /> Reject Request
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="px-3 py-2.5 sm:px-4 bg-white border-t border-gray-100 flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2 shrink-0">

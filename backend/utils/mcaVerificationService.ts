@@ -136,27 +136,26 @@ async function verifyWithPrimaryApi(cin: string): Promise<VerificationResult> {
         const requestId = submitResult.request_id || taskId;
 
         // Step 2: Poll for results (with timeout)
-        const maxAttempts = 10;
-        const pollInterval = 1000; // 1 second
+        // Optimized: Let's wait 4.5 seconds BEFORE the very first GET request. 
+        // IDfy usually finishes processing in 3-5 seconds. This huge initial delay 
+        // prevents us from wasting RapidAPI quota on 'pending' responses.
+        await new Promise(resolve => setTimeout(resolve, 4500));
 
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            await new Promise(resolve => setTimeout(resolve, pollInterval));
+        // Step 2: Custom Poll Strategy requested by user: Wait 30s -> GET -> Wait 20s -> GET
 
-            const pollResponse = await fetch(`${PRIMARY_API.baseUrl}/v3/tasks?request_id=${requestId}`, {
-                method: 'GET',
-                headers: {
-                    'x-rapidapi-host': PRIMARY_API.host,
-                    'x-rapidapi-key': RAPIDAPI_KEY
-                }
-            });
+        console.log(`Initial 30s wait for ${requestId}...`);
+        await new Promise(resolve => setTimeout(resolve, 30000));
 
-            if (!pollResponse.ok) {
-                continue; // Try again
+        let pollResponse = await fetch(`${PRIMARY_API.baseUrl}/v3/tasks?request_id=${requestId}`, {
+            method: 'GET',
+            headers: {
+                'x-rapidapi-host': PRIMARY_API.host,
+                'x-rapidapi-key': RAPIDAPI_KEY
             }
+        });
 
+        if (pollResponse.ok) {
             const pollResult = await pollResponse.json() as PrimaryApiResponse;
-
-            // Check if verification completed
             if (pollResult.result && pollResult.result.extraction_output) {
                 const data = pollResult.result.extraction_output;
                 return {
@@ -178,8 +177,42 @@ async function verifyWithPrimaryApi(cin: string): Promise<VerificationResult> {
                     }
                 };
             }
+        }
 
-            // Check for error in poll result
+        console.log(`First poll missed. Secondary 20s wait for ${requestId}...`);
+        await new Promise(resolve => setTimeout(resolve, 20000));
+
+        pollResponse = await fetch(`${PRIMARY_API.baseUrl}/v3/tasks?request_id=${requestId}`, {
+            method: 'GET',
+            headers: {
+                'x-rapidapi-host': PRIMARY_API.host,
+                'x-rapidapi-key': RAPIDAPI_KEY
+            }
+        });
+
+        if (pollResponse.ok) {
+            const pollResult = await pollResponse.json() as PrimaryApiResponse;
+            if (pollResult.result && pollResult.result.extraction_output) {
+                const data = pollResult.result.extraction_output;
+                return {
+                    success: true,
+                    data: {
+                        cin: data.registration_number || cin,
+                        companyName: data.company_name || data.name || '',
+                        registrationDate: data.incorporation_date || data.date_of_registration,
+                        status: data.company_status || data.status,
+                        authorizedCapital: data.authorized_capital,
+                        paidUpCapital: data.paid_up_capital,
+                        registeredOffice: data.registered_address || data.registered_office,
+                        email: data.email,
+                        category: data.company_category,
+                        subCategory: data.company_sub_category,
+                        classOfCompany: data.class_of_company,
+                        source: 'primary',
+                        rawData: data as unknown as Record<string, unknown>
+                    }
+                };
+            }
             if (pollResult.error) {
                 return { success: false, error: pollResult.error.message || 'Primary API verification failed' };
             }

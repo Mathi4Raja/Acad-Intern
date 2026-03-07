@@ -50,6 +50,7 @@ export default function SignupPage() {
     password: '',
     confirmPassword: '',
     department: '',
+    customDepartment: '',
     semester: '',
     companyName: '',
     website: '',
@@ -87,7 +88,7 @@ export default function SignupPage() {
       };
 
       if (selectedRole === 'student') {
-        payload.department = formData.department;
+        payload.department = formData.department === 'Other' ? formData.customDepartment : formData.department;
         payload.semester = formData.semester;
       } else if (selectedRole === 'company') {
         payload.companyName = formData.companyName;
@@ -412,34 +413,51 @@ export default function SignupPage() {
 
                 {/* Student Specific Fields */}
                 {selectedRole === 'student' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Department</label>
-                      <Select
-                        value={formData.department}
-                        onChange={(val) => setFormData({ ...formData, department: val })}
-                        options={[
-                          { value: '', label: 'Select Department' },
-                          ...DEPARTMENTS.map(dept => ({ value: dept, label: dept }))
-                        ]}
-                        className="w-full !bg-gray-50/50"
-                        isFullWidth
-                      />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Department</label>
+                        <Select
+                          value={formData.department}
+                          onChange={(val) => setFormData({ ...formData, department: val })}
+                          options={[
+                            { value: '', label: 'Select Department' },
+                            ...DEPARTMENTS.map(dept => ({ value: dept, label: dept }))
+                          ]}
+                          className="w-full !bg-gray-50/50"
+                          isFullWidth
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Current Semester</label>
+                        <Select
+                          value={formData.semester}
+                          onChange={(val) => setFormData({ ...formData, semester: val })}
+                          options={[
+                            { value: '', label: 'Select Semester' },
+                            ...[1, 2, 3, 4, 5, 6, 7, 8].map(sem => ({ value: sem.toString(), label: `Semester ${sem}` }))
+                          ]}
+                          className="w-full !bg-gray-50/50"
+                          isFullWidth
+                        />
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Current Semester</label>
-                      <Select
-                        value={formData.semester}
-                        onChange={(val) => setFormData({ ...formData, semester: val })}
-                        options={[
-                          { value: '', label: 'Select Semester' },
-                          ...[1, 2, 3, 4, 5, 6, 7, 8].map(sem => ({ value: sem.toString(), label: `Semester ${sem}` }))
-                        ]}
-                        className="w-full !bg-gray-50/50"
-                        isFullWidth
-                      />
-                    </div>
+                    {/* Conditional Other Department Field */}
+                    {formData.department === 'Other' && (
+                      <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Please specify department</label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.customDepartment}
+                          onChange={(e) => setFormData({ ...formData, customDepartment: e.target.value })}
+                          className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 transition-all text-sm bg-gray-50/50 focus:bg-white focus:ring-blue-500/20 focus:border-blue-400"
+                          placeholder="Enter your department name"
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 

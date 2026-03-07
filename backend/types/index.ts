@@ -71,6 +71,14 @@ export interface ICompany extends Document {
     website?: string;
     description?: string;
     verified: boolean;
+    verificationStatus?: 'unverified' | 'pending' | 'verified' | 'rejected';
+    verificationData?: {
+        cin?: string;
+        companyName?: string;
+        documentUrls?: string[];
+        notes?: string;
+        submittedAt?: Date;
+    };
     cin?: string;
     logo?: string;
     banner?: string;

@@ -67,7 +67,7 @@ export const uploadToR2 = async (
     mimetype: string,
     username?: string,
     existingUrl?: string,
-    fileType: 'resume' | 'profilePicture' | 'bannerImage' | 'message' | 'companyLogo' | 'companyBanner' | 'report' | 'system_backup' = 'resume'
+    fileType: 'resume' | 'profilePicture' | 'bannerImage' | 'message' | 'companyLogo' | 'companyBanner' | 'companyRecord' | 'report' | 'system_backup' = 'resume'
 ): Promise<UploadResult> => {
     // Generate filename based on username for consistency
     const ext = path.extname(originalFilename).toLowerCase();
@@ -94,6 +94,9 @@ export const uploadToR2 = async (
     } else if (fileType === 'companyBanner') {
         folder = 'companies/banners';
         suffix = 'banner';
+    } else if (fileType === 'companyRecord') {
+        folder = 'companies/records';
+        suffix = 'record';
     } else if (fileType === 'report') {
         folder = 'reports/screenshots';
         suffix = 'report_evidence';
