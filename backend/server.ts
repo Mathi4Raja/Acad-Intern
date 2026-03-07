@@ -23,6 +23,7 @@ import uploadRoutes from './routes/upload';
 import messageRoutes from './routes/messages';
 import analyticsRoutes from './routes/analytics';
 import settingsRoutes from './routes/settings';
+import mobileRoutes from './routes/mobile';
 import maintenanceMiddleware from './middleware/maintenanceMiddleware';
 import { initializeSocket } from './utils/socketHandler';
 import { startScheduler } from './utils/scheduler';
@@ -106,6 +107,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/mobile', mobileRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

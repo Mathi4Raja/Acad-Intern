@@ -1,6 +1,7 @@
 import Notification from '../models/Notification';
 import SystemSetting from '../models/SystemSetting';
 import { INotification } from '../types';
+import { sendPushNotificationToUser } from './pushNotificationService';
 
 interface NotificationOptions {
     userId: any;
@@ -39,6 +40,20 @@ export const createNotification = async (options: NotificationOptions): Promise<
             message: options.message,
             payload: options.payload || {},
             read: false
+        });
+
+        const route = typeof options.payload?.route === 'string'
+            ? options.payload.route
+            : '/notifications';
+
+        await sendPushNotificationToUser(String(options.userId), {
+            title: options.title,
+            body: options.message,
+            data: {
+                notificationId: String(notification._id),
+                type: options.type,
+                route
+            }
         });
 
         return notification;

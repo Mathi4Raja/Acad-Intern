@@ -145,7 +145,8 @@ export const applyForInternship = async (req: AuthRequest, res: Response, next: 
                 payload: {
                     applicationId: application._id,
                     internshipId: internship._id,
-                    studentName: req.user?.name
+                    studentName: req.user?.name,
+                    route: '/applications'
                 }
             });
         }
@@ -297,7 +298,8 @@ export const updateApplicationStatus = async (req: AuthRequest, res: Response, n
                 internshipId: internship._id,
                 status: status,
                 companyName: company.companyName,
-                interviewDetails: status === 'interview_scheduled' ? application.interviewDetails : undefined
+                interviewDetails: status === 'interview_scheduled' ? application.interviewDetails : undefined,
+                route: '/applications'
             }
         });
 

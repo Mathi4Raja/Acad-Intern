@@ -178,6 +178,20 @@ export interface INotification extends Document {
     createdAt: Date;
 }
 
+export type MobilePlatform = 'android' | 'ios';
+
+export interface IMobileDevice extends Document {
+    userId: Types.ObjectId;
+    fcmToken: string;
+    platform: MobilePlatform;
+    deviceName?: string;
+    appVersion?: string;
+    isActive: boolean;
+    lastSeenAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 // Message status enum
 export type MessageStatus = 'sent' | 'delivered' | 'seen';
 

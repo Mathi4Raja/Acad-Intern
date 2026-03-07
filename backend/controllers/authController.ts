@@ -15,6 +15,36 @@ import { sendEmail, generateResetToken, hashToken } from '../utils/emailService'
 import { uploadToR2, isR2Configured, getKeyFromUrl, getFileStream, deleteFromR2 } from '../utils/r2Storage';
 import crypto from 'crypto';
 
+const getPrimaryFrontendUrl = (): string => {
+    return (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
+};
+
+const buildMobileLink = (path: string, token: string): string | null => {
+    const mobileBase = process.env.MOBILE_DEEP_LINK_BASE?.trim();
+    if (!mobileBase) {
+        return null;
+    }
+
+    const separator = mobileBase.includes('?') ? '&' : '?';
+    return `${mobileBase}${separator}path=${encodeURIComponent(path)}&token=${encodeURIComponent(token)}`;
+};
+
+const buildVerificationLinks = (token: string) => {
+    const webUrl = `${getPrimaryFrontendUrl()}/verify-email?token=${token}`;
+    return {
+        webUrl,
+        mobileUrl: buildMobileLink('/verify-email', token)
+    };
+};
+
+const buildResetLinks = (token: string) => {
+    const webUrl = `${getPrimaryFrontendUrl()}/reset-password?token=${token}`;
+    return {
+        webUrl,
+        mobileUrl: buildMobileLink('/reset-password', token)
+    };
+};
+
 
 // Helper for URL validation that auto-prefixes https:// if missing
 const flexibleUrl = z.string().trim().transform((val) => {
@@ -218,8 +248,7 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
 
         // Send Verification or Welcome Email
         if (requireVerification) {
-            const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
-            const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
+            const { webUrl: verificationUrl, mobileUrl: mobileVerificationUrl } = buildVerificationLinks(verificationToken);
 
             // Template Selection based on Role
             const isCompany = user.role === 'company';
@@ -257,6 +286,11 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
                 <div class="button-wrapper">
                     <a href="${verificationUrl}" class="button">${isCompany ? 'Verify Corporate Account' : 'Verify Email & Get Started'}</a>
                 </div>
+                ${mobileVerificationUrl ? `
+                <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 12px;">
+                    Prefer mobile? Open directly in the app:<br>
+                    <a href="${mobileVerificationUrl}" style="color: ${isCompany ? '#059669' : '#4f46e5'}; word-break: break-all;">${mobileVerificationUrl}</a>
+                </p>` : ''}
                 <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 24px;">
                     Or copy and paste this link into your browser:<br>
                     <a href="${verificationUrl}" style="color: ${isCompany ? '#059669' : '#4f46e5'}; word-break: break-all;">${verificationUrl}</a>
@@ -276,7 +310,7 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
                 await sendEmail({
                     to: user.email,
                     subject: `Welcome to {{SITE_NAME}}! Confirm your email address`,
-                    text: `Welcome to {{SITE_NAME}}, ${user.name}! Please verify your email to get started: ${verificationUrl}`,
+                    text: `Welcome to {{SITE_NAME}}, ${user.name}! Please verify your email to get started: ${verificationUrl}${mobileVerificationUrl ? `\n\nMobile app link: ${mobileVerificationUrl}` : ''}`,
                     html: verificationHtml,
                     type: 'email_verification'
                 });
@@ -286,7 +320,7 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
         } else {
             // Send standard welcome email without verification link
             const isCompany = user.role === 'company';
-            const dashboardUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
+            const dashboardUrl = getPrimaryFrontendUrl();
             const welcomeHtml = `
 <!DOCTYPE html>
 <html>
@@ -768,9 +802,7 @@ export const forgotPassword = async (req: AuthRequest, res: Response, next: Next
 
         // Save hashed token to user with expiry (1 hour)
         // Create reset URL
-        const frontendUrls = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',');
-        const frontendUrl = frontendUrls[0].trim();
-        const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+        const { webUrl: resetUrl, mobileUrl: mobileResetUrl } = buildResetLinks(resetToken);
 
         // Get dynamic expiration from settings (default 60 minutes)
         let expiryMinutes = 60;
@@ -829,6 +861,11 @@ This link will expire in ${expiryMinutes} minutes.
                 <div class="button-wrapper">
                     <a href="${resetUrl}" class="button">Reset Password</a>
                 </div>
+                ${mobileResetUrl ? `
+                <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 12px;">
+                    Open in the mobile app:<br>
+                    <a href="${mobileResetUrl}" style="color: #4f46e5; word-break: break-all;">${mobileResetUrl}</a>
+                </p>` : ''}
                 <p>This link will expire in ${expiryMinutes} minutes. If you didn't request this, you can safely ignore this email.</p>
             </div>
             <div class="footer">
@@ -851,7 +888,7 @@ This link will expire in ${expiryMinutes} minutes.
             await sendEmail({
                 to: user.email,
                 subject: 'Password Reset Request - {{SITE_NAME}}',
-                text: message,
+                text: `${message}${mobileResetUrl ? `\nMobile app link:\n\n${mobileResetUrl}\n` : ''}`,
                 html: html,
                 type: 'password_reset'
             });
@@ -1238,8 +1275,7 @@ export const resendVerification = async (req: Request, res: Response, next: Next
         user.emailVerificationExpires = verificationExpires;
         await user.save();
 
-        const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').split(',')[0].trim();
-        const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
+        const { webUrl: verificationUrl, mobileUrl: mobileVerificationUrl } = buildVerificationLinks(verificationToken);
 
         // Reuse the premium template from signup (simplified for resend)
         const verificationHtml = `
@@ -1272,6 +1308,11 @@ export const resendVerification = async (req: Request, res: Response, next: Next
                 <div class="button-wrapper">
                     <a href="${verificationUrl}" class="button">Verify My Email</a>
                 </div>
+                ${mobileVerificationUrl ? `
+                <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 12px;">
+                    Open in the mobile app:<br>
+                    <a href="${mobileVerificationUrl}" style="color: #4f46e5; word-break: break-all;">${mobileVerificationUrl}</a>
+                </p>` : ''}
                 <p style="font-size: 13px; color: #6b7280; text-align: center; margin-top: 24px;">
                     Or copy and paste this link into your browser:<br>
                     <a href="${verificationUrl}" style="color: #4f46e5; word-break: break-all;">${verificationUrl}</a>
@@ -1290,7 +1331,7 @@ export const resendVerification = async (req: Request, res: Response, next: Next
         await sendEmail({
             to: user.email,
             subject: `Action Required: Verify your email address`,
-            text: `Please verify your email to access your account: ${verificationUrl}`,
+            text: `Please verify your email to access your account: ${verificationUrl}${mobileVerificationUrl ? `\n\nMobile app link: ${mobileVerificationUrl}` : ''}`,
             html: verificationHtml,
             type: 'email_verification'
         });

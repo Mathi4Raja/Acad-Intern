@@ -447,7 +447,8 @@ export const sendMessage = async (req: AuthRequest, res: Response, next: NextFun
                 payload: {
                     applicationId,
                     messageId: message._id,
-                    senderName
+                    senderName,
+                    route: `/messages?applicationId=${applicationId}`
                 }
             });
         }

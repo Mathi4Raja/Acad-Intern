@@ -11,6 +11,7 @@ export interface TestUser {
     name: string;
     role: 'student' | 'company' | 'admin';
     cookie: string;
+    token?: string;
 }
 
 /**
@@ -45,7 +46,8 @@ export async function createTestUser(
         password,
         name,
         role,
-        cookie
+        cookie,
+        token: signupRes.body.data?.token
     };
 }
 

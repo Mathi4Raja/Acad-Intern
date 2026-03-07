@@ -119,6 +119,13 @@ const auth = async (req: AuthRequest, res: Response, next: NextFunction): Promis
                         sameSite: isSecureContext ? 'none' : 'strict',
                         maxAge: cookieMaxAge
                     });
+
+                    // Mobile clients authenticate with bearer tokens and need
+                    // the rotated token reflected in the response.
+                    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+                        res.setHeader('X-Auth-Token', newToken);
+                        res.setHeader('Access-Control-Expose-Headers', 'X-Auth-Token');
+                    }
                 }
             } catch (err) {
                 console.error('Sliding session check failed:', err);
