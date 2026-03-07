@@ -76,7 +76,7 @@ export function TopNavbar({
             <div className="px-3 sm:px-6">
                 <div className="flex items-center justify-between h-14 sm:h-16">
                     {/* Left Side: Menu + Logo */}
-                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                    <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                         <button
                             onClick={onToggleSidebar}
                             className="lg:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors flex-shrink-0"
@@ -87,7 +87,7 @@ export function TopNavbar({
 
                         <Link
                             href={variant === "admin" ? "/admin/dashboard" : "/"}
-                            className="flex items-center gap-1.5 min-w-0 group/logo"
+                            className="flex items-center gap-2.5 min-w-0 group/logo"
                         >
                             {LogoIcon && (
                                 <LogoIcon
@@ -113,7 +113,7 @@ export function TopNavbar({
                     </div>
 
                     {/* Right Side: Notifications + User */}
-                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                         {/* Notifications */}
                         {notifications.length > 0 ? (
                             <NotificationDropdown

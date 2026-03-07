@@ -56,14 +56,14 @@ export function StatCard({
             )}
             onClick={onClick}
         >
-            <div className="flex items-start justify-between mb-1.5">
-                <div className="flex items-center gap-1.5">
+            <div className="flex items-start justify-between mb-1.5 gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
                     {Icon && (
                         <div className={cn('p-1 rounded-md flex-shrink-0', iconBg, active && 'bg-white')}>
                             <Icon className={cn('w-3.5 h-3.5', iconColor)} />
                         </div>
                     )}
-                    <h3 className={cn("text-[11px] uppercase tracking-wider font-semibold text-gray-500", active && "text-primary")}>{title}</h3>
+                    <h3 className={cn("text-[11px] uppercase tracking-wider font-semibold text-gray-500 truncate", active && "text-primary")} title={title}>{title}</h3>
                 </div>
                 {change ? (
                     <div className={cn('flex items-center gap-0.5 text-[9px] font-medium', getTrendColor())}>

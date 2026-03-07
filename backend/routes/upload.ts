@@ -136,7 +136,7 @@ router.post('/', protect, upload.single('file'), async (req: AuthRequest, res: R
                 if (company) {
                     if (type === 'companyLogo') existingUrl = company.logo;
                     else if (type === 'companyBanner') existingUrl = company.banner;
-                    else if (type === 'companyRecord') existingUrl = company.verificationData?.documentUrl;
+                    // For companyRecord, we no longer pass existingUrl because we support multiple documentUrls
 
                     // Use company name for filename if available
                     if (company.companyName) {

@@ -772,14 +772,12 @@ function ManageCompaniesContent() {
 
                     <div className="mt-5 flex items-center gap-2 pt-4 border-t border-orange-200/50">
                       <button
-                        // @ts-ignore
                         onClick={() => handleAction(selectedCompany._id, 'verify')}
                         className="px-5 py-2 bg-orange-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-700 transition-all shadow-sm flex items-center justify-center gap-1.5"
                       >
                         <CheckCircle size={14} /> Approve Request
                       </button>
                       <button
-                        // @ts-ignore
                         onClick={() => handleAction(selectedCompany._id, 'reject')}
                         className="px-5 py-2 bg-white text-red-600 border border-red-200 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-50 hover:border-red-300 transition-all shadow-sm flex items-center justify-center gap-1.5"
                       >

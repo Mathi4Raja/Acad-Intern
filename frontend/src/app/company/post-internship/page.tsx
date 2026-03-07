@@ -146,7 +146,7 @@ export default function PostInternship() {
                   value={formData.title}
                   onChange={handleInputChange}
                   placeholder="e.g., Frontend Developer Intern"
-                  className="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400"
                   required
                 />
               </div>
@@ -164,7 +164,7 @@ export default function PostInternship() {
                       value={formData.duration}
                       onChange={handleInputChange}
                       placeholder="3"
-                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400"
                       required
                     />
                   </div>
@@ -182,7 +182,7 @@ export default function PostInternship() {
                       value={formData.stipend}
                       onChange={handleInputChange}
                       placeholder="15000"
-                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400"
                       required
                     />
                   </div>
@@ -200,7 +200,7 @@ export default function PostInternship() {
                       value={formData.positions}
                       onChange={handleInputChange}
                       placeholder="2"
-                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400"
                       required
                     />
                   </div>
@@ -220,7 +220,7 @@ export default function PostInternship() {
                       value={formData.location}
                       onChange={handleInputChange}
                       placeholder="Bangalore, Karnataka"
-                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent placeholder:text-gray-400"
                       required
                     />
                   </div>
@@ -234,7 +234,7 @@ export default function PostInternship() {
                     value={formData.mode}
                     onChange={(val) => setFormData({ ...formData, mode: val })}
                     options={INTERNSHIP_MODES.map(mode => ({ value: mode.value, label: mode.label }))}
-                    className="w-full"
+                    className="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm border-gray-300 rounded-lg font-normal text-gray-900 border focus:ring-2 focus:ring-primary focus:border-transparent shadow-none hover:border-gray-400"
                     isFullWidth
                   />
                 </div>
@@ -252,7 +252,7 @@ export default function PostInternship() {
                     value={formData.deadline}
                     onChange={handleInputChange}
                     min={today}
-                    className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full pl-9 pr-3 py-1.5 sm:py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-gray-900"
                     required
                   />
                 </div>
