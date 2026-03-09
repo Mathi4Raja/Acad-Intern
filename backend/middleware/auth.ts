@@ -11,10 +11,17 @@ interface JwtPayload {
     authStartedAt: number;
 }
 
+const isMobileClient = (req: AuthRequest): boolean => {
+    const clientPlatform = req.headers['x-client-platform'];
+    const value = Array.isArray(clientPlatform) ? clientPlatform[0] : clientPlatform;
+    return String(value || '').toLowerCase() === 'mobile';
+};
+
 // Protect routes - authentication middleware
 const auth = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         let token: string | undefined;
+        let isBearerAuth = false;
 
         // Check for token in cookies (preferred)
         if (req.cookies.token) {
@@ -23,6 +30,7 @@ const auth = async (req: AuthRequest, res: Response, next: NextFunction): Promis
         // Check for token in Authorization header (Bearer token)
         else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
             token = req.headers.authorization.split(' ')[1];
+            isBearerAuth = true;
         }
 
         // Check if token exists
@@ -37,13 +45,14 @@ const auth = async (req: AuthRequest, res: Response, next: NextFunction): Promis
         try {
             // Verify token
             const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
+            const skipSessionTimeoutForMobile = isBearerAuth && isMobileClient(req);
 
             // 1. ENFORCE ABSOLUTE TIMEOUT (Hardcoded 7d from .env or fallback)
             const absoluteExpireStr = process.env.JWT_EXPIRE || '7d';
             // Parse '7d' logic (simple fallback for now)
             const absoluteLimitMs = 7 * 24 * 60 * 60 * 1000;
 
-            if (Date.now() - decoded.authStartedAt > absoluteLimitMs) {
+            if (!skipSessionTimeoutForMobile && Date.now() - decoded.authStartedAt > absoluteLimitMs) {
                 res.status(401).json({
                     success: false,
                     message: 'Your session has reached the absolute 7-day limit. Please log in again.'
@@ -99,7 +108,7 @@ const auth = async (req: AuthRequest, res: Response, next: NextFunction): Promis
                 }
 
                 // Slide if sessionTimeout is configured (in minutes)
-                if (sessionSetting && sessionSetting.value) {
+                if (!skipSessionTimeoutForMobile && sessionSetting && sessionSetting.value) {
                     const sessionMinutes = Number(sessionSetting.value);
                     const newToken = user.generateAuthToken(`${sessionMinutes}m`, decoded.authStartedAt);
 
@@ -122,7 +131,7 @@ const auth = async (req: AuthRequest, res: Response, next: NextFunction): Promis
 
                     // Mobile clients authenticate with bearer tokens and need
                     // the rotated token reflected in the response.
-                    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+                    if (isBearerAuth) {
                         res.setHeader('X-Auth-Token', newToken);
                         res.setHeader('Access-Control-Expose-Headers', 'X-Auth-Token');
                     }

@@ -115,6 +115,7 @@ export interface IInternship extends Document {
     location?: string;
     deadline?: Date;
     views: number;
+    contentUpdatedAt?: Date | null;
 }
 
 export interface IInterviewDetails {

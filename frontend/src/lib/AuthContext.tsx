@@ -10,9 +10,9 @@ interface AuthContextType {
     profile: StudentProfile | CompanyProfile | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (data: any) => Promise<void>;
+    login: (data: any, expectedRole?: User['role']) => Promise<void>;
     signup: (data: any) => Promise<void>;
-    googleLogin: (idToken: string) => Promise<void>;
+    googleLogin: (idToken: string, expectedRole?: User['role']) => Promise<void>;
     logout: () => Promise<void>;
     deleteAccount: () => Promise<void>;
     refreshUser: () => Promise<void>;
@@ -59,9 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
     };
 
-    const login = async (formData: any) => {
+    const login = async (formData: any, expectedRole?: User['role']) => {
         try {
-            const res = await api.post('/auth/login', formData);
+            const payload = expectedRole ? { ...formData, expectedRole } : formData;
+            const res = await api.post('/auth/login', payload);
             setUser(res.data.data.user);
 
             // Store token in an accessible cookie for Socket.IO
@@ -125,9 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const googleLogin = async (idToken: string) => {
+    const googleLogin = async (idToken: string, expectedRole?: User['role']) => {
         try {
-            const res = await api.post('/auth/google', { idToken });
+            const payload = expectedRole ? { idToken, expectedRole } : { idToken };
+            const res = await api.post('/auth/google', payload);
             setUser(res.data.data.user);
 
             // Store token in an accessible cookie for Socket.IO

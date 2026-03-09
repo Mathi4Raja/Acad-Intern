@@ -57,12 +57,13 @@ async function getInternships() {
       description: item.description,
       skills: item.skillsRequired || [],
       openings: item.openings,
-      postedAt: item.updatedAt && (new Date(item.updatedAt).getTime() - new Date(item.createdAt).getTime() > 60000)
-        ? `Edited ${formatTimeAgo(item.updatedAt)}`
+      postedAt: item.contentUpdatedAt
+        ? `Edited ${formatTimeAgo(item.contentUpdatedAt)}`
         : formatTimeAgo(item.createdAt),
       // Pass raw dates for sorting in client if needed
       createdAt: item.createdAt,
-      updatedAt: item.updatedAt
+      updatedAt: item.updatedAt,
+      contentUpdatedAt: item.contentUpdatedAt
     }));
 
     return mapped;

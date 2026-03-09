@@ -33,7 +33,9 @@ export default function SignupPage() {
   const { settings } = useSettings()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect')
-  const [selectedRole, setSelectedRole] = useState<UserRole>(null)
+  const roleParam = searchParams.get('role')
+  const initialRole: UserRole = roleParam === 'student' || roleParam === 'company' ? roleParam : null
+  const [selectedRole, setSelectedRole] = useState<UserRole>(initialRole)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
@@ -108,7 +110,7 @@ export default function SignupPage() {
     setIsGoogleLoading(true);
     setError('');
     try {
-      await googleLogin(response.credential);
+      await googleLogin(response.credential, 'student');
     } catch (err: any) {
       const status = err.response?.status;
       const message = err.response?.data?.message;
@@ -121,6 +123,13 @@ export default function SignupPage() {
       setIsGoogleLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (roleParam === 'student' || roleParam === 'company') {
+      setSelectedRole(roleParam);
+      setError('');
+    }
+  }, [roleParam]);
 
   const [isGoogleReady, setIsGoogleReady] = useState(false);
   const googleButtonContainerRef = useRef<HTMLDivElement>(null);

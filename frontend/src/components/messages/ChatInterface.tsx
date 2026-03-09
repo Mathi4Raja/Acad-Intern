@@ -795,7 +795,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
                                         onClick={(e) => handleMessageTap(e, message._id, isOwn, (message as any).isDeleted)}
                                     >
                                         <div
-                                            className={`rounded-xl md:rounded-2xl px-3 py-1.5 md:px-4 md:py-2.5 shadow-sm relative group overflow-hidden ${isOwn
+                                            className={`rounded-xl md:rounded-2xl px-3 py-1.5 md:px-4 md:py-2.5 shadow-sm relative group ${isOwn
                                                 ? 'bg-gradient-to-br from-primary to-primary-dark text-white message-bubble-own'
                                                 : 'bg-white text-gray-800 message-bubble-other border border-gray-200'
                                                 } ${isOwn

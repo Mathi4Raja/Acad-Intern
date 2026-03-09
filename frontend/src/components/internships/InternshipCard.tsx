@@ -139,8 +139,8 @@ const InternshipCard = memo(({
                 {/* Footer / Actions */}
                 <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <span className="text-xs text-gray-400 font-medium">
-                        {internship.updatedAt && new Date(internship.updatedAt).getTime() - new Date(internship.createdAt).getTime() > 60000
-                            ? `Edited ${formatDate(internship.updatedAt)}`
+                        {internship.contentUpdatedAt
+                            ? `Edited ${formatDate(internship.contentUpdatedAt)}`
                             : `Posted ${formatDate(internship.createdAt)}`
                         }
                     </span>

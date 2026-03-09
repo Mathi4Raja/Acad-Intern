@@ -42,11 +42,8 @@ export default function ManageInternships() {
     return date.toLocaleDateString()
   }
 
-  // Check if internship was edited (updatedAt differs from createdAt by more than 1 minute)
-  const wasEdited = (createdAt: string, updatedAt: string) => {
-    const created = new Date(createdAt).getTime()
-    const updated = new Date(updatedAt).getTime()
-    return (updated - created) > 60000 // More than 1 minute difference
+  const wasEdited = (contentUpdatedAt?: string | null) => {
+    return !!contentUpdatedAt
   }
 
   useEffect(() => {
@@ -85,7 +82,7 @@ export default function ManageInternships() {
             ...intern,
             applicants: appCount,
             deadline: new Date(intern.deadline).toLocaleDateString(),
-            postedDate: new Date(intern.createdAt).toLocaleDateString(),
+            postedDate: new Date(intern.contentUpdatedAt || intern.createdAt).toLocaleDateString(),
             status: intern.status || (intern.isActive ? 'active' : 'inactive')
           };
         }));
@@ -341,10 +338,10 @@ export default function ManageInternships() {
                     <span className="font-medium text-gray-900">{internship.views || 0}</span> views
                   </span>
                   <span className="hidden sm:inline">Posted: {internship.postedDate}</span>
-                  {wasEdited(internship.createdAt, internship.updatedAt) && (
+                  {wasEdited(internship.contentUpdatedAt) && (
                     <span className="flex items-center gap-1 text-amber-600">
                       <Pencil size={12} className="flex-shrink-0" />
-                      Edited {getTimeAgo(internship.updatedAt)}
+                      Edited {getTimeAgo(internship.contentUpdatedAt!)}
                     </span>
                   )}
                   <span className="col-span-2 sm:col-span-1">Deadline: {internship.deadline}</span>

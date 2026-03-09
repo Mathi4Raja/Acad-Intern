@@ -46,6 +46,7 @@ interface InternshipDetail {
     openings: number
     status: 'active' | 'inactive' | 'completed' | 'in_progress' | 'rejected'
     createdAt: string
+    contentUpdatedAt?: string
     location?: string
     deadline?: string
     hasApplied?: boolean
@@ -269,8 +270,8 @@ export default function InternshipDetailPage() {
                                     <Calendar size={14} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Posted on</p>
-                                    <p className="font-medium text-gray-900 leading-tight">{formatDate(internship.createdAt)}</p>
+                                    <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">{internship.contentUpdatedAt ? 'Updated on' : 'Posted on'}</p>
+                                    <p className="font-medium text-gray-900 leading-tight">{formatDate(internship.contentUpdatedAt || internship.createdAt)}</p>
                                 </div>
                             </div>
                         </div>

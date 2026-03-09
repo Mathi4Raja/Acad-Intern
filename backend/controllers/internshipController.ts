@@ -392,6 +392,36 @@ export const updateInternship = async (req: AuthRequest, res: Response, next: Ne
         }
 
         const validatedData = internshipSchema.partial().parse(req.body);
+        const contentEditFields = [
+            'title',
+            'description',
+            'requirements',
+            'responsibilities',
+            'skillsRequired',
+            'durationWeeks',
+            'stipend',
+            'mode',
+            'openings',
+            'location',
+            'deadline'
+        ] as const;
+        const hasContentEdit = contentEditFields.some((field) => {
+            if (!(field in validatedData)) return false;
+            const nextValue = (validatedData as any)[field];
+            const currentValue = (internship as any)[field];
+
+            if (field === 'deadline') {
+                const nextTime = nextValue ? new Date(nextValue).getTime() : null;
+                const currentTime = currentValue ? new Date(currentValue).getTime() : null;
+                return nextTime !== currentTime;
+            }
+
+            if (Array.isArray(nextValue) || Array.isArray(currentValue)) {
+                return JSON.stringify(nextValue ?? []) !== JSON.stringify(currentValue ?? []);
+            }
+
+            return nextValue !== currentValue;
+        });
 
         // If deadline is being updated, check if we should reset 'expired' status to 'active'
         if (validatedData.deadline) {
@@ -418,6 +448,10 @@ export const updateInternship = async (req: AuthRequest, res: Response, next: Ne
                     return;
                 }
             }
+        }
+
+        if (hasContentEdit) {
+            (validatedData as any).contentUpdatedAt = new Date();
         }
 
         internship = await Internship.findByIdAndUpdate(req.params.id, validatedData, {

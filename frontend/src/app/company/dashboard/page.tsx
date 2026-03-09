@@ -1,5 +1,5 @@
 'use client'
-import { Building2, Users, Briefcase, TrendingUp, Search, Calendar, ChevronRight, CheckCircle, LayoutDashboard } from 'lucide-react'
+import { Building2, Users, Briefcase, Search, Calendar, ChevronRight, CheckCircle, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
@@ -90,7 +90,7 @@ export default function CompanyDashboard() {
           title: intern.title,
           applicants: applicantCounts[intern._id] || 0,
           status: intern.status === 'active' ? 'Active' : 'Closed',
-          postedDate: intern.createdAt,
+          postedDate: intern.contentUpdatedAt || intern.createdAt,
           type: intern.mode
         })));
 
@@ -193,7 +193,6 @@ export default function CompanyDashboard() {
         <StatCard
           title="Total Applicants"
           value={stats.totalApplications}
-          change={{ value: 12, type: 'increase' }}
           icon={Users}
           iconColor="text-blue-600"
           iconBg="bg-blue-50"

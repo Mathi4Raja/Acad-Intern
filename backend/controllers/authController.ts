@@ -45,6 +45,14 @@ const buildResetLinks = (token: string) => {
     };
 };
 
+const MOBILE_SESSION_EXPIRE = '3650d';
+
+const isMobileClient = (req: Request): boolean => {
+    const clientPlatform = req.headers['x-client-platform'];
+    const value = Array.isArray(clientPlatform) ? clientPlatform[0] : clientPlatform;
+    return String(value || '').toLowerCase() === 'mobile';
+};
+
 
 // Helper for URL validation that auto-prefixes https:// if missing
 const flexibleUrl = z.string().trim().transform((val) => {
@@ -74,7 +82,8 @@ const signupSchema = z.object({
 
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
-    password: z.string().min(1, 'Password is required')
+    password: z.string().min(1, 'Password is required'),
+    expectedRole: z.enum(['student', 'company', 'admin']).optional()
 });
 
 const forgotPasswordSchema = z.object({
@@ -199,7 +208,8 @@ export const signup = async (req: AuthRequest, res: Response, next: NextFunction
         const cookieMaxAge = sessionMinutes * 60 * 1000;
 
         const authStartedAt = Date.now();
-        const token = user.generateAuthToken(`${sessionMinutes}m`, authStartedAt);
+        const tokenExpire = isMobileClient(req) ? MOBILE_SESSION_EXPIRE : `${sessionMinutes}m`;
+        const token = user.generateAuthToken(tokenExpire, authStartedAt);
 
         // Detect if request is from dev tunnels (HTTPS origin)
         const origin = req.headers.origin || '';
@@ -444,7 +454,21 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 // @access  Public
 export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { idToken } = req.body;
+        const { idToken, expectedRole } = req.body as { idToken?: string; expectedRole?: string };
+
+        if (expectedRole && !['student', 'company', 'admin'].includes(expectedRole)) {
+            res.status(400).json({
+                success: false,
+                message: 'Validation error',
+                errors: [
+                    {
+                        path: ['expectedRole'],
+                        message: 'Invalid enum value. Expected student | company | admin'
+                    }
+                ]
+            });
+            return;
+        }
 
         if (!idToken) {
             res.status(400).json({
@@ -527,13 +551,22 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
             await user.save();
         }
 
+        if (expectedRole && user.role !== expectedRole) {
+            res.status(403).json({
+                success: false,
+                message: `This account is registered as ${user.role}. Please use the ${user.role} portal.`
+            });
+            return;
+        }
+
         // DYNAMIC SETTINGS: Session Duration (Minutes)
         const sessionSetting = await SystemSetting.findOne({ key: 'sessionTimeout' });
         const sessionMinutes = Number(sessionSetting?.value || 10080); // Default 7 days (10080 min)
         const cookieMaxAge = sessionMinutes * 60 * 1000;
 
         const authStartedAt = Date.now();
-        const token = user.generateAuthToken(`${sessionMinutes}m`, authStartedAt);
+        const tokenExpire = isMobileClient(req) ? MOBILE_SESSION_EXPIRE : `${sessionMinutes}m`;
+        const token = user.generateAuthToken(tokenExpire, authStartedAt);
 
         // Detect secure context
         const origin = req.headers.origin || '';
@@ -580,7 +613,7 @@ export const googleAuth = async (req: AuthRequest, res: Response, next: NextFunc
 export const login = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         const validatedData = loginSchema.parse(req.body);
-        const { email, password } = validatedData;
+        const { email, password, expectedRole } = validatedData;
 
         // FETCH DYNAMIC SECURITY SETTINGS
         const settings = await SystemSetting.find({
@@ -656,7 +689,16 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
             return;
         }
 
-        // 4. ENFORCE EMAIL VERIFICATION
+        // 4. ENFORCE CLIENT ROLE EXPECTATION (optional, for mobile/student-only clients)
+        if (expectedRole && user.role !== expectedRole) {
+            res.status(403).json({
+                success: false,
+                message: `This account is registered as ${user.role}. Please use the ${user.role} portal.`
+            });
+            return;
+        }
+
+        // 5. ENFORCE EMAIL VERIFICATION
         if (requireVerification && !user.isEmailVerified && user.role !== 'admin') {
             res.status(403).json({
                 success: false,
@@ -673,7 +715,8 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
         await user.save();
 
         const authStartedAt = Date.now();
-        const token = user.generateAuthToken(`${sessionMinutes}m`, authStartedAt);
+        const tokenExpire = isMobileClient(req) ? MOBILE_SESSION_EXPIRE : `${sessionMinutes}m`;
+        const token = user.generateAuthToken(tokenExpire, authStartedAt);
 
         // Detect if request is from dev tunnels (HTTPS origin)
         const origin = req.headers.origin || '';

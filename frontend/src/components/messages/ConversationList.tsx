@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { MessageCircle, Loader2, Search, Trash2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { MessageCircle, Loader2, Search } from 'lucide-react';
 import { Conversation } from '@/types';
 import { messageApi } from '@/lib/api';
 import { useSocket } from '@/lib/SocketContext';
@@ -25,6 +25,11 @@ export default function ConversationList({
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [swipeOffsets, setSwipeOffsets] = useState<Record<string, number>>({});
+    const touchStartRef = useRef<{ id: string | null; x: number }>({
+        id: null,
+        x: 0,
+    });
     const { socket } = useSocket();
 
     useEffect(() => {
@@ -138,11 +143,6 @@ export default function ConversationList({
         applicationId: null
     });
 
-    const handleDeleteConversation = async (applicationId: string, event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent selecting the conversation
-        setDeleteConfirmation({ isOpen: true, applicationId });
-    };
-
     const confirmDelete = async () => {
         if (!deleteConfirmation.applicationId) return;
 
@@ -162,6 +162,29 @@ export default function ConversationList({
         } finally {
             setDeleteConfirmation({ isOpen: false, applicationId: null });
         }
+    };
+
+    const handleTouchStart = (applicationId: string, e: React.TouchEvent) => {
+        touchStartRef.current = {
+            id: applicationId,
+            x: e.touches[0]?.clientX ?? 0,
+        };
+    };
+
+    const handleTouchMove = (applicationId: string, e: React.TouchEvent) => {
+        if (touchStartRef.current.id !== applicationId) return;
+        const currentX = e.touches[0]?.clientX ?? 0;
+        const delta = Math.max(0, currentX - touchStartRef.current.x);
+        setSwipeOffsets((prev) => ({ ...prev, [applicationId]: Math.min(delta, 96) }));
+    };
+
+    const handleTouchEnd = (applicationId: string) => {
+        const delta = swipeOffsets[applicationId] ?? 0;
+        setSwipeOffsets((prev) => ({ ...prev, [applicationId]: 0 }));
+        if (delta > 72) {
+            setDeleteConfirmation({ isOpen: true, applicationId });
+        }
+        touchStartRef.current = { id: null, x: 0 };
     };
 
     if (loading) {
@@ -224,12 +247,22 @@ export default function ConversationList({
                             <div key={conv.application._id} className="relative group/item">
                                 <button
                                     onClick={() => onSelectConversation(conv.application._id, otherParty)}
+                                    onTouchStart={(e) => handleTouchStart(conv.application._id, e)}
+                                    onTouchMove={(e) => handleTouchMove(conv.application._id, e)}
+                                    onTouchEnd={() => handleTouchEnd(conv.application._id)}
+                                    onTouchCancel={() => handleTouchEnd(conv.application._id)}
                                     className={`w-full text-left p-3 rounded-xl transition-all duration-200 group relative
                                     ${isSelected
                                             ? 'bg-primary/5 ring-1 ring-primary/20 shadow-sm'
                                             : 'hover:bg-gray-50 border border-transparent hover:border-gray-100'
                                         }`}
-                                    style={{ animation: `fadeIn 0.3s ease-out ${index * 0.05}s backwards` }}
+                                    style={{
+                                        animation: `fadeIn 0.3s ease-out ${index * 0.05}s backwards`,
+                                        transform: `translateX(${swipeOffsets[conv.application._id] ?? 0}px)`,
+                                        transition: (swipeOffsets[conv.application._id] ?? 0) > 0
+                                            ? 'none'
+                                            : 'transform 160ms ease',
+                                    }}
                                 >
                                     <div className="flex gap-3">
                                         {/* Avatar */}
@@ -282,15 +315,6 @@ export default function ConversationList({
                                             </div>
                                         </div>
                                     </div>
-                                </button>
-
-                                {/* Delete Button - visible on hover */}
-                                <button
-                                    onClick={(e) => handleDeleteConversation(conv.application._id, e)}
-                                    className="absolute right-2 bottom-2 p-1.5 rounded-full bg-white text-gray-400 hover:text-red-500 hover:bg-red-50 shadow-sm border border-gray-100 opacity-0 group-hover/item:opacity-100 transition-all duration-200 z-10"
-                                    title="Delete conversation"
-                                >
-                                    <Trash2 size={14} />
                                 </button>
                             </div>
                         );

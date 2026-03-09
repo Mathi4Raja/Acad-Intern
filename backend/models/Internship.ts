@@ -65,6 +65,10 @@ const internshipSchema = new Schema<IInternship>({
     views: {
         type: Number,
         default: 0
+    },
+    contentUpdatedAt: {
+        type: Date,
+        default: null
     }
 }, {
     timestamps: true

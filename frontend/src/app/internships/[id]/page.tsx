@@ -32,6 +32,7 @@ interface InternshipDetail {
     mode: 'remote' | 'onsite' | 'hybrid'
     openings: number
     createdAt: string
+    contentUpdatedAt?: string
     deadline?: string
 }
 
@@ -194,8 +195,8 @@ export default function PublicInternshipDetailPage() {
                                     <Calendar size={14} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">Posted on</p>
-                                    <p className="font-medium text-gray-900 leading-tight">{formatDate(internship.createdAt)}</p>
+                                    <p className="text-[10px] text-gray-500 uppercase font-semibold tracking-wider">{internship.contentUpdatedAt ? 'Updated on' : 'Posted on'}</p>
+                                    <p className="font-medium text-gray-900 leading-tight">{formatDate(internship.contentUpdatedAt || internship.createdAt)}</p>
                                 </div>
                             </div>
                         </div>

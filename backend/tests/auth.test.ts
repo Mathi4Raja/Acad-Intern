@@ -121,6 +121,22 @@ describe('Auth API', () => {
 
             expect(res.status).toBe(401);
         });
+
+        it('should reject login when expectedRole does not match account role', async () => {
+            const company = await createTestUser('company', 'rolemismatch');
+
+            const res = await request(app)
+                .post('/api/auth/login')
+                .send({
+                    email: company.email,
+                    password: company.password,
+                    expectedRole: 'student'
+                });
+
+            expect(res.status).toBe(403);
+            expect(res.body.success).toBe(false);
+            expect(res.body.message).toContain('registered as company');
+        });
     });
 
     describe('GET /api/auth/me', () => {
@@ -316,6 +332,18 @@ describe('Auth API', () => {
                 .send({ idToken: '' });
 
             expect(res.status).toBe(400);
+        });
+
+        it('should reject invalid expectedRole values', async () => {
+            const res = await request(app)
+                .post('/api/auth/google')
+                .send({
+                    idToken: 'invalid-token-12345',
+                    expectedRole: 'superadmin'
+                });
+
+            expect(res.status).toBe(400);
+            expect(res.body.success).toBe(false);
         });
     });
 });

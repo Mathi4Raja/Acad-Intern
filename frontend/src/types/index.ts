@@ -53,6 +53,7 @@ export interface Internship {
     status: 'active' | 'inactive' | 'completed' | 'in_progress' | 'rejected'
     createdAt: string
     updatedAt?: string
+    contentUpdatedAt?: string | null
     matchScore?: number
     location?: string
     hasApplied?: boolean

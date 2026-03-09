@@ -49,6 +49,7 @@ interface Internship {
     postedAt: string;
     createdAt: string; // Keep original for calculations if needed
     updatedAt: string;
+    contentUpdatedAt?: string | null;
 }
 
 interface InternshipsClientProps {

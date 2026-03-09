@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, Users, Briefcase, Building, AlertCircle, CheckCircle, XCircle, Clock, ArrowUp, ArrowDown, Eye, ChevronRight, Home, Shield, Activity } from 'lucide-react'
+import { Users, Briefcase, Building, AlertCircle, CheckCircle, XCircle, Clock, ArrowUp, ArrowDown, Eye, ChevronRight, Home, Shield, Activity } from 'lucide-react'
 import { useEffect, useState, Suspense } from 'react'
 import api from '@/lib/api'
 import Link from 'next/link'
@@ -181,7 +181,6 @@ function AdminDashboardContent() {
                     <StatCard
                         title="Total Users"
                         value={stats.totalUsers.toLocaleString()}
-                        change={{ value: 12, type: 'increase' }}
                         icon={Users}
                         iconColor="text-blue-600"
                         iconBg="bg-blue-50"
@@ -191,7 +190,6 @@ function AdminDashboardContent() {
                     <StatCard
                         title="Active Posts"
                         value={stats.activeInternships.toLocaleString()}
-                        change={{ value: 5, type: 'increase' }}
                         icon={Briefcase}
                         iconColor="text-primary"
                         iconBg="bg-primary/5"

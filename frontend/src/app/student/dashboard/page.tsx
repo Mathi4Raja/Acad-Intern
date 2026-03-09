@@ -144,7 +144,6 @@ export default function StudentDashboard() {
         <StatCard
           title="Applications"
           value={stats.applicationsSubmitted}
-          change={{ value: 10, type: 'increase' }}
           icon={FileText}
           iconColor="text-blue-600"
           iconBg="bg-blue-50"
