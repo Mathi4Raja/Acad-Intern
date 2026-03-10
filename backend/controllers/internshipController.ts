@@ -123,10 +123,23 @@ export const matchInternships = async (req: AuthRequest, res: Response, next: Ne
                 return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             });
 
+        const pageParam = req.query.page;
+        const limitParam = req.query.limit;
+        const usePagination = pageParam !== undefined || limitParam !== undefined;
+        const pageNum = Math.max(parseInt((pageParam as string) || '1', 10), 1);
+        const limitNum = Math.max(parseInt((limitParam as string) || '10', 10), 1);
+        const start = (pageNum - 1) * limitNum;
+        const pagedMatches = usePagination
+            ? sortedMatches.slice(start, start + limitNum)
+            : sortedMatches;
+
         res.status(200).json({
             success: true,
-            count: sortedMatches.length,
-            data: sortedMatches
+            count: pagedMatches.length,
+            total: sortedMatches.length,
+            page: pageNum,
+            limit: limitNum,
+            data: pagedMatches
         });
     } catch (error) {
         next(error);
@@ -138,7 +151,7 @@ export const matchInternships = async (req: AuthRequest, res: Response, next: Ne
 // @access  Private (Student)
 export const getInternships = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { search, mode, minStipend, duration, skills, companyId, page = '1', limit = '10' } = req.query;
+        const { search, mode, minStipend, duration, skills, companyId, page, limit } = req.query;
 
         // Find companies that are NOT shadow-banned
         const shadowBannedCompanies = await User.find({ role: 'company', isShadowBanned: true }).distinct('_id');
@@ -180,10 +193,18 @@ export const getInternships = async (req: AuthRequest, res: Response, next: Next
             query.companyId = companyId;
         }
 
-        const internships = await Internship.find(query)
+        const usePagination = page !== undefined || limit !== undefined;
+        const pageNum = Math.max(parseInt((page as string) || '1', 10), 1);
+        const limitNum = Math.max(parseInt((limit as string) || '10', 10), 1);
+        const skip = (pageNum - 1) * limitNum;
+
+        const total = await Internship.countDocuments(query);
+        const internshipsQuery = Internship.find(query)
             .populate('companyId', 'companyName website verified logo')
-            .sort({ createdAt: -1 })
-            .lean();
+            .sort({ createdAt: -1 });
+        const internships = usePagination
+            ? await internshipsQuery.skip(skip).limit(limitNum).lean()
+            : await internshipsQuery.lean();
 
         // Check for applications if user is logged in
         let internshipsWithStatus = internships;
@@ -200,6 +221,9 @@ export const getInternships = async (req: AuthRequest, res: Response, next: Next
         res.status(200).json({
             success: true,
             count: internshipsWithStatus.length,
+            total,
+            page: pageNum,
+            limit: limitNum,
             data: internshipsWithStatus
         });
     } catch (error) {

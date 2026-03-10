@@ -47,6 +47,7 @@ const getServiceAccount = (): Record<string, unknown> | null => {
 const ensureFirebaseApp = (): any | null => {
     const firebaseAdmin = getFirebaseAdmin();
     if (!firebaseAdmin) {
+        console.warn('Push: firebase-admin not available');
         return null;
     }
 
@@ -56,6 +57,7 @@ const ensureFirebaseApp = (): any | null => {
 
     const serviceAccount = getServiceAccount();
     if (!serviceAccount) {
+        console.warn('Push: missing Firebase service account env vars');
         return null;
     }
 
@@ -66,6 +68,7 @@ const ensureFirebaseApp = (): any | null => {
             });
         }
         firebaseAppInitialized = true;
+        console.log('Push: Firebase Admin initialized');
         return firebaseAdmin;
     } catch (error) {
         console.error('Failed to initialize Firebase Admin:', error);
@@ -79,6 +82,7 @@ export const sendPushNotificationToUser = async (
 ): Promise<void> => {
     const firebaseAdmin = ensureFirebaseApp();
     if (!firebaseAdmin) {
+        console.warn('Push: skipped send, Firebase Admin not initialized');
         return;
     }
 
@@ -88,11 +92,13 @@ export const sendPushNotificationToUser = async (
     }).select('fcmToken');
 
     if (!devices.length) {
+        console.warn(`Push: no active devices for user ${userId}`);
         return;
     }
 
     const tokens = devices.map((device) => device.fcmToken).filter(Boolean);
     if (!tokens.length) {
+        console.warn(`Push: empty tokens for user ${userId}`);
         return;
     }
 
@@ -105,12 +111,16 @@ export const sendPushNotificationToUser = async (
             },
             data: payload.data || {}
         });
+        console.log(
+            `Push: sent to ${tokens.length} token(s), success=${response.successCount}, failure=${response.failureCount}`
+        );
 
         const invalidTokens = response.responses
             .map((item: any, index: number) => (item.success ? null : tokens[index]))
             .filter(Boolean);
 
         if (invalidTokens.length) {
+            console.warn(`Push: invalid tokens=${invalidTokens.length}`);
             await MobileDevice.updateMany(
                 { fcmToken: { $in: invalidTokens } },
                 { $set: { isActive: false } }

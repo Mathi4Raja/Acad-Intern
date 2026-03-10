@@ -6,6 +6,7 @@ A comprehensive platform connecting students with internship opportunities, feat
 
 - **backend/**: Express.js REST API server
 - **frontend/**: Next.js web application
+- **mobile/**: Flutter student mobile application
 - **system_Architecture**: System architecture documentation
 - **TEST_CREDENTIALS.md**: Test credentials documentation
 - **TRACK_TASKS.md**: Task tracking documentation
@@ -29,6 +30,12 @@ A comprehensive platform connecting students with internship opportunities, feat
 - **Styling**: Tailwind CSS (assumed from postcss.config.mjs)
 - **UI Components**: Custom components with shadcn/ui (from components.json)
 
+### Mobile
+- **Framework**: Flutter
+- **Language**: Dart
+- **Navigation**: go_router
+- **State Management**: flutter_riverpod
+
 ## Setup
 
 ### Prerequisites
@@ -49,6 +56,7 @@ cd AcadIntern
 npm install
 cd backend && npm install && cd ..
 cd frontend && npm install && cd ..
+cd mobile && flutter pub get && cd ..
 ```
 
 ### Backend Setup
@@ -88,6 +96,29 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+
+### Mobile Setup
+
+1. Navigate to mobile directory:
+```bash
+cd mobile
+```
+
+2. Install Flutter dependencies:
+```bash
+flutter pub get
+```
+
+3. Run on Android emulator/device:
+```bash
+flutter run \
+  --dart-define=API_BASE_URL=http://10.0.2.2:5000/api \
+  --dart-define=SOCKET_BASE_URL=http://10.0.2.2:5000 \
+  --dart-define=GOOGLE_CLIENT_ID_ANDROID=<google-client-id> \
+  --dart-define=MOBILE_DEEP_LINK_BASE=acadintern://auth
+```
+
+4. For Firebase native files and push setup, see `mobile/FIREBASE_SETUP.md`.
 
 ## API Endpoints
 

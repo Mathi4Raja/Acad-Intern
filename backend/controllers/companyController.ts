@@ -275,7 +275,7 @@ export const submitManualVerification = async (req: AuthRequest, res: Response, 
 // @access  Private (Authenticated)
 export const getCompanies = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { search, industry, location, verified } = req.query;
+        const { search, industry, location, verified, page, limit } = req.query;
         let query: any = {};
 
         // Search by company name
@@ -298,12 +298,23 @@ export const getCompanies = async (req: AuthRequest, res: Response, next: NextFu
             query.verified = true;
         }
 
-        // Find companies with pagination (limit 100 for now)
-        const companies = await Company.find(query).limit(100).sort({ verified: -1, companyName: 1 });
+        const usePagination = page !== undefined || limit !== undefined;
+        const pageNum = Math.max(parseInt((page as string) || '1', 10), 1);
+        const limitNum = Math.max(parseInt((limit as string) || '10', 10), 1);
+        const skip = (pageNum - 1) * limitNum;
+
+        const total = await Company.countDocuments(query);
+        const companiesQuery = Company.find(query).sort({ verified: -1, companyName: 1 });
+        const companies = usePagination
+            ? await companiesQuery.skip(skip).limit(limitNum)
+            : await companiesQuery.limit(100);
 
         res.status(200).json({
             success: true,
             count: companies.length,
+            total,
+            page: pageNum,
+            limit: limitNum,
             data: companies
         });
     } catch (error) {
