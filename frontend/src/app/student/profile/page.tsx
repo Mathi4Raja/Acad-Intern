@@ -17,6 +17,7 @@ interface StudentProfile {
   department?: string
   semester?: number | null
   phone?: string
+  location?: string
   skills: string[]
   bio?: string
   cgpa?: number | null
@@ -62,6 +63,7 @@ export default function StudentProfile() {
     department: '',
     semester: null,
     phone: '',
+    location: '',
     skills: [],
     bio: '',
     cgpa: null,
