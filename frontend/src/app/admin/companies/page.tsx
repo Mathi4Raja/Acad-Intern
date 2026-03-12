@@ -504,16 +504,37 @@ function ManageCompaniesContent() {
                     <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Registry Entry</p>
                     <p className="text-[11px] font-bold text-gray-700 truncate">{formatDate(company.createdAt)}</p>
                   </div>
-                  <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors col-span-2 flex items-center justify-between">
-                    <div>
+                  <div className="bg-gray-50/50 rounded-xl p-2 border border-gray-100 group-hover:bg-white transition-colors col-span-2 flex items-center justify-between min-w-0">
+                    <div className="min-w-0 flex-1 mr-2">
                       <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Asset Links</p>
-                      <p className="text-[11px] font-black text-primary truncate hover:underline cursor-pointer">
-                        {company.website ? company.website.replace(/^https?:\/\//, '') : 'None Provided'}
-                      </p>
+                      {company.website ? (
+                        <a
+                          href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block text-[11px] font-black text-primary hover:underline truncate"
+                          title={company.website}
+                        >
+                          {company.website.replace(/^https?:\/\//, '')}
+                        </a>
+                      ) : (
+                        <p className="text-[11px] font-black text-gray-400 truncate">None Provided</p>
+                      )}
                     </div>
-                    <div className="bg-primary/5 px-2 py-1 rounded-lg border border-primary/10">
-                      <p className="text-[8px] font-black text-primary/60 uppercase tracking-tighter leading-none">Activity</p>
-                      <p className="text-[13px] font-black text-primary leading-none mt-1">Live</p>
+                    <div className={cn(
+                      "px-2 py-1 rounded-lg border",
+                      company.website
+                        ? "bg-primary/5 border-primary/10"
+                        : "bg-gray-100 border-gray-200"
+                    )}>
+                      <p className={cn(
+                        "text-[8px] font-black uppercase tracking-tighter leading-none",
+                        company.website ? "text-primary/60" : "text-gray-400"
+                      )}>Activity</p>
+                      <p className={cn(
+                        "text-[13px] font-black leading-none mt-1",
+                        company.website ? "text-primary" : "text-gray-400"
+                      )}>{company.website ? 'Live' : 'None'}</p>
                     </div>
                   </div>
                 </div>

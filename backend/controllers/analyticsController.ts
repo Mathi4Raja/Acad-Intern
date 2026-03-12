@@ -130,12 +130,9 @@ export const getStudentAnalytics = async (req: AuthRequest, res: Response, next:
         stats.searchAppearances.history = generateWeeklyData(currentSearchApps);
 
 
-        // 2. Application Rate
+        // 2. Application Rate (response rate: shortlisted+ / total applications this period)
         const applications = await Application.find({ studentId });
-        // Assume previous application count tracked? Hard to do without timestamp in model if not verified.
-        // Checking Application model... it usually has createdAt (timestamps: true) or appliedAt.
-        // Let's assume appliedAt or createdAt exists. 
-        // If Model has timestamps, we can stick to that.
+        const positiveStatuses = ['shortlisted', 'interview_scheduled', 'assessment_completed', 'accepted'];
 
         const currentApps = applications.filter(a => {
             const d = new Date((a as any).appliedAt || (a as any).createdAt);
@@ -147,40 +144,23 @@ export const getStudentAnalytics = async (req: AuthRequest, res: Response, next:
             return d >= sixtyDaysAgo && d < thirtyDaysAgo;
         });
 
-        if (stats.profileViews.total > 0) {
-            const currentRate = (currentApps.length / (stats.profileViews.total || 1)) * 100;
-            stats.applicationRate.value = `${currentRate.toFixed(1)}%`;
+        const currentSuccessful = currentApps.filter(a => positiveStatuses.includes(a.status));
+        const previousSuccessful = previousApps.filter(a => positiveStatuses.includes(a.status));
 
-            // Previous Rate
-            const previousTotalViews = previousProfileViews.length;
-            const previousRate = previousTotalViews > 0 ? (previousApps.length / previousTotalViews) * 100 : 0;
+        const currentRate = currentApps.length > 0
+            ? (currentSuccessful.length / currentApps.length) * 100
+            : 0;
+        const previousRate = previousApps.length > 0
+            ? (previousSuccessful.length / previousApps.length) * 100
+            : 0;
 
-            stats.applicationRate.trend = calculateTrend(currentRate, previousRate);
-        }
+        stats.applicationRate.value = `${currentRate.toFixed(1)}%`;
+        stats.applicationRate.trend = calculateTrend(currentRate, previousRate);
 
-        // 3. Profile Strength (Real Logic)
+        // 3. Profile Strength — use the stored completenessScore for consistency with updateProfile
         const profile = await StudentProfile.findOne({ userId: studentId });
         if (profile) {
-            let score = 0;
-            const maxScore = 100;
-
-            // Scoring Rules (Adjusted for available schema fields)
-            if (profile.resumeUrl) score += 30;
-            if (profile.bio && profile.bio.length > 20) score += 15;
-            if (profile.skills && profile.skills.length >= 5) score += 30;
-            if (profile.skills && profile.skills.length >= 3 && profile.skills.length < 5) score += 15;
-            // Experience and Education not yet in schema/type, handling safely
-            if (profile.linkedIn || profile.github) score += 25;
-
-            stats.profileStrength.value = `${Math.min(score, 100)}%`;
-
-            // Trend for profile strength is tricky without historical snapshots.
-            // PROPOSAL: Leave trend as 0 or mock it as "stable" since profile strength doesn't fluctuate wildly daily.
-            // Or compare to a fixed "Last Month" snapshot if we had one.
-            // Ideally we'd need a 'ProfileHistory' model.
-            // For now, let's keep trend as 0 but valid score.
-            stats.profileStrength.trend = 5; // Positive reinforcement for now? Or just 0. 
-            // Let's set it to 0 per "actual data" request (no history exists).
+            stats.profileStrength.value = `${profile.completenessScore ?? 0}%`;
             stats.profileStrength.trend = 0;
         }
 

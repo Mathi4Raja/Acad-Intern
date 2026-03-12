@@ -24,7 +24,7 @@ const updateCompanySchema = z.object({
 });
 
 const updateInternshipStatusSchema = z.object({
-    status: z.enum(['active', 'inactive', 'completed', 'in_progress', 'rejected'])
+    status: z.enum(['active', 'inactive'])
 });
 
 const updateReportStatusSchema = z.object({
@@ -911,35 +911,72 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
             default: startDate.setDate(startDate.getDate() - 30); // Default 30 days
         }
 
-        // 1. User Growth (Group by Month for trend)
-        const userGrowth = await User.aggregate([
-            { $match: { createdAt: { $gte: startDate } } },
-            {
-                $group: {
-                    _id: {
-                        month: { $month: "$createdAt" },
-                        year: { $year: "$createdAt" },
-                        role: "$role"
-                    },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { "_id.year": 1, "_id.month": 1 } }
-        ]);
-
-        // Process user growth for chart
+        // 1. User Growth — daily granularity for short ranges, monthly for longer ones
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const userGrowthMap = new Map();
+        const isShortRange = range === '7days' || range === '30days';
+        let userGrowthData: { month: string; students: number; companies: number }[];
 
-        userGrowth.forEach((item: any) => {
-            const key = `${months[item._id.month - 1]}`;
-            if (!userGrowthMap.has(key)) {
-                userGrowthMap.set(key, { month: key, students: 0, companies: 0 });
+        if (isShortRange) {
+            const numDays = range === '7days' ? 7 : 30;
+            const rawDailyGrowth = await User.aggregate([
+                { $match: { createdAt: { $gte: startDate } } },
+                {
+                    $group: {
+                        _id: {
+                            day: { $dayOfMonth: '$createdAt' },
+                            month: { $month: '$createdAt' },
+                            year: { $year: '$createdAt' },
+                            role: '$role'
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
+            ]);
+
+            // Pre-fill every day in the range so the chart has no gaps
+            const dayMap = new Map<string, { month: string; students: number; companies: number }>();
+            for (let i = numDays - 1; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const key = `${months[d.getMonth()]} ${d.getDate()}`;
+                dayMap.set(key, { month: key, students: 0, companies: 0 });
             }
-            if (item._id.role === 'student') userGrowthMap.get(key).students += item.count;
-            if (item._id.role === 'company') userGrowthMap.get(key).companies += item.count;
-        });
-        const userGrowthData = Array.from(userGrowthMap.values());
+            rawDailyGrowth.forEach((item: any) => {
+                const key = `${months[item._id.month - 1]} ${item._id.day}`;
+                const entry = dayMap.get(key);
+                if (entry) {
+                    if (item._id.role === 'student') entry.students += item.count;
+                    if (item._id.role === 'company') entry.companies += item.count;
+                }
+            });
+            userGrowthData = Array.from(dayMap.values());
+        } else {
+            // Monthly — include year in key to avoid cross-year collision (e.g. Jan 2025 ≠ Jan 2026)
+            const rawMonthlyGrowth = await User.aggregate([
+                { $match: { createdAt: { $gte: startDate } } },
+                {
+                    $group: {
+                        _id: {
+                            month: { $month: '$createdAt' },
+                            year: { $year: '$createdAt' },
+                            role: '$role'
+                        },
+                        count: { $sum: 1 }
+                    }
+                },
+                { $sort: { '_id.year': 1, '_id.month': 1 } }
+            ]);
+            const monthMap = new Map<string, { month: string; students: number; companies: number }>();
+            rawMonthlyGrowth.forEach((item: any) => {
+                const key = `${months[item._id.month - 1]} ${item._id.year}`;
+                if (!monthMap.has(key)) monthMap.set(key, { month: key, students: 0, companies: 0 });
+                const entry = monthMap.get(key)!;
+                if (item._id.role === 'student') entry.students += item.count;
+                if (item._id.role === 'company') entry.companies += item.count;
+            });
+            userGrowthData = Array.from(monthMap.values());
+        }
 
         // 2. Internship Statistics
         const internshipStats = await Internship.aggregate([
@@ -955,9 +992,8 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
         // Map backend statuses to frontend chart labels/colors
         const internshipData = [
             { label: 'Active', value: internshipStats.find((i: any) => i._id === 'active')?.count || 0, color: '#10b981' }, // green-500
-            { label: 'Completed', value: internshipStats.find((i: any) => i._id === 'completed')?.count || 0, color: '#8b5cf6' }, // violet-500
-            { label: 'In Progress', value: internshipStats.find((i: any) => i._id === 'in_progress')?.count || 0, color: '#f59e0b' }, // amber-500
-            { label: 'Rejected', value: internshipStats.find((i: any) => i._id === 'rejected')?.count || 0, color: '#ef4444' } // red-500
+            { label: 'Inactive', value: internshipStats.find((i: any) => i._id === 'inactive')?.count || 0, color: '#6b7280' }, // gray-500
+            { label: 'Expired', value: internshipStats.find((i: any) => i._id === 'expired')?.count || 0, color: '#f59e0b' }, // amber-500
         ].map(item => ({ ...item, percentage: totalInternships ? ((item.value / totalInternships) * 100).toFixed(1) : 0 }));
 
         // Add total posted for reference in the UI list if needed, but the main bars are statuses
@@ -968,25 +1004,26 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
             percentage: '100.0'
         });
 
-        // 3. Application Funnel
+        // 3. Application Funnel — all-time conversion pipeline (not time-range filtered;
+        // short ranges produce misleading funnels since fresh apps are all still "pending")
         const appStats = await Application.aggregate([
-            { $match: { createdAt: { $gte: startDate } } },
             {
                 $group: {
-                    _id: "$status",
+                    _id: '$status',
                     count: { $sum: 1 }
                 }
             }
         ]);
 
         const totalApps = appStats.reduce((acc: number, curr: any) => acc + curr.count, 0);
-        const funnelOrder = ['pending', 'reviewed', 'shortlisted', 'interview_scheduled', 'accepted'];
+        // Only include statuses that actually exist in the Application model
+        const funnelOrder = ['pending', 'shortlisted', 'interview_scheduled', 'assessment_completed', 'accepted'];
         const funnelLabels: Record<string, string> = {
-            'pending': 'Under Review', // Or 'Pending Review'
-            'reviewed': 'Reviewed',
-            'shortlisted': 'Shortlisted',
-            'interview_scheduled': 'Interview Scheduled',
-            'accepted': 'Accepted'
+            pending: 'Pending Review',
+            shortlisted: 'Shortlisted',
+            interview_scheduled: 'Interview Scheduled',
+            assessment_completed: 'Assessment Done',
+            accepted: 'Accepted'
         };
 
         const funnelData = funnelOrder.map(status => {
@@ -1002,32 +1039,34 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
             funnelData.unshift({ stage: 'Total Applications', count: totalApps, percentage: '100' });
         }
 
-        // 4. Top Companies
+        // 4. Top Companies — filtered to time range; real hiringRate = accepted / total
         const topCompanies = await Application.aggregate([
+            { $match: { createdAt: { $gte: startDate } } },
             {
                 $lookup: {
-                    from: "internships",
-                    localField: "internshipId",
-                    foreignField: "_id",
-                    as: "internship"
+                    from: 'internships',
+                    localField: 'internshipId',
+                    foreignField: '_id',
+                    as: 'internship'
                 }
             },
-            { $unwind: "$internship" },
+            { $unwind: '$internship' },
             {
                 $lookup: {
-                    from: "companies",
-                    localField: "internship.companyId",
-                    foreignField: "_id",
-                    as: "company"
+                    from: 'companies',
+                    localField: 'internship.companyId',
+                    foreignField: '_id',
+                    as: 'company'
                 }
             },
-            { $unwind: "$company" },
+            { $unwind: '$company' },
             {
                 $group: {
-                    _id: "$company._id",
-                    name: { $first: "$company.companyName" },
+                    _id: '$company._id',
+                    name: { $first: '$company.companyName' },
                     applications: { $sum: 1 },
-                    internships: { $addToSet: "$internship._id" }
+                    accepted: { $sum: { $cond: [{ $eq: ['$status', 'accepted'] }, 1, 0] } },
+                    internships: { $addToSet: '$internship._id' }
                 }
             },
             { $sort: { applications: -1 } },
@@ -1036,19 +1075,26 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
                 $project: {
                     name: 1,
                     applications: 1,
-                    internships: { $size: "$internships" },
-                    hiringRate: { $literal: Math.floor(Math.random() * 15) + 5 } // Simulation for now
+                    internships: { $size: '$internships' },
+                    hiringRate: {
+                        $cond: [
+                            { $gt: ['$applications', 0] },
+                            { $round: [{ $multiply: [{ $divide: ['$accepted', '$applications'] }, 100] }, 1] },
+                            0
+                        ]
+                    }
                 }
             }
         ]);
 
-        // 5. Geo Distribution
+        // 5. Geo Distribution (case-insensitive grouping)
         const geoDist = await StudentProfile.aggregate([
             { $match: { location: { $exists: true, $ne: "" } } },
             {
                 $group: {
-                    _id: "$location",
-                    users: { $sum: 1 }
+                    _id: { $toLower: { $trim: { input: "$location" } } },
+                    users: { $sum: 1 },
+                    displayName: { $first: "$location" }
                 }
             },
             { $sort: { users: -1 } },
@@ -1057,7 +1103,7 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
 
         const totalGeoUsers = geoDist.reduce((acc: number, curr: any) => acc + curr.users, 0);
         const geoData = geoDist.map((g: any) => ({
-            location: g._id,
+            location: g._id.charAt(0).toUpperCase() + g._id.slice(1),
             users: g.users,
             percentage: totalGeoUsers ? ((g.users / totalGeoUsers) * 100).toFixed(1) : 0
         }));
@@ -1174,7 +1220,8 @@ export const getAnalyticsStats = async (req: AuthRequest, res: Response, next: N
                     internshipGrowth: internshipGrowthPct.toFixed(1),
                     totalApplications: await Application.countDocuments(),
                     applicationGrowth: appGrowthPct.toFixed(1),
-                    activeCompanies: await Company.countDocuments({ status: 'active' }),
+                    // Company has no status field — status lives on the User document
+                activeCompanies: await User.countDocuments({ role: 'company', status: 'active' }),
                     companyGrowth: companyGrowthPct.toFixed(1)
                 }
             }

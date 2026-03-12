@@ -4,6 +4,7 @@ import Application from '../models/Application';
 import Internship from '../models/Internship';
 import Company from '../models/Company';
 import Notification from '../models/Notification';
+import ProfileView from '../models/ProfileView';
 import { createNotification } from '../utils/notificationService';
 import { sendEmail } from '../utils/emailService';
 import StudentProfile from '../models/StudentProfile';
@@ -240,6 +241,30 @@ export const getInternshipApplications = async (req: AuthRequest, res: Response,
                 }
             };
         });
+
+        // Record search appearances for all students in the list (once per viewer per student per day)
+        const viewerId = req.user!._id;
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const viewerRole = req.user!.role;
+        Promise.all(
+            studentIds.map(async (sid) => {
+                const alreadyToday = await ProfileView.findOne({
+                    viewerId,
+                    profileOwnerId: sid,
+                    viewType: 'search_appearance',
+                    viewedAt: { $gte: todayStart }
+                }).lean();
+                if (!alreadyToday) {
+                    return ProfileView.create({
+                        viewerId,
+                        profileOwnerId: sid,
+                        viewerRole,
+                        viewType: 'search_appearance'
+                    });
+                }
+            })
+        ).catch((err: Error) => console.error('Failed to record search appearances:', err));
 
         res.status(200).json({
             success: true,

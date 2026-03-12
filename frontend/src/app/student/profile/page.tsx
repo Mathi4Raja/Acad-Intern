@@ -591,7 +591,7 @@ export default function StudentProfile() {
               <h1 className="text-xl sm:text-2xl font-black text-gray-900">{profile.name || user?.name}</h1>
               <div className="flex flex-wrap gap-2 text-sm text-gray-500 mt-1">
                 {profile.department && <span className="flex items-center gap-1"><FileText size={14} /> {profile.department}</span>}
-                {/* {profile.location && <span className="flex items-center gap-1"><MapPin size={14}/> {profile.location}</span>} */}
+                {profile.location && <span className="flex items-center gap-1"><MapPin size={14}/> {profile.location}</span>}
               </div>
             </div>
 
@@ -710,6 +710,25 @@ export default function StudentProfile() {
                   <Phone size={14} />
                 </div>
                 <span className="text-sm font-semibold text-gray-800">{profile.phone || 'Not provided'}</span>
+              </div>
+            )}
+          </div>
+          <div className="space-y-1 ml-1 cursor-default">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Location</label>
+            {isEditing ? (
+              <input
+                type="text"
+                value={profile.location || ''}
+                onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                placeholder="e.g. Bangalore"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+            ) : (
+              <div className="flex items-center gap-3 py-1">
+                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
+                  <MapPin size={14} />
+                </div>
+                <span className="text-sm font-semibold text-gray-800">{profile.location || 'Not provided'}</span>
               </div>
             )}
           </div>

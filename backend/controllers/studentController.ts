@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { z } from 'zod';
 import StudentProfile from '../models/StudentProfile';
+import ProfileView from '../models/ProfileView';
 import { AuthRequest } from '../types';
 import { getKeyFromUrl, hasFile } from '../utils/r2Storage';
 
@@ -37,7 +38,8 @@ const profileSchema = z.object({
     github: flexibleUrl.optional().or(z.literal('')),
     profilePicture: z.string().url().optional().or(z.literal('')).nullable(),
     bannerImage: z.string().url().optional().or(z.literal('')).nullable(),
-    phone: z.string().optional()
+    phone: z.string().optional(),
+    location: z.string().optional()
 });
 
 // @desc    Get current student profile
@@ -108,6 +110,7 @@ export const updateProfile = async (req: AuthRequest, res: Response, next: NextF
         if (validatedData.profilePicture !== undefined) profile.profilePicture = validatedData.profilePicture || undefined;
         if (validatedData.bannerImage !== undefined) profile.bannerImage = validatedData.bannerImage || undefined;
         if (validatedData.phone) profile.phone = validatedData.phone;
+        if (validatedData.location !== undefined) profile.location = validatedData.location;
 
         profile.calculateCompleteness();
         await profile.save();
@@ -162,6 +165,14 @@ export const getStudentProfile = async (req: AuthRequest, res: Response, next: N
         const profileData = profile.toObject();
         (profileData as any).name = studentUser.name;
         (profileData as any).email = studentUser.email;
+
+        // Record the profile view (fire-and-forget; never block the response)
+        ProfileView.create({
+            viewerId: req.user!._id,
+            profileOwnerId: studentUser._id,
+            viewerRole: req.user!.role,
+            viewType: 'profile_view'
+        }).catch((err: Error) => console.error('Failed to record profile view:', err));
 
         res.status(200).json({
             success: true,
