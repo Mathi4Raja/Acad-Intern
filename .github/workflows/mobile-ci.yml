@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Mobile CI
+
+"on":
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-ci.yml'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: ./mobile
+        run: flutter pub get
+
+      - name: Build release APK
+        working-directory: ./mobile
+        run: flutter build apk --release
+
+      - name: Publish to GitHub Releases
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        run: |
+          # Delete release AND its tag via the API (--cleanup-tag avoids needing raw git auth)
+          gh release delete mobile-latest --cleanup-tag --repo $GITHUB_REPOSITORY --yes 2>/dev/null || true
+
+          gh release create mobile-latest \
+            --repo $GITHUB_REPOSITORY \
+            --title "Mobile App – Latest" \
+            --notes "Latest release build. Automatically updated on every push to main." \
+            "mobile/build/app/outputs/flutter-apk/app-release.apk#acad-intern.apk"

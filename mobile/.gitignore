@@ -1,0 +1,22 @@
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+coverage/
+
+# IDE
+.idea/
+.vscode/
+
+# Platform tool output
+android/.gradle/
+ios/Pods/
+
+# Firebase local credentials
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Local dart-define config files
+env.local.json

@@ -2,10 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 
 export function CTASection() {
-    const router = useRouter();
     const ref = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -41,16 +39,13 @@ export function CTASection() {
                 {/* Action Button */}
                 <div className="flex justify-center mb-4 md:mb-8 reveal" style={{ transitionDelay: "200ms" }}>
                     <Button
+                        asChild
                         size="lg"
-                        onClick={() => {
-                            // Smooth navigation with slight delay for click effect
-                            setTimeout(() => {
-                                router.push('/signup');
-                            }, 250);
-                        }}
                         className="h-11 md:h-13 px-8 md:px-12 rounded-lg md:rounded-xl bg-white text-primary hover:bg-white/95 font-black text-sm md:text-lg shadow-2xl hover:scale-105 active:scale-90 transition-all duration-300 ease-out cursor-pointer shadow-white/10 border-none outline-none group"
                     >
-                        Get Started Free
+                        <a href="/api/download-apk" download="acad-intern.apk">
+                            Get the App
+                        </a>
                     </Button>
                 </div>
 
