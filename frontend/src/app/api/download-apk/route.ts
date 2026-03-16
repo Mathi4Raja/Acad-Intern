@@ -43,23 +43,15 @@ export async function GET() {
     // Step 1: get the release and find the APK asset
     const releaseRes = await fetch(GITHUB_RELEASE_API, { headers });
     if (!releaseRes.ok) {
-        const body = await releaseRes.text();
-        return new NextResponse(
-            `GitHub API error ${releaseRes.status}: ${body}`,
-            { status: 502 }
-        );
+        return new NextResponse("Release not found", { status: 502 });
     }
 
     const release = await releaseRes.json();
     const asset = (release.assets as { name: string; url: string }[])?.find(
-        (a) => a.name === "acad-intern.apk"
+        (a) => a.name === "app-release.apk"
     );
     if (!asset) {
-        const names = (release.assets as { name: string }[])?.map((a) => a.name) ?? [];
-        return new NextResponse(
-            `APK not found in release. Assets: ${JSON.stringify(names)}`,
-            { status: 502 }
-        );
+        return new NextResponse("APK not found in release", { status: 502 });
     }
 
     // Step 2: hit the asset API URL with Accept: octet-stream — GitHub
