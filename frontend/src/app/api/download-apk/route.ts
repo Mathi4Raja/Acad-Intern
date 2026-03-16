@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 
-const GITHUB_APK_URL =
-    "https://github.com/Mathi4Raja/Acad-Intern/releases/download/mobile-latest/acad-intern.apk";
+const GITHUB_RELEASE_API =
+    "https://api.github.com/repos/Mathi4Raja/Acad-Intern/releases/tags/mobile-latest";
 
 export async function GET() {
     // Local dev override: set APK_PATH in .env.local to serve the file directly
@@ -31,15 +31,37 @@ export async function GET() {
         });
     }
 
-    // Production: use GitHub token to resolve the signed CDN URL, then redirect
-    // the browser there directly — avoids proxying 60 MB through Vercel.
+    // Production: use the GitHub API to locate the APK asset, then get its
+    // signed CDN URL via the asset download endpoint (redirect: "manual").
     const token = process.env.GITHUB_TOKEN;
-    const response = await fetch(GITHUB_APK_URL, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+    const headers: Record<string, string> = {
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    // Step 1: get the release and find the APK asset
+    const releaseRes = await fetch(GITHUB_RELEASE_API, { headers });
+    if (!releaseRes.ok) {
+        return new NextResponse("Release not found", { status: 502 });
+    }
+
+    const release = await releaseRes.json();
+    const asset = (release.assets as { name: string; url: string }[])?.find(
+        (a) => a.name === "acad-intern.apk"
+    );
+    if (!asset) {
+        return new NextResponse("APK not found in release", { status: 502 });
+    }
+
+    // Step 2: hit the asset API URL with Accept: octet-stream — GitHub
+    // responds with a 302 redirect to a short-lived signed CDN URL.
+    const assetRes = await fetch(asset.url, {
+        headers: { ...headers, Accept: "application/octet-stream" },
         redirect: "manual",
     });
 
-    const signedUrl = response.headers.get("location");
+    const signedUrl = assetRes.headers.get("location");
     if (!signedUrl) {
         return new NextResponse("APK not available", { status: 502 });
     }
