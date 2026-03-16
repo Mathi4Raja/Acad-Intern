@@ -55,7 +55,11 @@ export async function GET() {
         (a) => a.name === "acad-intern.apk"
     );
     if (!asset) {
-        return new NextResponse("APK not found in release", { status: 502 });
+        const names = (release.assets as { name: string }[])?.map((a) => a.name) ?? [];
+        return new NextResponse(
+            `APK not found in release. Assets: ${JSON.stringify(names)}`,
+            { status: 502 }
+        );
     }
 
     // Step 2: hit the asset API URL with Accept: octet-stream — GitHub
