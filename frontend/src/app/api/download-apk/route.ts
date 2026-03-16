@@ -43,7 +43,11 @@ export async function GET() {
     // Step 1: get the release and find the APK asset
     const releaseRes = await fetch(GITHUB_RELEASE_API, { headers });
     if (!releaseRes.ok) {
-        return new NextResponse("Release not found", { status: 502 });
+        const body = await releaseRes.text();
+        return new NextResponse(
+            `GitHub API error ${releaseRes.status}: ${body}`,
+            { status: 502 }
+        );
     }
 
     const release = await releaseRes.json();
