@@ -48,7 +48,7 @@ export async function GET() {
 
     const release = await releaseRes.json();
     const asset = (release.assets as { name: string; url: string }[])?.find(
-        (a) => a.name === "app-release.apk"
+        (a) => a.name === "AcadIntern-latest release.apk"
     );
     if (!asset) {
         return new NextResponse("APK not found in release", { status: 502 });

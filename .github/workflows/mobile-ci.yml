@@ -44,8 +44,11 @@ jobs:
           # Delete release AND its tag via the API (--cleanup-tag avoids needing raw git auth)
           gh release delete mobile-latest --cleanup-tag --repo $GITHUB_REPOSITORY --yes 2>/dev/null || true
 
+          mv mobile/build/app/outputs/flutter-apk/app-release.apk \
+            "mobile/build/app/outputs/flutter-apk/AcadIntern-latest release.apk"
+
           gh release create mobile-latest \
             --repo $GITHUB_REPOSITORY \
             --title "Mobile App – Latest" \
             --notes "Latest release build. Automatically updated on every push to main." \
-            "mobile/build/app/outputs/flutter-apk/app-release.apk#acad-intern.apk"
+            "mobile/build/app/outputs/flutter-apk/AcadIntern-latest release.apk"
