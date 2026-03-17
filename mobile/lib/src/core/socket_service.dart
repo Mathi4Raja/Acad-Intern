@@ -52,6 +52,9 @@ class SocketService {
     _socket?.on('message-deleted', (data) {
       _status.add({'event': 'message-deleted', 'data': data});
     });
+    _socket?.on('conversation-updated', (data) {
+      _status.add({'event': 'conversation-updated', 'data': data});
+    });
     _socket?.connect();
   }
 

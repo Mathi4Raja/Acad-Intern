@@ -37,6 +37,7 @@ final pushNavigationProvider = StreamProvider<String>((ref) {
 });
 
 final inboxRefreshTriggerProvider = StateProvider<int>((ref) => 0);
+final activeChatIdProvider = StateProvider<String?>((ref) => null);
 
 final inboxCountsProvider = FutureProvider<InboxCounts>((ref) async {
   ref.watch(inboxRefreshTriggerProvider);

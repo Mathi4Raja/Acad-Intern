@@ -25,17 +25,43 @@ class MessagesScreen extends ConsumerStatefulWidget {
 }
 
 class _MessagesScreenState extends ConsumerState<MessagesScreen> {
-  late Future<List<ConversationModel>> _future;
+  List<ConversationModel> _conversations = const [];
+  bool _loading = true;
+  String? _error;
   String _query = '';
   bool _deepLinked = false;
+  StreamSubscription<Map<String, dynamic>>? _messageSubscription;
+  StreamSubscription<Map<String, dynamic>>? _statusSubscription;
 
   @override
   void initState() {
     super.initState();
-    _future = ref.read(studentRepositoryProvider).fetchConversations();
+    _loadConversations(showLoading: true);
+    _messageSubscription =
+        ref.read(socketServiceProvider).messages.listen((data) {
+      _handleMessageEvent(data);
+    });
+    _statusSubscription =
+        ref.read(socketServiceProvider).status.listen((event) {
+      final eventName = event['event']?.toString();
+      if (eventName == 'conversation-updated') {
+        final data = event['data'] as Map<String, dynamic>? ?? {};
+        _handleConversationUpdated(data);
+      } else if (eventName == 'seen') {
+        final data = event['data'] as Map<String, dynamic>? ?? {};
+        _handleConversationSeen(data);
+      }
+    });
     if (widget.highlightedApplicationId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _tryDeepLinkOpen());
     }
+  }
+
+  @override
+  void dispose() {
+    _messageSubscription?.cancel();
+    _statusSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _tryDeepLinkOpen() async {
@@ -43,7 +69,15 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
     _deepLinked = true;
 
     final applicationId = widget.highlightedApplicationId!;
-    final conversations = await ref.read(studentRepositoryProvider).fetchConversations();
+    final conversations = _conversations.isNotEmpty
+        ? _conversations
+        : await ref.read(studentRepositoryProvider).fetchConversations();
+    if (_conversations.isEmpty && mounted) {
+      setState(() {
+        _conversations = conversations;
+        _loading = false;
+      });
+    }
     final existing = conversations.where((item) => item.applicationId == applicationId);
     if (!mounted) return;
 
@@ -69,10 +103,130 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
     } catch (_) {}
   }
 
+  Future<void> _loadConversations({bool showLoading = false}) async {
+    if (!mounted) return;
+    if (showLoading) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
+    try {
+      final next = await ref.read(studentRepositoryProvider).fetchConversations();
+      if (!mounted) return;
+      setState(() {
+        _conversations = next;
+        _loading = false;
+        _error = null;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = 'Failed to load conversations';
+      });
+    }
+  }
+
   Future<void> _reload() async {
-    final next = ref.read(studentRepositoryProvider).fetchConversations();
-    setState(() => _future = next);
-    await next;
+    await _loadConversations(showLoading: false);
+  }
+
+  DateTime? _parseMessageTime(Map<String, dynamic>? message) {
+    final raw = message?['createdAt']?.toString();
+    if (raw == null || raw.isEmpty) return null;
+    return DateTime.tryParse(raw)?.toLocal();
+  }
+
+  ConversationModel _mergeConversation(
+    ConversationModel existing, {
+    String? lastMessage,
+    DateTime? lastMessageAt,
+    int? unreadCount,
+  }) {
+    return ConversationModel(
+      applicationId: existing.applicationId,
+      otherPartyName: existing.otherPartyName,
+      internshipTitle: existing.internshipTitle,
+      unreadCount: unreadCount ?? existing.unreadCount,
+      lastMessage: lastMessage ?? existing.lastMessage,
+      applicationStatus: existing.applicationStatus,
+      lastMessageAt: lastMessageAt ?? existing.lastMessageAt,
+      companyLogo: existing.companyLogo,
+      studentProfilePicture: existing.studentProfilePicture,
+    );
+  }
+
+  bool _updateConversation(
+    String applicationId,
+    ConversationModel Function(ConversationModel existing) updater,
+  ) {
+    final index =
+        _conversations.indexWhere((item) => item.applicationId == applicationId);
+    if (index == -1) return false;
+    final next = [..._conversations];
+    next[index] = updater(next[index]);
+    if (mounted) {
+      setState(() => _conversations = next);
+    }
+    return true;
+  }
+
+  void _handleMessageEvent(Map<String, dynamic> data) {
+    final message = data['message'] as Map<String, dynamic>? ?? {};
+    final applicationId =
+        (message['applicationId'] ?? data['applicationId'])?.toString() ?? '';
+    if (applicationId.isEmpty) return;
+    final updated = _updateConversation(applicationId, (existing) {
+      return _mergeConversation(
+        existing,
+        lastMessage: message['content']?.toString(),
+        lastMessageAt: _parseMessageTime(message),
+      );
+    });
+    if (!updated) {
+      _reload();
+    }
+  }
+
+  void _handleConversationUpdated(Map<String, dynamic> data) {
+    final applicationId = data['applicationId']?.toString() ?? '';
+    if (applicationId.isEmpty) return;
+
+    final message = data['message'] as Map<String, dynamic>? ?? {};
+    final increment = (data['unreadCountIncrement'] as num?)?.toInt();
+    final activeChatId = ref.read(activeChatIdProvider);
+    final updated = _updateConversation(applicationId, (existing) {
+      var unread = existing.unreadCount;
+      if (increment != null) {
+        unread = activeChatId == applicationId ? 0 : unread + increment;
+      } else if (activeChatId == applicationId) {
+        unread = 0;
+      }
+      return _mergeConversation(
+        existing,
+        lastMessage: message['content']?.toString(),
+        lastMessageAt: _parseMessageTime(message),
+        unreadCount: unread,
+      );
+    });
+    if (!updated) {
+      _reload();
+    }
+  }
+
+  void _handleConversationSeen(Map<String, dynamic> data) {
+    final applicationId = data['applicationId']?.toString() ?? '';
+    if (applicationId.isEmpty) return;
+    final seenBy = data['userId']?.toString();
+    final currentUserId = ref.read(sessionControllerProvider).value?.user.id;
+    if (currentUserId == null || seenBy != currentUserId) return;
+    final updated = _updateConversation(applicationId, (existing) {
+      return _mergeConversation(existing, unreadCount: 0);
+    });
+    if (!updated) {
+      _reload();
+    }
   }
 
   String _formatLastSeen(DateTime? timestamp) {
@@ -127,14 +281,11 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
   Widget build(BuildContext context) {
     return StudentPageScaffold(
       title: 'Messages',
-      body: FutureBuilder<List<ConversationModel>>(
-        future: _future,
-        builder: (context, snapshot) {
-          return RefreshIndicator(
-            onRefresh: _reload,
-            child: Builder(
-              builder: (context) {
-                if (snapshot.connectionState != ConnectionState.done) {
+      body: RefreshIndicator(
+        onRefresh: _reload,
+        child: Builder(
+          builder: (context) {
+            if (_loading && _conversations.isEmpty) {
                   return ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
@@ -144,17 +295,17 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                     ],
                   );
                 }
-                if (snapshot.hasError || !snapshot.hasData) {
+                if (_error != null && _conversations.isEmpty) {
                   return ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
-                    children: const [
-                      SizedBox(height: 140),
-                      Center(child: Text('Failed to load conversations')),
+                    children: [
+                      const SizedBox(height: 140),
+                      Center(child: Text(_error!)),
                     ],
                   );
                 }
-                final conversations = snapshot.data!;
+                final conversations = _conversations;
                 final filtered = conversations.where((item) {
                   if (_query.isEmpty) return true;
                   final q = _query.toLowerCase();
@@ -371,9 +522,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                 );
               },
             ),
-          );
-        },
-      ),
+          ),
     );
   }
 }
@@ -465,17 +614,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   bool _sending = false;
   DateTime? _mutedUntil;
   bool _isAppActive = true;
+  late final StateController<String?> _activeChatController;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _activeChatController = ref.read(activeChatIdProvider.notifier);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _activeChatController.state = widget.applicationId;
+      }
+    });
     _bootstrap();
-  }
-
-  bool _isChatVisible() {
-    final route = ModalRoute.of(context);
-    return route?.isCurrent ?? true;
   }
 
   Future<void> _bootstrap() async {
@@ -506,12 +657,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       // If we are viewing this chat, mark incoming messages as seen immediately
       final currentUserId =
           ref.read(sessionControllerProvider).value?.user.id;
+      final activeChatId = ref.read(activeChatIdProvider);
       if (_isAppActive &&
-          _isChatVisible() &&
+          activeChatId == widget.applicationId &&
           currentUserId != null &&
           next.senderId.isNotEmpty &&
           next.senderId != currentUserId) {
         socket.markAsSeen(widget.applicationId);
+        repository.markConversationSeen(widget.applicationId);
         ref.read(inboxRefreshTriggerProvider.notifier).state++;
       }
     });
@@ -1109,6 +1262,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     _typingDebounce?.cancel();
     _stopTyping();
     WidgetsBinding.instance.removeObserver(this);
+    if (_activeChatController.state == widget.applicationId) {
+      _activeChatController.state = null;
+    }
     ref.read(socketServiceProvider).leaveApplication(widget.applicationId);
     _messageController.dispose();
     _inputFocusNode.dispose();
@@ -1119,7 +1275,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _isAppActive = state == AppLifecycleState.resumed;
-    if (_isAppActive && _isChatVisible()) {
+    final activeChatId = ref.read(activeChatIdProvider);
+    if (_isAppActive && activeChatId == widget.applicationId) {
       final currentUserId = ref.read(sessionControllerProvider).value?.user.id;
       if (currentUserId != null) {
         final hasUnseenFromOther = _messages.any((item) =>
@@ -1128,6 +1285,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             item.status != 'seen');
         if (hasUnseenFromOther) {
           ref.read(socketServiceProvider).markAsSeen(widget.applicationId);
+          ref
+              .read(studentRepositoryProvider)
+              .markConversationSeen(widget.applicationId);
           ref.read(inboxRefreshTriggerProvider.notifier).state++;
         }
       }
