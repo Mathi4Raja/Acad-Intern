@@ -102,12 +102,30 @@ class PushService {
   }
 
   Future<void> _configureNotificationChannels() async {
+    if (!Platform.isAndroid) {
+      return;
+    }
     final androidPlugin = _localNotifications
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
-    await androidPlugin?.createNotificationChannel(_defaultChannel);
-    await androidPlugin?.requestNotificationsPermission();
+    if (androidPlugin == null) {
+      debugPrint('PushService: Android notifications plugin unavailable');
+      return;
+    }
+    await androidPlugin.createNotificationChannel(_defaultChannel);
+    final wasEnabled = await androidPlugin.areNotificationsEnabled();
+    debugPrint('PushService: Android notifications enabled=$wasEnabled');
+    try {
+      final granted = await androidPlugin.requestNotificationsPermission();
+      debugPrint('PushService: Android notification request result=$granted');
+    } catch (error) {
+      debugPrint(
+        'PushService: Android notification request failed: $error',
+      );
+    }
+    final isEnabled = await androidPlugin.areNotificationsEnabled();
+    debugPrint('PushService: Android notifications enabled(after)=$isEnabled');
   }
 
   void _handleLocalNotificationTap(String? payload) {
@@ -174,16 +192,26 @@ class PushService {
     try {
       await _localNotifications.initialize(
         const InitializationSettings(
-          android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+          android: AndroidInitializationSettings('@mipmap/launcher_icon'),
           iOS: DarwinInitializationSettings(),
         ),
         onDidReceiveNotificationResponse: (response) {
           _handleLocalNotificationTap(response.payload);
         },
       );
-      await _configureNotificationChannels();
+    } catch (error) {
+      debugPrint('PushService: local notifications init failed: $error');
+      return;
+    }
 
-      final messaging = FirebaseMessaging.instance;
+    try {
+      await _configureNotificationChannels();
+    } catch (error) {
+      debugPrint('PushService: channel setup failed: $error');
+    }
+
+    final messaging = FirebaseMessaging.instance;
+    try {
       final permission = await messaging.requestPermission(
         alert: true,
         badge: true,
@@ -192,59 +220,66 @@ class PushService {
       debugPrint(
         'PushService: permission status=${permission.authorizationStatus}',
       );
+    } catch (error) {
+      debugPrint('PushService: permission request failed: $error');
+    }
+
+    try {
       await messaging.setForegroundNotificationPresentationOptions(
         alert: true,
         badge: true,
         sound: true,
       );
-
-      try {
-        await syncTokenWithBackend();
-      } catch (_) {
-        // Device registration requires auth and is retried after login.
-      }
-
-      _onMessageSubscription = FirebaseMessaging.onMessage.listen((message) async {
-        debugPrint(
-          'PushService: foreground message data=${message.data} notification=${message.notification?.title}',
-        );
-        await _showForegroundNotification(message);
-      });
-
-      _onMessageOpenedSubscription = FirebaseMessaging.onMessageOpenedApp.listen(
-        (message) {
-          debugPrint(
-            'PushService: notification opened data=${message.data}',
-          );
-          _emitRouteFromMessage(message);
-        },
+    } catch (error) {
+      debugPrint(
+        'PushService: foreground presentation setup failed: $error',
       );
-
-      final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-      if (initialMessage != null) {
-        debugPrint(
-          'PushService: initial message data=${initialMessage.data}',
-        );
-        _emitRouteFromMessage(initialMessage);
-      }
-
-      _tokenRefreshSubscription =
-          FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
-        if (token.isEmpty) {
-          return;
-        }
-        debugPrint('PushService: token refreshed=$token');
-        try {
-          await _repository.registerDevice(
-            fcmToken: token,
-            platform: _platformName(),
-          );
-          debugPrint('PushService: refreshed token registered');
-        } catch (_) {}
-      });
-    } catch (_) {
-      // Push remains optional until native Android setup is completed.
     }
+
+    try {
+      await syncTokenWithBackend();
+    } catch (_) {
+      // Device registration requires auth and is retried after login.
+    }
+
+    _onMessageSubscription = FirebaseMessaging.onMessage.listen((message) async {
+      debugPrint(
+        'PushService: foreground message data=${message.data} notification=${message.notification?.title}',
+      );
+      await _showForegroundNotification(message);
+    });
+
+    _onMessageOpenedSubscription = FirebaseMessaging.onMessageOpenedApp.listen(
+      (message) {
+        debugPrint(
+          'PushService: notification opened data=${message.data}',
+        );
+        _emitRouteFromMessage(message);
+      },
+    );
+
+    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      debugPrint(
+        'PushService: initial message data=${initialMessage.data}',
+      );
+      _emitRouteFromMessage(initialMessage);
+    }
+
+    _tokenRefreshSubscription =
+        FirebaseMessaging.instance.onTokenRefresh.listen((token) async {
+      if (token.isEmpty) {
+        return;
+      }
+      debugPrint('PushService: token refreshed=$token');
+      try {
+        await _repository.registerDevice(
+          fcmToken: token,
+          platform: _platformName(),
+        );
+        debugPrint('PushService: refreshed token registered');
+      } catch (_) {}
+    });
   }
 
   Future<void> dispose() async {

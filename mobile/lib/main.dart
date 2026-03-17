@@ -19,7 +19,6 @@ Future<void> main() async {
 
   final container = ProviderContainer();
   await container.read(sessionControllerProvider.notifier).restore();
-  await container.read(pushBootstrapProvider.future);
 
   runApp(
     UncontrolledProviderScope(
@@ -27,4 +26,9 @@ Future<void> main() async {
       child: const AcadInternStudentApp(),
     ),
   );
+
+  // Defer push permission prompt until after the first frame so the UI/Activity is ready.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    container.read(pushBootstrapProvider.future);
+  });
 }

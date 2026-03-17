@@ -58,6 +58,15 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
     const [companyName, setCompanyName] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
+    const normalizeId = (value: any) => {
+        if (value && typeof value === 'object') {
+            return value._id || value.id || value;
+        }
+        return value;
+    };
+
+    const isSameId = (a: any, b: any) => String(normalizeId(a)) === String(normalizeId(b));
+
     // Outside click for menu
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -202,7 +211,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
             if (data.applicationId === applicationId && data.userId !== currentUserId) {
                 setMessages((prev) =>
                     prev.map((msg) =>
-                        (typeof msg.senderId === 'object' ? msg.senderId._id : msg.senderId) === currentUserId && msg.status === 'sent'
+                        isSameId(msg.senderId, currentUserId) && msg.status === 'sent'
                             ? { ...msg, status: 'delivered' as MessageStatus }
                             : msg
                     )
@@ -214,7 +223,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
             if (data.applicationId === applicationId && data.userId !== currentUserId) {
                 setMessages((prev) =>
                     prev.map((msg) =>
-                        msg.senderId._id === currentUserId && msg.status !== 'seen'
+                        isSameId(msg.senderId, currentUserId) && msg.status !== 'seen'
                             ? { ...msg, status: 'seen' as MessageStatus }
                             : msg
                     )
@@ -275,7 +284,7 @@ export default function ChatInterface({ applicationId, currentUserId, otherParty
     // Mark messages as seen when viewing
     useEffect(() => {
         const hasUnseenMessages = messages.some(
-            (msg) => msg.receiverId === currentUserId && msg.status !== 'seen'
+            (msg) => isSameId(msg.receiverId, currentUserId) && msg.status !== 'seen'
         );
         if (hasUnseenMessages) {
             markAsSeen(applicationId);
