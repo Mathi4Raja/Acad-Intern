@@ -600,6 +600,15 @@ export const markAsSeen = async (req: AuthRequest, res: Response, next: NextFunc
             }
         );
 
+        // Notify sender(s) about seen status (for REST-based clients like mobile)
+        const io = req.app.get('io');
+        if (io) {
+            io.to(`application:${applicationId}`).emit('messages-seen', {
+                applicationId,
+                userId
+            });
+        }
+
         res.status(200).json({
             success: true,
             message: 'Messages marked as seen'
