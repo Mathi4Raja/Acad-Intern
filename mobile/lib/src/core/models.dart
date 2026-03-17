@@ -438,10 +438,14 @@ class ChatMessageModel {
   final List<Map<String, dynamic>> attachments;
 
   factory ChatMessageModel.fromJson(Map<String, dynamic> json) {
-    final sender = json['senderId'] as Map<String, dynamic>? ?? {};
+    final senderRaw = json['senderId'];
+    final sender = senderRaw is Map<String, dynamic> ? senderRaw : <String, dynamic>{};
+    final senderId = senderRaw is Map<String, dynamic>
+        ? (senderRaw['_id'] ?? '').toString()
+        : (senderRaw?.toString() ?? '');
     return ChatMessageModel(
       id: (json['_id'] ?? '').toString(),
-      senderId: (sender['_id'] ?? '').toString(),
+      senderId: senderId,
       senderName: (sender['name'] ?? 'User').toString(),
       content: json['content']?.toString(),
       status: (json['status'] ?? 'sent').toString(),

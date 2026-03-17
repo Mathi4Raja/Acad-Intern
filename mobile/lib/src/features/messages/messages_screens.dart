@@ -445,7 +445,8 @@ class ChatScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen>
+    with WidgetsBindingObserver {
   final _messageController = TextEditingController();
   final _inputFocusNode = FocusNode();
   final _scrollController = ScrollController();
@@ -463,11 +464,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _localTyping = false;
   bool _sending = false;
   DateTime? _mutedUntil;
+  bool _isAppActive = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _bootstrap();
+  }
+
+  bool _isChatVisible() {
+    final route = ModalRoute.of(context);
+    return route?.isCurrent ?? true;
   }
 
   Future<void> _bootstrap() async {
@@ -494,6 +502,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         setState(() => _messages = [..._messages, next]);
       }
       _scrollToEnd();
+
+      // If we are viewing this chat, mark incoming messages as seen immediately
+      final currentUserId =
+          ref.read(sessionControllerProvider).value?.user.id;
+      if (_isAppActive &&
+          _isChatVisible() &&
+          currentUserId != null &&
+          next.senderId.isNotEmpty &&
+          next.senderId != currentUserId) {
+        socket.markAsSeen(widget.applicationId);
+        ref.read(inboxRefreshTriggerProvider.notifier).state++;
+      }
     });
 
     _statusSubscription = socket.status.listen((event) {
@@ -1088,11 +1108,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _statusSubscription?.cancel();
     _typingDebounce?.cancel();
     _stopTyping();
+    WidgetsBinding.instance.removeObserver(this);
     ref.read(socketServiceProvider).leaveApplication(widget.applicationId);
     _messageController.dispose();
     _inputFocusNode.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _isAppActive = state == AppLifecycleState.resumed;
+    if (_isAppActive && _isChatVisible()) {
+      final currentUserId = ref.read(sessionControllerProvider).value?.user.id;
+      if (currentUserId != null) {
+        final hasUnseenFromOther = _messages.any((item) =>
+            item.senderId.isNotEmpty &&
+            item.senderId != currentUserId &&
+            item.status != 'seen');
+        if (hasUnseenFromOther) {
+          ref.read(socketServiceProvider).markAsSeen(widget.applicationId);
+          ref.read(inboxRefreshTriggerProvider.notifier).state++;
+        }
+      }
+    }
   }
 
   @override

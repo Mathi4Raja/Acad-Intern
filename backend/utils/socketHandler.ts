@@ -252,6 +252,7 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
                 // For company, check if the internship's company has this user
                 let isCompany = false;
                 let companyUserId = null;
+                let companyDoc: any = null;
                 if (socket.userRole === 'company' && application.internshipId) {
                     // Removed dynamic require
                     const company = await Company.findOne({
@@ -261,6 +262,7 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
                     isCompany = !!company;
                     if (company) {
                         companyUserId = company.userId;
+                        companyDoc = company;
                     }
                 }
 
@@ -323,11 +325,14 @@ export const initializeSocket = (server: HTTPServer): SocketIOServer => {
 
                 // Create notification for receiver
                 const user = await User.findById(socket.userId);
+                const senderDisplayName = (isCompany && companyDoc?.companyName)
+                    ? companyDoc.companyName
+                    : user?.name;
                 await createNotification({
                     userId: receiverId,
                     type: 'general',
                     title: 'New Message',
-                    message: `You have a new message from ${user?.name}`,
+                    message: `You have a new message from ${senderDisplayName}`,
                     payload: {
                         applicationId,
                         messageId: message._id
