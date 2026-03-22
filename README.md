@@ -24,6 +24,9 @@ A comprehensive platform connecting students with internship opportunities, feat
 - **Security**: Helmet, CORS, Rate Limiting
 - **File Uploads**: Cloudflare R2 (via AWS SDK)
 
+#### CI/CD
+This project uses GitHub Actions for continuous integration.
+
 ### Frontend
 - **Framework**: Next.js
 - **Language**: TypeScript
@@ -35,6 +38,58 @@ A comprehensive platform connecting students with internship opportunities, feat
 - **Language**: Dart
 - **Navigation**: go_router
 - **State Management**: flutter_riverpod
+
+#### Mobile runtime variables and recommended commands
+
+- Recommended `--dart-define` values:
+  - `API_BASE_URL` (defaults to Render URL if omitted)
+  - `SOCKET_BASE_URL` (defaults to Render URL if omitted)
+  - `FRONTEND_BASE_URL` (used for shared internship links)
+  - `GOOGLE_SERVER_CLIENT_ID` (Google OAuth Web client ID, required for Google Sign-In ID token)
+  - `MOBILE_DEEP_LINK_BASE` (defaults to `acadintern://auth` if omitted)
+
+Example local run:
+
+```bash
+flutter run \
+  --dart-define=API_BASE_URL=https://your-render-backend.onrender.com/api \
+  --dart-define=SOCKET_BASE_URL=https://your-render-backend.onrender.com \
+  --dart-define=FRONTEND_BASE_URL=https://acadintern.mathi.live \
+  --dart-define=GOOGLE_SERVER_CLIENT_ID=your-web-client-id.apps.googleusercontent.com \
+  --dart-define=MOBILE_DEEP_LINK_BASE=acadintern://auth
+```
+
+Recommended for team workflows:
+
+```bash
+cp env.example.json env.local.json
+flutter run --dart-define-from-file=env.local.json
+flutter build apk --release --dart-define-from-file=env.local.json
+```
+
+#### Mobile Notes
+
+- Uploads are backend-mediated through `/api/upload`.
+- Session auth uses bearer tokens stored in secure storage.
+- Rotated bearer tokens are read from the `X-Auth-Token` response header.
+- Android and iOS wrappers are already generated in this folder.
+- For push notifications and Google sign-in native setup, see `mobile/FIREBASE_SETUP.md`.
+- Keep `env.local.json` local (ignored in git).
+
+#### Universal Links / App Links
+
+- Android app links are configured for:
+  - `https://acadintern.mathi.live`
+  - `https://acadintern.in`
+- iOS associated domains are configured for the same domains in `Runner.entitlements`.
+- Your web domain must host platform association files for verification:
+  - `https://<domain>/.well-known/assetlinks.json` (Android)
+  - `https://<domain>/.well-known/apple-app-site-association` (iOS)
+
+#### Launch Screen Assets
+
+You can customize the launch screen with your own desired assets by replacing the image files in `mobile/ios/Runner/Assets.xcassets/LaunchImage.imageset`.
+Or open the Flutter Xcode workspace with `open ios/Runner.xcworkspace`, select `Runner/Assets.xcassets` in the Project Navigator and drop in the desired images.
 
 ## Setup
 
